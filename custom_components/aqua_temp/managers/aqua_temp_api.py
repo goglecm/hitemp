@@ -168,7 +168,7 @@ class AquaTempAPI:
 
         if error is not None:
             if attempt < API_MAX_ATTEMPTS:
-                await sleep(1000)
+                await sleep(1)
 
                 await self._internal_update(attempt + 1)
 
@@ -356,6 +356,25 @@ class AquaTempAPI:
 
         await self._perform_action(request_data, fan_pc_key)
 
+    async def set_protocol_code_value(
+        self, device_code: str, protocol_code: str, value
+    ):
+        """Set a single protocol code value on the device."""
+        param_device_code = self._config_manager.get_api_param(APIParam.DeviceCode)
+        param_protocol_code = self._config_manager.get_api_param(APIParam.ProtocolCode)
+
+        request_data = {
+            DEVICE_CONTROL_PARAM: [
+                {
+                    param_device_code: device_code,
+                    param_protocol_code: protocol_code,
+                    DEVICE_CONTROL_VALUE: value,
+                }
+            ]
+        }
+
+        await self._perform_action(request_data, protocol_code)
+
     async def _perform_action(
         self, request_data: dict, operation: str, attempt: int = 1
     ):
@@ -392,7 +411,7 @@ class AquaTempAPI:
 
         if error is not None:
             if attempt < API_MAX_ATTEMPTS:
-                await sleep(1000)
+                await sleep(1)
 
                 await self._connect()
 

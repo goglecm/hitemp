@@ -141,6 +141,13 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         await self.async_request_refresh()
 
+    async def set_protocol_code_value(
+        self, device_code: str, protocol_code: str, value
+    ):
+        await self._api.set_protocol_code_value(device_code, protocol_code, value)
+
+        await self.async_request_refresh()
+
     async def set_temperature_unit(self, device_code: str, option: str):
         await self._config_manager.update_temperature_unit(device_code, option)
 

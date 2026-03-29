@@ -38,6 +38,7 @@ from ..common.entity_descriptions import (
     DEFAULT_ENTITY_DESCRIPTIONS,
     AquaTempBinarySensorEntityDescription,
     AquaTempEntityDescription,
+    AquaTempNumberEntityDescription,
     AquaTempSensorEntityDescription,
 )
 from ..models.config_data import ConfigData
@@ -416,6 +417,20 @@ class AquaTempConfigManager:
                 )
 
                 entities.append(binary_sensor_entity)
+
+            elif platform == Platform.NUMBER:
+                number_entity = AquaTempNumberEntityDescription(
+                    key=key,
+                    name=data_item.get("name"),
+                    device_class=data_item.get("device_class"),
+                    native_unit_of_measurement=data_item.get("unit_of_measurement"),
+                    native_min_value=data_item.get("native_min_value"),
+                    native_max_value=data_item.get("native_max_value"),
+                    native_step=data_item.get("native_step"),
+                    translation_key=translation_key,
+                )
+
+                entities.append(number_entity)
 
             else:
                 entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))

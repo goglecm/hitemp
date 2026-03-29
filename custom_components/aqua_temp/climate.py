@@ -97,7 +97,6 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
 
         if not is_power_on:
             hvac_mode = HVACMode.OFF
-            target_temperature = None
 
         if minimum_temperature is not None:
             self._attr_min_temp = minimum_temperature

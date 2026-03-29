@@ -343,9 +343,12 @@
   {
     "key": "R01",
     "name": "Target temp [R01]",
-    "platform": "sensor",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "\u00b0C",
+    "native_min_value": 38,
+    "native_max_value": 75,
+    "native_step": 1.0
   },
   {
     "key": "R03",

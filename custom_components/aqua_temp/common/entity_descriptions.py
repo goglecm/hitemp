@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.climate import ClimateEntityDescription, HVACMode
+from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
@@ -41,6 +42,13 @@ class AquaTempSensorEntityDescription(
     SensorEntityDescription, AquaTempEntityDescription
 ):
     platform: Platform | None = Platform.SENSOR
+
+
+@dataclass(frozen=True, kw_only=True)
+class AquaTempNumberEntityDescription(
+    NumberEntityDescription, AquaTempEntityDescription
+):
+    platform: Platform | None = Platform.NUMBER
 
 
 @dataclass(frozen=True, kw_only=True)
