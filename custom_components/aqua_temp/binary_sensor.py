@@ -42,24 +42,27 @@ class AquaTempBinarySensorEntity(BaseEntity, BinarySensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Fetch new state parameters for the sensor."""
-        device_data = self.local_coordinator.get_device_data(self.device_code)
+        try:
+            device_data = self.local_coordinator.get_device_data(self.device_code)
 
-        if self.entity_description.key == API_STATUS:
-            state = self.local_coordinator.api_status
+            if self.entity_description.key == API_STATUS:
+                state = self.local_coordinator.api_status
 
-        else:
-            state = device_data.get(self.entity_description.key)
+            else:
+                state = device_data.get(self.entity_description.key)
 
-        is_on = str(state).lower() == str(self._entity_on_value).lower()
+            is_on = str(state).lower() == str(self._entity_on_value).lower()
 
-        attributes = {}
-        if self._entity_attributes is not None:
-            for attribute_key in self._entity_attributes:
-                value = device_data.get(attribute_key)
+            attributes = {}
+            if self._entity_attributes is not None:
+                for attribute_key in self._entity_attributes:
+                    value = device_data.get(attribute_key)
 
-                attributes[attribute_key] = value
+                    attributes[attribute_key] = value
 
-        self._attr_is_on = is_on
-        self._attr_extra_state_attributes = attributes
+            self._attr_is_on = is_on
+            self._attr_extra_state_attributes = attributes
+        except Exception as ex:
+            _LOGGER.error(f"Failed to update {self.entity_description.key}: {ex}")
 
         self.async_write_ha_state()

@@ -19,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..common.api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
+from ..common.utils import safe_float
 from ..common.consts import (
     API_MAX_ATTEMPTS,
     CONFIG_HVAC_MAXIMUM,
@@ -176,6 +177,7 @@ class AquaTempAPI:
                 _LOGGER.error(
                     f"Failed to update (Attempt #{attempt}), Error: {error}, Line: {line_number}"
                 )
+                raise error
 
     async def _update_device(self, device_code: str):
         _LOGGER.debug(f"Starting to update device: {device_code}")
@@ -482,10 +484,10 @@ class AquaTempAPI:
         device_status_response = await self._post_request(Endpoints.DeviceStatus, data)
         object_result = device_status_response.get(param_object_result, {})
 
-        is_fault = object_result.get(param_is_fault, str(False))
+        is_fault = object_result.get(param_is_fault, False)
         fault_description = None
 
-        if bool(is_fault):
+        if str(is_fault).lower() not in ("false", "0", ""):
             device_fault_response = await self._post_request(
                 Endpoints.DeviceFault, data
             )
@@ -617,8 +619,8 @@ class AquaTempAPI:
 
         return result
 
-    def get_device_data(self, device_code: str) -> dict | None:
-        device_data = copy(self._devices.get(device_code))
+    def get_device_data(self, device_code: str) -> dict:
+        device_data = copy(self._devices.get(device_code, {}))
 
         return device_data
 
@@ -631,11 +633,7 @@ class AquaTempAPI:
         device_data = self.get_device_data(device_code)
         target_temperature = device_data.get(target_temperature_pc)
 
-        if target_temperature == "":
-            target_temperature = None
-
-        if target_temperature is not None:
-            target_temperature = float(str(target_temperature))
+        target_temperature = safe_float(target_temperature)
 
         return target_temperature
 
@@ -646,11 +644,7 @@ class AquaTempAPI:
         )
         current_temperature = device_data.get(pc_key)
 
-        if current_temperature == "":
-            current_temperature = None
-
-        if current_temperature is not None:
-            current_temperature = float(str(current_temperature))
+        current_temperature = safe_float(current_temperature)
 
         return current_temperature
 
@@ -662,13 +656,7 @@ class AquaTempAPI:
             device_code, hvac_mode, CONFIG_HVAC_MINIMUM
         )
 
-        temperature = device_data.get(key)
-
-        if temperature == "":
-            temperature = None
-
-        if temperature is not None:
-            temperature = float(str(temperature))
+        temperature = safe_float(device_data.get(key))
 
         return temperature
 
@@ -681,13 +669,7 @@ class AquaTempAPI:
             device_code, hvac_mode, CONFIG_HVAC_MAXIMUM
         )
 
-        temperature = device_data.get(key)
-
-        if temperature == "":
-            temperature = None
-
-        if temperature is not None:
-            temperature = float(str(temperature))
+        temperature = safe_float(device_data.get(key))
 
         return temperature
 
@@ -699,7 +681,14 @@ class AquaTempAPI:
         hvac_mode = self._config_manager.get_hvac_reverse_mapping(
             device_code, device_mode
         )
-        result = HVACMode(hvac_mode)
+
+        try:
+            result = HVACMode(hvac_mode)
+        except ValueError:
+            _LOGGER.warning(
+                f"Unknown HVAC mode value '{device_mode}' (mapped to '{hvac_mode}'), defaulting to OFF"
+            )
+            result = HVACMode.OFF
 
         return result
 

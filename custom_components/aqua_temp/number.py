@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .common.base_entity import BaseEntity, async_setup_base_entry
 from .common.entity_descriptions import AquaTempNumberEntityDescription
+from .common.utils import safe_float
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,15 +52,16 @@ class AquaTempNumberEntity(BaseEntity, NumberEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Fetch new state for this parameter."""
-        device_data = self.local_coordinator.get_device_data(self.device_code)
+        try:
+            device_data = self.local_coordinator.get_device_data(self.device_code)
 
-        state = device_data.get(self.entity_description.key)
+            state = device_data.get(self.entity_description.key)
 
-        if isinstance(state, str) and state != "":
-            state = float(state)
-        elif state == "":
-            state = None
+            if isinstance(state, str):
+                state = safe_float(state)
 
-        self._attr_native_value = state
+            self._attr_native_value = state
+        except Exception as ex:
+            _LOGGER.error(f"Failed to update {self.entity_description.key}: {ex}")
 
         self.async_write_ha_state()

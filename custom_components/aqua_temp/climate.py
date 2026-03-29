@@ -84,33 +84,36 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
 
     def _handle_coordinator_update(self) -> None:
         """Fetch new state parameters for the sensor."""
-        coordinator = self.local_coordinator
-        device_code = self.device_code
+        try:
+            coordinator = self.local_coordinator
+            device_code = self.device_code
 
-        hvac_mode = coordinator.get_device_hvac_mode(device_code)
-        is_power_on = coordinator.get_device_power(device_code)
-        fan_mode = coordinator.get_device_fan_mode(device_code)
-        current_temperature = coordinator.get_device_current_temperature(device_code)
-        target_temperature = coordinator.get_device_target_temperature(device_code)
-        minimum_temperature = coordinator.get_device_minimum_temperature(device_code)
-        maximum_temperature = coordinator.get_device_maximum_temperature(device_code)
+            hvac_mode = coordinator.get_device_hvac_mode(device_code)
+            is_power_on = coordinator.get_device_power(device_code)
+            fan_mode = coordinator.get_device_fan_mode(device_code)
+            current_temperature = coordinator.get_device_current_temperature(device_code)
+            target_temperature = coordinator.get_device_target_temperature(device_code)
+            minimum_temperature = coordinator.get_device_minimum_temperature(device_code)
+            maximum_temperature = coordinator.get_device_maximum_temperature(device_code)
 
-        if not is_power_on:
-            hvac_mode = HVACMode.OFF
+            if not is_power_on:
+                hvac_mode = HVACMode.OFF
 
-        if minimum_temperature is not None:
-            self._attr_min_temp = minimum_temperature
-        if maximum_temperature is not None:
-            self._attr_max_temp = maximum_temperature
-        self._attr_hvac_mode = hvac_mode
-        self._attr_fan_mode = fan_mode
-        self._attr_target_temperature = target_temperature
-        self._attr_current_temperature = current_temperature
+            if minimum_temperature is not None:
+                self._attr_min_temp = minimum_temperature
+            if maximum_temperature is not None:
+                self._attr_max_temp = maximum_temperature
+            self._attr_hvac_mode = hvac_mode
+            self._attr_fan_mode = fan_mode
+            self._attr_target_temperature = target_temperature
+            self._attr_current_temperature = current_temperature
 
-        _LOGGER.debug(f"_attr_hvac_mode: {self._attr_hvac_mode}")
-        _LOGGER.debug(f"_attr_target_temperature: {self._attr_target_temperature}")
-        _LOGGER.debug(f"_attr_fan_mode: {self._attr_fan_mode}")
-        _LOGGER.debug(f"_attr_min_temp: {self._attr_min_temp}")
-        _LOGGER.debug(f"_attr_max_temp: {self._attr_max_temp}")
+            _LOGGER.debug(f"_attr_hvac_mode: {self._attr_hvac_mode}")
+            _LOGGER.debug(f"_attr_target_temperature: {self._attr_target_temperature}")
+            _LOGGER.debug(f"_attr_fan_mode: {self._attr_fan_mode}")
+            _LOGGER.debug(f"_attr_min_temp: {self._attr_min_temp}")
+            _LOGGER.debug(f"_attr_max_temp: {self._attr_max_temp}")
+        except Exception as ex:
+            _LOGGER.error(f"Failed to update climate entity: {ex}")
 
         self.async_write_ha_state()

@@ -66,6 +66,7 @@ CONFIG_SET_FAN = "fan"
 CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
 
 API_STATUS = "api_status"
+LAST_ERROR = "last_error"
 
 PRODUCT_ID_DEFAULT = "default"
 

@@ -50,6 +50,9 @@ class AquaTempSelectEntity(BaseEntity, SelectEntity, ABC):
 
     def _handle_coordinator_update(self) -> None:
         """Fetch new state parameters for the sensor."""
-        self._attr_current_option = self._get_temperature_unit()
+        try:
+            self._attr_current_option = self._get_temperature_unit()
+        except Exception as ex:
+            _LOGGER.error(f"Failed to update {self.entity_description.key}: {ex}")
 
         self.async_write_ha_state()

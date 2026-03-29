@@ -75,15 +75,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     _LOGGER.info(f"Unloading {DOMAIN} integration, Entry ID: {entry.entry_id}")
 
-    coordinator: AquaTempCoordinator = hass.data[DOMAIN][entry.entry_id]
+    try:
+        coordinator: AquaTempCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    await coordinator.config_manager.remove(entry.entry_id)
+        await coordinator.config_manager.remove(entry.entry_id)
 
-    platforms = coordinator.config_manager.platforms
+        platforms = coordinator.config_manager.platforms
 
-    for platform in platforms:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in platforms:
+            await hass.config_entries.async_forward_entry_unload(entry, platform)
 
-    del hass.data[DOMAIN][entry.entry_id]
+        del hass.data[DOMAIN][entry.entry_id]
+
+    except Exception as ex:
+        _LOGGER.error(
+            f"Failed to unload {DOMAIN} integration, Entry ID: {entry.entry_id}, Error: {ex}"
+        )
+        return False
 
     return True

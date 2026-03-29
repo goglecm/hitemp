@@ -38,6 +38,14 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         self._api = AquaTempAPI(hass, config_manager)
         self._config_manager = config_manager
+        self._last_error: str | None = None
+
+    @property
+    def last_error(self) -> str | None:
+        return self._last_error
+
+    def set_last_error(self, error: str | None):
+        self._last_error = error
 
     @property
     def api_status(self):
@@ -114,6 +122,8 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
             config_data = self._config_manager.get_debug_data()
 
+            self._last_error = None
+
             return {
                 DATA_ITEM_DEVICES: self.devices,
                 DATA_ITEM_LOGIN_DETAILS: self._api.login_details,
@@ -121,6 +131,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             }
 
         except Exception as err:
+            self._last_error = str(err)
             raise UpdateFailed(f"Error communicating with API: {err}")
 
     def get_temperature_unit(self, device_code: str):
