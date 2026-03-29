@@ -60,6 +60,7 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_fan_mode = FAN_AUTO
 
         self._attr_temperature_unit = coordinator.get_temperature_unit(device_code)
+        self._attr_min_temp = 5.0
         self._attr_max_temp = 90.0
 
     async def async_set_temperature(self, **kwargs):
