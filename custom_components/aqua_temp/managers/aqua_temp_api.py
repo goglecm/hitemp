@@ -32,7 +32,6 @@ from ..common.consts import (
     CONFIG_SET_TEMPERATURE,
     DEVICE_CONTROL_PARAM,
     DEVICE_CONTROL_VALUE,
-    FAN_MODE_MAPPING,
     HEADERS,
     HTTP_HEADER_X_TOKEN,
     POWER_MODE_OFF,
@@ -342,7 +341,8 @@ class AquaTempAPI:
         param_device_code = self._config_manager.get_api_param(APIParam.DeviceCode)
         param_protocol_code = self._config_manager.get_api_param(APIParam.ProtocolCode)
 
-        value = FAN_MODE_MAPPING.get(fan_mode)
+        fan_modes = self._config_manager.get_fan_modes(device_code)
+        value = fan_modes.get(fan_mode)
 
         request_data = {
             DEVICE_CONTROL_PARAM: [
