@@ -60,6 +60,7 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_fan_mode = FAN_AUTO
 
         self._attr_temperature_unit = coordinator.get_temperature_unit(device_code)
+        self._attr_max_temp = 90.0
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -97,8 +98,10 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
             hvac_mode = HVACMode.OFF
             target_temperature = None
 
-        self._attr_min_temp = minimum_temperature
-        self._attr_max_temp = maximum_temperature
+        if minimum_temperature is not None:
+            self._attr_min_temp = minimum_temperature
+        if maximum_temperature is not None:
+            self._attr_max_temp = maximum_temperature
         self._attr_hvac_mode = hvac_mode
         self._attr_fan_mode = fan_mode
         self._attr_target_temperature = target_temperature
