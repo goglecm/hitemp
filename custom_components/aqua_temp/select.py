@@ -25,7 +25,7 @@ async def async_setup_entry(
 
 
 class AquaTempSelectEntity(BaseEntity, SelectEntity):
-    """Representation of a sensor."""
+    """Select for the unit the device reports temperatures in."""
 
     def __init__(
         self,

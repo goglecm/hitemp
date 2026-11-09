@@ -1,4 +1,4 @@
-"""Diagnostics support for Tuya."""
+"""Diagnostics support for Aqua Temp / HiTemp."""
 
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ def _async_get_diagnostics(
 def _async_device_as_dict(
     hass: HomeAssistant, entry: ConfigEntry, device_id: str, device_data: dict
 ) -> dict[str, Any]:
-    """Represent a Shinobi monitor as a dictionary."""
+    """Represent a heat pump and its entities as a dictionary."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 

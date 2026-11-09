@@ -1,13 +1,13 @@
 {
   "domain": "aqua_temp",
   "name": "Aqua Temp",
-  "codeowners": ["@radical-squared", "@elad-bar"],
+  "codeowners": ["@goglecm"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/radical-squared/aquatemp",
+  "documentation": "https://github.com/goglecm/hitemp",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/radical-squared/aquatemp/issues",
+  "issue_tracker": "https://github.com/goglecm/hitemp/issues",
   "requirements": [],
-  "version": "3.0.37"
+  "version": "4.0.0"
 }

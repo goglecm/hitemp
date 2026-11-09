@@ -1,4 +1,4 @@
-"""Platform for climate integration."""
+"""Client for the Aqua Temp / HiTemp cloud API."""
 
 from asyncio import sleep
 from copy import copy

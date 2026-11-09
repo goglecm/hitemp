@@ -1,5 +1,75 @@
 # Changelog
 
+## 4.0.0
+
+_Minimum HA Version: 2026.11.0_
+
+The project moved to [goglecm/hitemp](https://github.com/goglecm/hitemp).
+
+### Breaking changes
+
+- Requires Home Assistant 2026.11.0, for the native climate temperature API
+- HiTemp: only parameters with ranges confirmed in the app are writable:
+  R01 (38-60 °C), R03, R04, R05 and R06 (0-450 min). E01-E04 and H99 are
+  writable but disabled by default; existing installs have them disabled by a
+  migration. All other parameters, including H98 (model selection), are
+  read-only sensors. The old number entities show as "no longer provided" and
+  can be removed.
+- The climate card of HiTemp is limited to 38-60 °C (was 5-90 °C)
+- Turning a climate entity on resumes the heat pump's last mode instead of
+  switching to heat
+
+### Home Assistant 2026.11
+
+- Remove the deprecated `CONN_CLASS_LOCAL_POLL` from the config flow
+- Use `_attr_native_temperature_unit`, `_attr_native_target_temperature` and
+  `_attr_native_current_temperature` in the climate entity
+- Use probatio for the config flow schema and drop the undeclared aiofiles
+  dependency
+- Replace `device_registry.async_get_device` in diagnostics
+- Set up the entry in `async_setup_entry` (retried while the cloud is
+  unreachable), store the coordinator in `runtime_data`, remove `async_setup`
+- Add reauthentication when the cloud rejects the password
+
+### Safety fixes
+
+- The Fault sensor never turned on (the cloud reports a boolean) and Fault and
+  Status were only refreshed at login; both now update on every poll
+- Entities of an offline heat pump are unavailable and commands to it are
+  refused
+- Failed data requests no longer leave old values shown as current
+- Switching mode wrote the previous mode's target to the active setpoint
+- Commands never contain an unmapped protocol code; duplicate writes removed
+- Numbers are rounded to their step; temperature ranges follow the unit select
+- Accounts no longer share their cloud token; TLS certificate verification is
+  enabled again
+- Passwords, tokens and account details are removed from logs and diagnostics
+
+### Other fixes
+
+- Editing the options moved the API type out of the entry data, so the wrong
+  API was used after a restart; affected entries are repaired
+- Device diagnostics failed with a TypeError
+- Last Error and API Status stayed unavailable exactly when polling failed
+- Changing the temperature unit needed a reload
+- Unloading the entry deleted the stored temperature unit
+- Concurrent setups could lose the encryption key or preferences
+- The same account can no longer be added twice
+
+### Since 3.0.37
+
+- HiTemp: fetch `mode_real`, `M17` and use the product's fan mapping;
+  align the mapping with the device
+- Number platform for writable parameters, target temperature while off
+- Last Error diagnostic sensor
+
+### Development
+
+- Tests for every feature against Home Assistant 2026.11.1, run in CI with
+  95% coverage required
+- Ruff replaces black, isort, flake8, pyupgrade and autoflake; all
+  dependencies, hooks and actions updated
+
 ## 3.0.37
 
 - Initialize data using `async_request_refresh` instead of `async_config_entry_first_refresh` to remove warning message
