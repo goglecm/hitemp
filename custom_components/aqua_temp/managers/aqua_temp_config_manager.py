@@ -3,8 +3,8 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
-import aiofiles
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -43,6 +43,16 @@ from ..common.entity_descriptions import (
 from ..models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _load_json_file(file_path: str) -> Any | None:
+    """Load a JSON file, or return None if it does not exist (blocking)."""
+    path = Path(file_path)
+
+    if not path.exists():
+        return None
+
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 class AquaTempConfigManager:
@@ -379,14 +389,10 @@ class AquaTempConfigManager:
             ProductParameter.ENTITY_DESCRIPTION, product_id
         )
 
-        if not os.path.exists(file_path):
+        json_data = await self._hass.async_add_executor_job(_load_json_file, file_path)
+
+        if json_data is None:
             return
-
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
-
-        json_data = json.loads(json_str)
 
         for data_item in json_data:
             platform = data_item.get("platform")
@@ -444,7 +450,9 @@ class AquaTempConfigManager:
     async def _load_pc_mapping(self, product_id: str):
         file_path = self._get_product_file(ProductParameter.MAPPING, product_id)
 
-        if not os.path.exists(file_path):
+        json_data = await self._hass.async_add_executor_job(_load_json_file, file_path)
+
+        if json_data is None:
             return
 
         hvac_mode_mapping = {}
@@ -452,12 +460,6 @@ class AquaTempConfigManager:
 
         fan_mode_mapping = {}
         fan_mode_reverse_mapping = {}
-
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
-
-        json_data = json.loads(json_str)
 
         self._protocol_codes_configuration[product_id] = json_data
 
@@ -489,11 +491,10 @@ class AquaTempConfigManager:
         config_file = f"../parameters/api.{api_type}.json"
         file_path = os.path.join(os.path.dirname(__file__), config_file)
 
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
+        json_data = await self._hass.async_add_executor_job(_load_json_file, file_path)
 
-        json_data = json.loads(json_str)
+        if json_data is None:
+            raise FileNotFoundError(file_path)
 
         self._api_config = json_data
 
