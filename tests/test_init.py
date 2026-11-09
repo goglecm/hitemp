@@ -28,12 +28,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import deprecation, entity_registry as er, frame
+from homeassistant.helpers import (
+    deprecation,
+    device_registry as dr,
+    entity_registry as er,
+    frame,
+)
 from homeassistant.util import dt as dt_util, slugify
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from custom_components.aqua_temp.common.consts import CONFIGURATION_FILE, DOMAIN
+from custom_components.aqua_temp.diagnostics import (
+    async_get_config_entry_diagnostics,
+    async_get_device_diagnostics,
+)
 from custom_components.aqua_temp.managers.aqua_temp_coordinator import (
     AquaTempCoordinator,
 )
@@ -196,6 +205,41 @@ async def test_migration_disables_installer_parameters(
     assert hass.states.get(r01).state == "50.0"
 
 
+async def test_migration_restores_api_type_from_options(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Entries whose API type was moved to the options by older versions recover."""
+    device = add_device(HITEMP_FIXTURE)
+    entry = make_entry(api_type=None, minor_version=1, options={"api_type": "hi_temp"})
+
+    await setup_entry(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data["api_type"] == "hi_temp"
+    assert entry.options == {}
+    assert entry.unique_id == "hi_temp_owner@example.com"
+    assert fake_cloud.requests[0].style == "camel"
+    assert hass.states.get(entity_id(hass, "climate", "Mode", device.code))
+
+
+async def test_migration_skips_unique_id_already_in_use(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """A duplicate account keeps working but gets no unique ID."""
+    make_entry(unique_id="hi_temp_owner@example.com")
+    entry = make_entry(minor_version=1)
+
+    await setup_entry(hass, entry)
+
+    assert entry.minor_version == 2
+    assert entry.unique_id is None
+
+
 class _ClimateUsingDeprecatedAttribute(ClimateEntity):
     """Entity used to prove the deprecation spy works."""
 
@@ -207,37 +251,51 @@ class _ClimateUsingDeprecatedAttribute(ClimateEntity):
 def deprecation_reports() -> Any:
     """Record every deprecated Home Assistant API use, ignoring de-duplication."""
     reports: list[str] = []
-    original = deprecation._DeprecatedEntityMember._report_usage
+    original_member_report = deprecation._DeprecatedEntityMember._report_usage
+    original_report = frame._report_usage
 
     def entity_member_spy(self, instance: object, action: str) -> None:
         reports.append(f"{action} {type(instance).__name__}.{self.name}")
-        original(self, instance, action)
+        original_member_report(self, instance, action)
 
     def constant_spy(obj_name: str, module_name: str, *args, **kwargs) -> None:
         reports.append(f"constant {module_name}.{obj_name}")
 
-    def report_spy(what: str, *args, **kwargs) -> None:
-        reports.append(what)
+    def report_spy(hass: HomeAssistant, what: str, **kwargs: Any) -> None:
+        # Every frame.report_usage call ends here, however it was imported
+        integration_frame = kwargs.get("integration_frame")
+        if kwargs.get("integration_domain") == DOMAIN or (
+            integration_frame is not None and integration_frame.integration == DOMAIN
+        ):
+            reports.append(what)
+        original_report(hass, what, **kwargs)
 
     with (
         patch.object(
             deprecation._DeprecatedEntityMember, "_report_usage", entity_member_spy
         ),
         patch.object(deprecation, "_print_deprecation_warning_internal", constant_spy),
-        patch.object(frame, "report_usage", report_spy),
-        patch.object(config_entries, "report_usage", report_spy),
+        patch.object(frame, "_report_usage", report_spy),
     ):
         yield reports
 
 
-def test_deprecation_spy_detects_usage(deprecation_reports: list[str]) -> None:
-    """The spy catches both kinds of deprecation reported by the user."""
+async def test_deprecation_spy_detects_usage(
+    hass: HomeAssistant, deprecation_reports: list[str]
+) -> None:
+    """The spy catches every kind of usage report Home Assistant raises."""
     _ClimateUsingDeprecatedAttribute()
     _ = config_entries.CONN_CLASS_LOCAL_POLL
+    frame.report_usage(
+        "uses something deprecated",
+        integration_domain=DOMAIN,
+        core_behavior=frame.ReportBehavior.LOG,
+    )
 
     assert deprecation_reports == [
         "writes _ClimateUsingDeprecatedAttribute._attr_target_temperature",
         "constant homeassistant.config_entries.CONN_CLASS_LOCAL_POLL",
+        "uses something deprecated",
     ]
 
 
@@ -283,6 +341,12 @@ async def test_no_deprecated_home_assistant_usage(
     for device in (hitemp, pool):
         state = hass.states.get(entity_id(hass, "climate", "Mode", device.code))
         assert state.attributes[ATTR_TEMPERATURE] == 40
+
+    await async_get_config_entry_diagnostics(hass, entry)
+    device_entry = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, hitemp.device_id), entry.entry_id
+    )
+    await async_get_device_diagnostics(hass, entry, device_entry)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
 

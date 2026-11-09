@@ -12,13 +12,14 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
-from .common.consts import DOMAIN, INVALID_TOKEN_SECTION
+from .common.consts import CONF_API_TYPE, DOMAIN, INVALID_TOKEN_SECTION
 from .managers.aqua_temp_config_manager import (
     AquaTempConfigManager,
     load_disabled_by_default_number_keys,
 )
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 from .managers.password_manager import PasswordManager
+from .models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +57,52 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -
     if entry.version == 1 and entry.minor_version < 2:
         await _async_disable_installer_parameters(hass, entry)
 
-        hass.config_entries.async_update_entry(entry, minor_version=2)
+        data, options = _restore_api_type(entry)
+        unique_id = entry.unique_id or _free_unique_id(hass, entry, data)
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            options=options,
+            unique_id=unique_id,
+            minor_version=2,
+        )
 
     _LOGGER.info(
         f"Migrated {entry.title} to version {entry.version}.{entry.minor_version}"
     )
+
+
+def _restore_api_type(entry: AquaTempConfigEntry) -> tuple[dict, dict]:
+    """Move the API type back into the entry data.
+
+    Editing the options of older versions moved it into the options, where
+    setup did not read it, so the default API was used after a restart.
+    """
+    data = dict(entry.data)
+    options = dict(entry.options)
+
+    if CONF_API_TYPE in options:
+        api_type = options.pop(CONF_API_TYPE)
+
+        if CONF_API_TYPE not in data:
+            _LOGGER.warning(f"Restoring API type {api_type} of {entry.title}")
+
+            data[CONF_API_TYPE] = api_type
+
+    return data, options
+
+
+def _free_unique_id(
+    hass: HomeAssistant, entry: AquaTempConfigEntry, data: dict
+) -> str | None:
+    unique_id = ConfigData.from_dict(data).unique_id
+
+    for other_entry in hass.config_entries.async_entries(DOMAIN):
+        if other_entry is not entry and other_entry.unique_id == unique_id:
+            return None
+
+    return unique_id
 
 
 async def _async_disable_installer_parameters(

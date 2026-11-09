@@ -69,13 +69,17 @@ def _async_get_diagnostics(
         "disabled_polling": entry.pref_disable_polling,
     }
 
+    def _identifier(device_code: str) -> str:
+        return devices[device_code].get(device_id_param) or device_code
+
     if device is not None:
         device_id = next(iter(device.identifiers))[1]
 
         for device_code in devices:
-            device_details = devices[device_code]
-            if device_details.get(device_id_param) == device_id:
-                data |= _async_device_as_dict(hass, device_details)
+            if _identifier(device_code) == device_id:
+                data |= _async_device_as_dict(
+                    hass, entry, device_id, devices[device_code]
+                )
 
     else:
         _LOGGER.debug("Getting diagnostic information for all devices")
@@ -83,7 +87,7 @@ def _async_get_diagnostics(
         data.update(
             devices=[
                 _async_device_as_dict(
-                    hass, devices[device_code][device_id_param], devices[device_code]
+                    hass, entry, _identifier(device_code), devices[device_code]
                 )
                 for device_code in devices
             ]
@@ -94,13 +98,15 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-    hass: HomeAssistant, device_id: str, device_data: dict
+    hass: HomeAssistant, entry: ConfigEntry, device_id: str, device_data: dict
 ) -> dict[str, Any]:
     """Represent a Shinobi monitor as a dictionary."""
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    ha_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    ha_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), entry.entry_id
+    )
     data = {}
 
     if ha_device:
@@ -113,10 +119,13 @@ def _async_device_as_dict(
             "entities": [],
         }
 
-        ha_entities = er.async_entries_for_device(
-            entity_registry,
-            device_id=ha_device.id,
-            include_disabled_entities=True,
+        ha_entities = sorted(
+            er.async_entries_for_device(
+                entity_registry,
+                device_id=ha_device.id,
+                include_disabled_entities=True,
+            ),
+            key=lambda entity_entry: entity_entry.entity_id,
         )
 
         for entity_entry in ha_entities:
@@ -130,6 +139,7 @@ def _async_device_as_dict(
 
             data["device"]["entities"].append(
                 {
+                    "entity_id": entity_entry.entity_id,
                     "disabled": entity_entry.disabled,
                     "disabled_by": entity_entry.disabled_by,
                     "entity_category": entity_entry.entity_category,

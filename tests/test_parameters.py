@@ -7,7 +7,10 @@ from pathlib import Path
 import re
 from typing import Any
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import Platform
 import pytest
 
@@ -98,6 +101,20 @@ def test_number_descriptions_have_valid_ranges(product_id: str) -> None:
         assert ((maximum - minimum) / step) == pytest.approx(
             round((maximum - minimum) / step)
         ), f"range of {item['key']} is not a multiple of its step"
+
+
+@pytest.mark.parametrize("product_id", PRODUCTS_WITH_FILES)
+def test_device_classes_are_valid(product_id: str) -> None:
+    """Device classes must exist for their platform; sensors compare them as enums."""
+    device_classes = {
+        Platform.SENSOR: SensorDeviceClass,
+        Platform.BINARY_SENSOR: BinarySensorDeviceClass,
+        Platform.NUMBER: NumberDeviceClass,
+    }
+
+    for item in _descriptions(product_id):
+        if (device_class := item.get("device_class")) is not None:
+            device_classes[item["platform"]](device_class)
 
 
 @pytest.mark.parametrize("product_id", PRODUCTS_WITH_FILES)

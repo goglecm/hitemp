@@ -9,12 +9,28 @@
           "username": "Username",
           "password": "Password",
           "api_type": "API type"
+        },
+        "data_description": {
+          "api_type": "The app the account was created with"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update the Aqua Temp password",
+        "description": "The cloud rejected the password of {username}. Enter the current password to resume polling the heat pump.",
+        "data": {
+          "password": "Password"
         }
       }
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
-      "corrupted_encryption_key": "Corrupted encryption key, please follow the steps in {invalid_token_url}"
+      "cannot_connect": "Cannot connect to the cloud, please try again later",
+      "corrupted_encryption_key": "Corrupted encryption key, please follow the steps in {invalid_token_url}",
+      "unknown": "Unexpected error, please check the logs"
+    },
+    "abort": {
+      "already_configured": "This account is already configured",
+      "reauth_successful": "The password was updated"
     }
   },
   "options": {
@@ -27,12 +43,18 @@
           "username": "Username",
           "password": "Password",
           "api_type": "API type"
+        },
+        "data_description": {
+          "password": "Leave empty to keep the current password",
+          "api_type": "The app the account was created with"
         }
       }
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
-      "corrupted_encryption_key": "Corrupted encryption key, please follow the steps in {invalid_token_url}"
+      "cannot_connect": "Cannot connect to the cloud, please try again later",
+      "corrupted_encryption_key": "Corrupted encryption key, please follow the steps in {invalid_token_url}",
+      "unknown": "Unexpected error, please check the logs"
     }
   },
   "selector": {
@@ -641,7 +663,7 @@
         "name": "EEV adjustment mode [E01]"
       },
       "1245226668902080512_e02": {
-        "name": "Target degree of supreheat [E02]"
+        "name": "Target degree of superheat [E02]"
       },
       "1245226668902080512_e03": {
         "name": "Original position of EEV [E03]"
@@ -665,7 +687,7 @@
         "name": "Circle of disinfection [G04]"
       },
       "1245226668902080512_h01": {
-        "name": "Remenber the status of device when power down [H01]"
+        "name": "Remember the status of device when power down [H01]"
       },
       "1245226668902080512_h03": {
         "name": "Heating source [H03]"
@@ -1374,6 +1396,9 @@
     },
     "command_failed": {
       "message": "Sending the command to the heat pump {device} failed: {error}"
+    },
+    "invalid_credentials": {
+      "message": "The cloud rejected the username or password"
     }
   }
 }

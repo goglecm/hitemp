@@ -148,7 +148,8 @@ class FakeCloud:
         self.single_session = False
         self.data_error: str | None = None
         self.control_error: str | None = None
-        self.http_status: dict[str, int] = {}
+        self.login_response: dict[str, Any] | None = None
+        self.http_status: dict[str, int | list[int]] = {}
         self._token_counter = 0
         self._sessions: list[aiohttp.ClientSession] = []
         self._connectors: list[aiohttp.BaseConnector] = []
@@ -182,6 +183,11 @@ class FakeCloud:
     def clear_requests(self) -> None:
         """Forget recorded requests."""
         self.requests.clear()
+
+    @property
+    def sessions(self) -> list[aiohttp.ClientSession]:
+        """Return the sessions created through Home Assistant so far."""
+        return list(self._sessions)
 
     # ------------------------------------------------------------ transport
     @contextmanager
@@ -262,6 +268,11 @@ class FakeCloud:
             raise aiohttp.ClientConnectionError("Cloud unreachable")
 
         if (status := self.http_status.get(endpoint)) is not None:
+            if isinstance(status, list):
+                # One status per request, then back to normal
+                status = status.pop(0)
+                if not self.http_status[endpoint]:
+                    del self.http_status[endpoint]
             return AiohttpClientMockResponse(method, url, status=status)
 
         result = self._dispatch(style, endpoint, headers or {}, body or {})
@@ -295,6 +306,9 @@ class FakeCloud:
         keys = KEYS[style]
 
         if endpoint == "app/user/login":
+            if self.login_response is not None:
+                return self.login_response
+
             username = body.get(keys["username"])
             if self.accounts.get(username) != body.get("password"):
                 return self._error(style, "-1", "Account or password error")

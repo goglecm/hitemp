@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,6 +19,7 @@ from ..common.consts import (
     UPDATE_API_INTERVAL,
 )
 from ..common.utils import convert_range
+from ..models.exceptions import InvalidCredentialsError
 from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 
@@ -81,12 +82,9 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         param_custom_model = self._config_manager.get_api_param(APIParam.CustomModel)
 
         device_data = self.get_device_data(device_code)
-        device_nickname = device_data.get(param_nickname)
+        device_nickname = device_data.get(param_nickname) or device_code
         device_model = device_data.get(param_custom_model)
-        device_id = device_data.get(param_device_id)
-
-        if param_custom_model in device_data:
-            device_model = device_data.get(param_custom_model)
+        device_id = device_data.get(param_device_id) or device_code
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
@@ -125,6 +123,12 @@ class AquaTempCoordinator(DataUpdateCoordinator):
                 DATA_ITEM_LOGIN_DETAILS: self._api.login_details,
                 DATA_ITEM_CONFIG: config_data,
             }
+
+        except InvalidCredentialsError as err:
+            self._last_error = str(err)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from err
 
         except Exception as err:
             self._last_error = str(err)

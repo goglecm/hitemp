@@ -40,6 +40,27 @@ class LoginError(Exception):
         return result
 
 
+class InvalidCredentialsError(LoginError):
+    """The cloud rejected the username or password."""
+
+    def __str__(self):
+        result = "Failed to login, the username or password was rejected"
+
+        return result
+
+
+class CloudConnectionError(Exception):
+    """The cloud could not be reached."""
+
+    def __init__(self, error: Exception):
+        self.error = error
+
+    def __str__(self):
+        result = f"Cannot connect to the cloud, Error: {self.error}"
+
+        return result
+
+
 class InvalidTokenError(Exception):
     flow: str
 

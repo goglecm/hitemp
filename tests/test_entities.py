@@ -16,9 +16,11 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
@@ -26,7 +28,9 @@ from homeassistant.core import HomeAssistant
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from .conftest import HITEMP_FIXTURE, entity_id, setup_entry
+from custom_components.aqua_temp.common.consts import API_STATUS, LAST_ERROR
+
+from .conftest import GENERIC_FIXTURE, HITEMP_FIXTURE, entity_id, setup_entry
 from .fake_cloud import FakeCloud, FakeDevice
 
 
@@ -72,6 +76,27 @@ async def test_initial_states(hass: HomeAssistant, hitemp: FakeDevice) -> None:
     ).state == (UnitOfTemperature.CELSIUS)
 
 
+@pytest.mark.parametrize("value", ["abc", "", None])
+async def test_non_numeric_values_are_unknown(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    value: str | None,
+) -> None:
+    """Values that are not numbers are shown as unknown, never as a stale number."""
+    device = add_device(HITEMP_FIXTURE)
+    device.data.update(T02=value, R01=value)
+    await setup_entry(hass, make_entry())
+
+    assert hass.states.get(entity_id(hass, "sensor", "T02", device.code)).state == (
+        STATE_UNKNOWN
+    )
+    assert hass.states.get(entity_id(hass, "number", "R01", device.code)).state == (
+        STATE_UNKNOWN
+    )
+
+
 async def test_number_writes_parameter(
     hass: HomeAssistant, fake_cloud: FakeCloud, hitemp: FakeDevice
 ) -> None:
@@ -91,11 +116,12 @@ async def test_number_writes_parameter(
     assert hass.states.get(number).state == "7.0"
 
 
-async def test_select_stores_temperature_unit(
+async def test_select_changes_units_without_reload(
     hass: HomeAssistant, hitemp: FakeDevice
 ) -> None:
-    """Choosing a temperature unit is stored for the device."""
-    select = entity_id(hass, "select", "temperature_unit", hitemp.code)
+    """Choosing °F is stored and applied to climate, sensors and numbers at once."""
+    code = hitemp.code
+    select = entity_id(hass, "select", "temperature_unit", code)
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -105,3 +131,64 @@ async def test_select_stores_temperature_unit(
     )
 
     assert hass.states.get(select).state == UnitOfTemperature.FAHRENHEIT
+
+    # 50 °F reported by the device, shown in the system's °C
+    climate = hass.states.get(entity_id(hass, "climate", "Mode", code))
+    assert climate.attributes[ATTR_TEMPERATURE] == pytest.approx(10.0)
+
+    bottom = hass.states.get(entity_id(hass, "sensor", "T02", code))
+    assert float(bottom.state) == pytest.approx(3.6, abs=0.1)
+
+    r01 = hass.states.get(entity_id(hass, "number", "R01", code))
+    assert r01.attributes["min"] == pytest.approx(38.3, abs=0.1)
+
+
+async def test_diagnostic_entities_stay_available_when_polling_fails(
+    hass: HomeAssistant, fake_cloud: FakeCloud, hitemp: FakeDevice
+) -> None:
+    """API Status and Last Error explain a failure instead of going unavailable."""
+    code = hitemp.code
+    entry = hass.config_entries.async_entries("aqua_temp")[0]
+    last_error = entity_id(hass, "sensor", LAST_ERROR, code)
+    assert hass.states.get(last_error).state == STATE_UNKNOWN
+
+    fake_cloud.network_down = True
+    fake_cloud.expire_tokens()
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(last_error).state == "Cloud unreachable"
+    assert hass.states.get(
+        entity_id(hass, "binary_sensor", API_STATUS, code)
+    ).state == (STATE_OFF)
+    assert hass.states.get(entity_id(hass, "sensor", "T02", code)).state == (
+        STATE_UNAVAILABLE
+    )
+    assert hass.states.get(
+        entity_id(hass, "binary_sensor", "is_fault", code)
+    ).state == (STATE_UNAVAILABLE)
+
+    fake_cloud.network_down = False
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(last_error).state == STATE_UNKNOWN
+    assert hass.states.get(
+        entity_id(hass, "binary_sensor", API_STATUS, code)
+    ).state == (STATE_ON)
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_device_without_nickname_uses_device_code(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Devices without a nickname are named after their device code."""
+    device = add_device(GENERIC_FIXTURE)
+    await setup_entry(hass, make_entry())
+
+    climate = hass.states.get(entity_id(hass, "climate", "Mode", device.code))
+    assert climate.name == device.code
+    sensor = hass.states.get(entity_id(hass, "sensor", "T02", device.code))
+    assert sensor.name.startswith(device.code)

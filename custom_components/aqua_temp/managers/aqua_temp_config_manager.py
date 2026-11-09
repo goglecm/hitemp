@@ -1,10 +1,14 @@
 from copy import copy
+from enum import StrEnum
 import json
 import logging
 import os
 from pathlib import Path
 from typing import Any
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -41,9 +45,12 @@ from ..common.entity_descriptions import (
     AquaTempNumberEntityDescription,
     AquaTempSensorEntityDescription,
 )
+from ..common.storage import get_storage_lock
 from ..models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
+
+CREDENTIAL_KEYS = (CONF_PASSWORD, CONF_USERNAME)
 
 
 def _load_json_file(file_path: str) -> Any | None:
@@ -54,6 +61,13 @@ def _load_json_file(file_path: str) -> Any | None:
         return None
 
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _device_class[T: StrEnum](device_classes: type[T], data_item: dict) -> T | None:
+    """Return the device class as the platform's enum, which sensors require."""
+    device_class = data_item.get("device_class")
+
+    return None if device_class is None else device_classes(device_class)
 
 
 def load_disabled_by_default_number_keys() -> set[str]:
@@ -159,22 +173,23 @@ class AquaTempConfigManager:
         if self._store is None:
             return
 
-        store_data = await self._store.async_load()
+        async with get_storage_lock(self._hass):
+            store_data = await self._store.async_load()
 
-        entries = [DEFAULT_ENTRY_ID, entry_id]
+            entries = [DEFAULT_ENTRY_ID, entry_id]
 
-        if store_data is not None:
-            should_save = False
-            data = {key: store_data[key] for key in store_data}
+            if store_data is not None:
+                should_save = False
+                data = {key: store_data[key] for key in store_data}
 
-            for rm_entry_id in entries:
-                if rm_entry_id in store_data:
-                    data.pop(rm_entry_id)
+                for rm_entry_id in entries:
+                    if rm_entry_id in store_data:
+                        data.pop(rm_entry_id)
 
-                    should_save = True
+                        should_save = True
 
-            if should_save:
-                await self._store.async_save(data)
+                if should_save:
+                    await self._store.async_save(data)
 
     def get_entity_name(
         self, entity_description: AquaTempEntityDescription, device_info: DeviceInfo
@@ -362,8 +377,8 @@ class AquaTempConfigManager:
         if self._store is not None:
             store_data = await self._store.async_load()
 
-            if store_data is not None:
-                self._data = store_data.get(self._entry_id)
+            if store_data is not None and self._entry_id in store_data:
+                self._data = self._redact_credentials(store_data[self._entry_id])
 
     @staticmethod
     def _get_defaults() -> dict:
@@ -375,44 +390,41 @@ class AquaTempConfigManager:
         if self._store is None:
             return
 
-        should_save = False
-        store_data = await self._store.async_load()
+        async with get_storage_lock(self._hass):
+            should_save = False
+            store_data = dict(await self._store.async_load() or {})
 
-        if store_data is None:
-            store_data = {}
+            entry_data = dict(store_data.get(self._entry_id, {}))
 
-        entry_data = store_data.get(self._entry_id, {})
+            _LOGGER.debug(
+                f"Storing config data: {json.dumps(self._data)}, "
+                f"Existing: {json.dumps(self._redact_credentials(entry_data))}"
+            )
 
-        _LOGGER.debug(
-            f"Storing config data: {json.dumps(self._data)}, "
-            f"Exiting: {json.dumps(entry_data)}"
-        )
-
-        for key in self._data:
-            stored_value = entry_data.get(key)
-
-            if key in [CONF_PASSWORD, CONF_USERNAME]:
-                entry_data.pop(key)
-
-                if stored_value is not None:
+            # Older versions stored the credentials here as well
+            for key in CREDENTIAL_KEYS:
+                if key in entry_data:
+                    entry_data.pop(key)
                     should_save = True
 
-            else:
-                current_value = self._data.get(key)
-
-                if stored_value != current_value:
+            for key in self._data:
+                if entry_data.get(key) != self._data[key]:
                     should_save = True
 
                     entry_data[key] = self._data[key]
 
-        if DEFAULT_ENTRY_ID in store_data:
-            store_data.pop(DEFAULT_ENTRY_ID)
-            should_save = True
+            if DEFAULT_ENTRY_ID in store_data:
+                store_data.pop(DEFAULT_ENTRY_ID)
+                should_save = True
 
-        if should_save:
-            store_data[self._entry_id] = entry_data
+            if should_save:
+                store_data[self._entry_id] = entry_data
 
-            await self._store.async_save(store_data)
+                await self._store.async_save(store_data)
+
+    @staticmethod
+    def _redact_credentials(data: dict) -> dict:
+        return {key: value for key, value in data.items() if key not in CREDENTIAL_KEYS}
 
     async def _load_entity_descriptions(self, product_id: str):
         entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
@@ -434,7 +446,7 @@ class AquaTempConfigManager:
                 sensor_entity = AquaTempSensorEntityDescription(
                     key=key,
                     name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
+                    device_class=_device_class(SensorDeviceClass, data_item),
                     native_unit_of_measurement=data_item.get("unit_of_measurement"),
                     entity_category=EntityCategory.DIAGNOSTIC,
                     translation_key=translation_key,
@@ -446,7 +458,7 @@ class AquaTempConfigManager:
                 binary_sensor_entity = AquaTempBinarySensorEntityDescription(
                     key=key,
                     name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
+                    device_class=_device_class(BinarySensorDeviceClass, data_item),
                     on_value=data_item.get("on_value"),
                     entity_category=EntityCategory.DIAGNOSTIC,
                     translation_key=translation_key,
@@ -460,7 +472,7 @@ class AquaTempConfigManager:
                 number_entity = AquaTempNumberEntityDescription(
                     key=key,
                     name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
+                    device_class=_device_class(NumberDeviceClass, data_item),
                     native_unit_of_measurement=data_item.get("unit_of_measurement"),
                     native_min_value=data_item.get("native_min_value"),
                     native_max_value=data_item.get("native_max_value"),

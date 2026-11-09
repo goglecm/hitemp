@@ -158,7 +158,7 @@
   },
   {
     "key": "E02",
-    "name": "Target degree of supreheat [E02]",
+    "name": "Target degree of superheat [E02]",
     "platform": "number",
     "device_class": "temperature_delta",
     "unit_of_measurement": "\u00b0C",
@@ -229,7 +229,7 @@
   },
   {
     "key": "H01",
-    "name": "Remenber the status of device when power down [H01]",
+    "name": "Remember the status of device when power down [H01]",
     "platform": "sensor",
     "device_class": null,
     "unit_of_measurement": null

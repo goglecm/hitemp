@@ -2,23 +2,39 @@
 
 from __future__ import annotations
 
-from copy import copy
 import logging
 from typing import Any
 
+from aiohttp import ClientError
 from cryptography.fernet import InvalidToken
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
 
-from ..common.consts import CONF_TITLE, DEFAULT_NAME, INVALID_TOKEN_SECTION
-from ..models.config_data import DATA_KEYS, ConfigData
-from ..models.exceptions import LoginError
+from ..common.consts import (
+    CONF_API_TYPE,
+    CONF_TITLE,
+    DEFAULT_NAME,
+    INVALID_TOKEN_SECTION,
+)
+from ..models.config_data import ConfigData
+from ..models.exceptions import (
+    CloudConnectionError,
+    CloudError,
+    InvalidCredentialsError,
+    LoginError,
+)
 from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 from .password_manager import PasswordManager
 
 _LOGGER = logging.getLogger(__name__)
+
+ERROR_INVALID_CREDENTIALS = "invalid_credentials"
+ERROR_CANNOT_CONNECT = "cannot_connect"
+ERROR_CORRUPTED_ENCRYPTION_KEY = "corrupted_encryption_key"
+ERROR_UNKNOWN = "unknown"
 
 
 class IntegrationFlowManager:
@@ -27,8 +43,6 @@ class IntegrationFlowManager:
 
     _flow_handler: FlowHandler
     _flow_id: str
-
-    _config_manager: AquaTempConfigManager
 
     def __init__(
         self,
@@ -40,63 +54,47 @@ class IntegrationFlowManager:
         self._flow_handler = flow_handler
         self._entry = entry
         self._flow_id = "user" if entry is None else "init"
-        self._config_manager = AquaTempConfigManager(self._hass, None)
 
     async def async_step(self, user_input: dict | None = None):
-        """Manage the domain options."""
-        _LOGGER.info(f"Config flow started, Step: {self._flow_id}, Input: {user_input}")
+        """Show and handle the account form of the user and options flows."""
+        _LOGGER.info(f"Config flow started, Step: {self._flow_id}")
 
         form_errors = None
 
         if user_input is None:
-            if self._entry is None:
-                user_input = {}
-
-            else:
-                user_input = {key: self._entry.data[key] for key in self._entry.data}
-                user_input[CONF_TITLE] = self._entry.title
-
-                await PasswordManager.decrypt(
-                    self._hass, user_input, self._entry.entry_id
-                )
+            user_input = self._current_settings()
 
         else:
-            try:
-                await self._config_manager.initialize(user_input)
+            credentials = dict(user_input)
+            error_key = None
 
-                api = AquaTempAPI(self._hass, self._config_manager)
+            if self._entry is None:
+                # Before logging in: a second login would end the session of
+                # the entry already using this account
+                await self._async_abort_if_configured(credentials)
 
-                await api.initialize(True)
+            elif not credentials.get(CONF_PASSWORD):
+                try:
+                    credentials[CONF_PASSWORD] = await self._async_stored_password()
+                except InvalidToken:
+                    error_key = ERROR_CORRUPTED_ENCRYPTION_KEY
 
-                _LOGGER.debug("User inputs are valid")
+            if error_key is None:
+                error_key = await self._async_validate(credentials)
 
+            if error_key is None:
                 if self._entry is None:
-                    data = copy(user_input)
+                    return await self._async_create_entry(credentials)
 
-                else:
-                    data = await self.remap_entry_data(user_input)
+                return await self._async_update_entry(credentials)
 
-                await PasswordManager.encrypt(self._hass, data)
+            form_errors = {"base": error_key}
 
-                title = data.get(CONF_TITLE, DEFAULT_NAME)
+            _LOGGER.warning(f"Failed to validate the account, Error Key: {error_key}")
 
-                if CONF_TITLE in data:
-                    data.pop(CONF_TITLE)
-
-                return self._flow_handler.async_create_entry(title=title, data=data)
-
-            except LoginError:
-                error_key = "invalid_credentials"
-
-            except InvalidToken:
-                error_key = "corrupted_encryption_key"
-
-            if error_key is not None:
-                form_errors = {"base": error_key}
-
-                _LOGGER.warning(f"Failed to create integration, Error Key: {error_key}")
-
-        schema = ConfigData.default_schema(user_input)
+        schema = ConfigData.default_schema(
+            user_input, password_required=self._entry is None
+        )
 
         return self._flow_handler.async_show_form(
             step_id=self._flow_id,
@@ -105,29 +103,134 @@ class IntegrationFlowManager:
             description_placeholders={"invalid_token_url": INVALID_TOKEN_SECTION},
         )
 
-    async def remap_entry_data(self, options: dict[str, Any]) -> dict[str, Any]:
-        config_options = {}
-        config_data = {}
-
+    async def async_step_reauth(self, user_input: dict | None = None):
+        """Ask for a new password after the cloud rejected the stored one."""
         entry = self._entry
-        entry_data = entry.data
+        form_errors = None
 
-        title = DEFAULT_NAME
+        if user_input is not None:
+            credentials = {
+                CONF_USERNAME: entry.data.get(CONF_USERNAME),
+                CONF_API_TYPE: entry.data.get(CONF_API_TYPE),
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
 
-        for key in options:
-            if key in DATA_KEYS:
-                config_data[key] = options.get(key, entry_data.get(key))
+            error_key = await self._async_validate(credentials)
 
-            elif key == CONF_TITLE:
-                title = options.get(key, DEFAULT_NAME)
+            if error_key is None:
+                data = {**entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
 
-            else:
-                config_options[key] = options.get(key)
+                await PasswordManager.encrypt(self._hass, data)
 
-        await PasswordManager.encrypt(self._hass, config_data)
+                return self._flow_handler.async_update_reload_and_abort(
+                    entry, data=data
+                )
 
-        self._hass.config_entries.async_update_entry(
-            entry, data=config_data, title=title
+            form_errors = {"base": error_key}
+
+        return self._flow_handler.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=ConfigData.password_schema(),
+            errors=form_errors,
+            description_placeholders={
+                "username": entry.data.get(CONF_USERNAME),
+                "invalid_token_url": INVALID_TOKEN_SECTION,
+            },
         )
 
-        return config_options
+    def _current_settings(self) -> dict[str, Any]:
+        if self._entry is None:
+            return {}
+
+        return {
+            CONF_TITLE: self._entry.title,
+            CONF_USERNAME: self._entry.data.get(CONF_USERNAME),
+            CONF_API_TYPE: ConfigData.from_dict(self._entry.data).api_type,
+        }
+
+    async def _async_stored_password(self) -> str | None:
+        data = {CONF_PASSWORD: self._entry.data.get(CONF_PASSWORD)}
+
+        await PasswordManager.decrypt(self._hass, data, self._entry.entry_id)
+
+        return data[CONF_PASSWORD]
+
+    async def _async_validate(self, credentials: dict[str, Any]) -> str | None:
+        """Log in with the credentials, returning an error key on failure."""
+        config_manager = AquaTempConfigManager(self._hass, None)
+        await config_manager.initialize(credentials)
+
+        api = AquaTempAPI(self._hass, config_manager, auto_cleanup=False)
+
+        try:
+            await api.initialize(True)
+
+        except InvalidCredentialsError:
+            return ERROR_INVALID_CREDENTIALS
+
+        except (
+            LoginError,
+            CloudConnectionError,
+            CloudError,
+            ClientError,
+            TimeoutError,
+        ) as ex:
+            _LOGGER.warning(f"Cannot connect to the cloud, Error: {ex}")
+
+            return ERROR_CANNOT_CONNECT
+
+        except Exception:
+            _LOGGER.exception("Unexpected error while validating the account")
+
+            return ERROR_UNKNOWN
+
+        finally:
+            api.terminate()
+
+        _LOGGER.debug("User inputs are valid")
+
+        return None
+
+    async def _async_abort_if_configured(self, credentials: dict[str, Any]) -> None:
+        config_data = ConfigData.from_dict(credentials)
+
+        await self._flow_handler.async_set_unique_id(config_data.unique_id)
+        self._flow_handler._abort_if_unique_id_configured()  # noqa: SLF001
+
+    async def _async_create_entry(self, credentials: dict[str, Any]):
+        config_data = ConfigData.from_dict(credentials)
+
+        data = self._entry_data(credentials, config_data)
+
+        await PasswordManager.encrypt(self._hass, data)
+
+        title = credentials.get(CONF_TITLE) or DEFAULT_NAME
+
+        return self._flow_handler.async_create_entry(title=title, data=data)
+
+    async def _async_update_entry(self, credentials: dict[str, Any]):
+        entry = self._entry
+        config_data = ConfigData.from_dict(credentials)
+
+        data = self._entry_data(credentials, config_data)
+
+        await PasswordManager.encrypt(self._hass, data, entry.entry_id)
+
+        self._hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            title=credentials.get(CONF_TITLE) or DEFAULT_NAME,
+        )
+        self._hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        return self._flow_handler.async_create_entry(data={})
+
+    @staticmethod
+    def _entry_data(
+        credentials: dict[str, Any], config_data: ConfigData
+    ) -> dict[str, Any]:
+        return {
+            CONF_USERNAME: credentials[CONF_USERNAME],
+            CONF_PASSWORD: credentials[CONF_PASSWORD],
+            CONF_API_TYPE: config_data.api_type,
+        }

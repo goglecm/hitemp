@@ -96,9 +96,23 @@ DEVICE_CONTROL_PARAM = "param"
 TO_REDACT = [
     "userId",
     "user_id",
+    "toUser",
+    "to_user",
     "userName",
     "user_name",
+    "username",
+    "nickName",
+    "nick_name",
+    "realName",
+    "real_name",
+    "userPassword",
+    "user_password",
+    "password",
+    "email",
+    "phone",
+    "mobile",
     "accessKey",
+    "token",
     HTTP_HEADER_X_TOKEN,
 ]
 

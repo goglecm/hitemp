@@ -14,6 +14,7 @@ from ..common.consts import (
     STORAGE_DATA_KEY,
     STORAGE_VERSION,
 )
+from ..common.storage import get_storage_lock
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +79,10 @@ class PasswordManager:
             data[CONF_PASSWORD] = password_encrypted
 
     async def _load_encryption_key(self):
+        async with get_storage_lock(self._hass):
+            await self._load_encryption_key_locked()
+
+    async def _load_encryption_key_locked(self):
         store_data = None
 
         if self._store is not None:

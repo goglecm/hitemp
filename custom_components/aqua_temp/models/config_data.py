@@ -6,7 +6,9 @@ from probatio import Schema
 from ..common.api_types import API_TYPE_LEGACY, API_TYPES, APIType
 from ..common.consts import CONF_API_TYPE, CONF_TITLE, DEFAULT_NAME
 
-DATA_KEYS = [CONF_USERNAME, CONF_PASSWORD]
+PASSWORD_SELECTOR = selector.TextSelector(
+    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+)
 
 
 class ConfigData:
@@ -48,6 +50,18 @@ class ConfigData:
 
         self._api_type = api_type
 
+    @staticmethod
+    def from_dict(data: dict) -> ConfigData:
+        config_data = ConfigData()
+        config_data.update(data)
+
+        return config_data
+
+    @property
+    def unique_id(self) -> str:
+        """Identify the account, which may only be configured once."""
+        return f"{self.api_type}_{(self.username or '').strip().lower()}"
+
     def to_dict(self):
         obj = {
             CONF_USERNAME: self.username,
@@ -61,22 +75,31 @@ class ConfigData:
         return to_string
 
     @staticmethod
-    def default_schema(user_input: dict | None) -> Schema:
+    def default_schema(
+        user_input: dict | None, password_required: bool = True
+    ) -> Schema:
+        """Return the account form; passwords are never pre-filled."""
         if user_input is None:
             user_input = {}
+
+        password_key = (
+            vol.Required(CONF_PASSWORD)
+            if password_required
+            else vol.Optional(CONF_PASSWORD)
+        )
 
         new_user_input = {
             vol.Required(
                 CONF_TITLE, default=user_input.get(CONF_TITLE, DEFAULT_NAME)
             ): str,
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
-            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
-            vol.Required(
-                CONF_API_TYPE, default=user_input.get(CONF_API_TYPE)
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=API_TYPES,
-                    translation_key=CONF_API_TYPE,
+            _required(CONF_USERNAME, user_input.get(CONF_USERNAME)): str,
+            password_key: PASSWORD_SELECTOR,
+            _required(CONF_API_TYPE, user_input.get(CONF_API_TYPE)): (
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=API_TYPES,
+                        translation_key=CONF_API_TYPE,
+                    )
                 )
             ),
         }
@@ -84,3 +107,15 @@ class ConfigData:
         schema = vol.Schema(new_user_input)
 
         return schema
+
+    @staticmethod
+    def password_schema() -> Schema:
+        """Return the form asking only for a new password."""
+        return vol.Schema({vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR})
+
+
+def _required(key: str, default: str | None) -> vol.Required:
+    if default is None or default == "":
+        return vol.Required(key)
+
+    return vol.Required(key, default=default)

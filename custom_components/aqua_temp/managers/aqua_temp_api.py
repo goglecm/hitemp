@@ -7,14 +7,17 @@ import json
 import logging
 import sys
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import ClientError, ClientResponseError, ClientSession
 from homeassistant.components.climate.const import HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.redact import async_redact_data
 
 from custom_components.aqua_temp.models.exceptions import (
+    CloudConnectionError,
     CloudError,
+    InvalidCredentialsError,
     InvalidTokenError,
     LoginError,
     OperationFailedException,
@@ -42,6 +45,7 @@ from ..common.consts import (
     POWER_MODE_OFF,
     POWER_MODE_ON,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
+    TO_REDACT,
 )
 from ..common.endpoints import Endpoints
 from ..common.utils import normalize_state, safe_float
@@ -50,6 +54,7 @@ from .aqua_temp_config_manager import AquaTempConfigManager
 _LOGGER = logging.getLogger(__name__)
 
 INVALID_TOKEN_ERROR_CODE = "-100"
+INVALID_CREDENTIALS_ERROR_CODE = "-1"
 SUCCESS_ERROR_CODE = "0"
 SUCCESS_MESSAGE = "Success"
 
@@ -61,21 +66,30 @@ class AquaTempAPI:
     _session: ClientSession | None
     _config_manager: AquaTempConfigManager
     _token: str | None
-    _hass: HomeAssistant | None
+    _hass: HomeAssistant
 
     def __init__(
-        self, hass: HomeAssistant | None, config_manager: AquaTempConfigManager
+        self,
+        hass: HomeAssistant,
+        config_manager: AquaTempConfigManager,
+        auto_cleanup: bool = True,
     ):
-        """Initialize the climate entity."""
+        """Initialize the API client.
+
+        Sessions created with auto_cleanup=False must be released with terminate().
+        """
 
         self._devices = {}
         self._login_details = None
 
         self._session = None
+        self._auto_cleanup = auto_cleanup
         self._token = None
+        self._last_request_succeeded = False
 
         self._hass = hass
-        self._headers = HEADERS
+        # Each account has its own token, so the headers must not be shared
+        self._headers = dict(HEADERS)
         self._config_manager = config_manager
 
         self._dispatched_devices = []
@@ -83,7 +97,12 @@ class AquaTempAPI:
 
     @property
     def is_connected(self):
-        result = self._session is not None and self._token is not None
+        """Return whether the API is logged in and its last request succeeded."""
+        result = (
+            self._session is not None
+            and self._token is not None
+            and self._last_request_succeeded
+        )
 
         return result
 
@@ -105,10 +124,9 @@ class AquaTempAPI:
 
     def _get_session(self) -> ClientSession:
         if self._session is None:
-            if self._hass is None:
-                self._session = ClientSession()
-            else:
-                self._session = async_create_clientsession(hass=self._hass)
+            self._session = async_create_clientsession(
+                hass=self._hass, auto_cleanup=self._auto_cleanup
+            )
 
         return self._session
 
@@ -123,14 +141,14 @@ class AquaTempAPI:
 
         except LoginError as lex:
             if throw_error:
-                raise lex
+                raise
 
-            else:
-                _LOGGER.error(
-                    "Failed to login, Please update credentials and try again"
-                )
+            _LOGGER.error(f"{lex}, Please update credentials and try again")
 
         except Exception as ex:
+            if throw_error:
+                raise
+
             exc_type, exc_obj, tb = sys.exc_info()
             line_number = tb.tb_lineno
 
@@ -143,11 +161,20 @@ class AquaTempAPI:
             _LOGGER.debug("No token available, Login AquaTemp API and fetching devices")
             await self._login()
 
-            await self._load_devices()
+            try:
+                await self._load_devices()
 
-    async def terminate(self):
-        if self._hass is None:
-            await self._session.close()
+            except Exception:
+                # Without the device list the next attempt has to log in again
+                self.set_token()
+                raise
+
+    def terminate(self):
+        """Release a session created with auto_cleanup=False."""
+        if self._session is not None and not self._auto_cleanup:
+            self._session.detach()
+
+        self._session = None
 
     async def update(self):
         """Fetch new state parameters for the sensor."""
@@ -600,46 +627,62 @@ class AquaTempAPI:
         return object_results[0].get("description")
 
     async def _login(self):
+        """Log in and load the user details.
+
+        Raises InvalidCredentialsError when the cloud rejects the credentials,
+        CloudConnectionError when it cannot be reached and LoginError otherwise.
+        """
+        param_username = self._config_manager.get_api_param(APIParam.Username)
+        param_object_result = self._config_manager.get_api_param(APIParam.ObjectResult)
+        param_error_code = self._config_manager.get_api_param(APIParam.ErrorCode)
+
+        config_data = self._config_manager.config_data
+
+        plain_password = config_data.password or ""
+
+        password_bytes = bytes(plain_password, "utf-8")
+
+        md5hash = hashlib.new("md5", usedforsecurity=False)
+        md5hash.update(password_bytes)
+
+        password_hashed = md5hash.hexdigest()
+
+        data = {param_username: config_data.username, "password": password_hashed}
+
+        self.set_token()
+
         try:
-            param_username = self._config_manager.get_api_param(APIParam.Username)
-            param_object_result = self._config_manager.get_api_param(
-                APIParam.ObjectResult
-            )
+            login_response = await self._post_request(Endpoints.Login, data) or {}
 
-            config_data = self._config_manager.config_data
+        except (ClientError, TimeoutError) as ex:
+            _LOGGER.error(f"Failed to login, Error: {ex}")
 
-            plain_password = config_data.password
+            raise CloudConnectionError(ex) from ex
 
-            password_bytes = bytes(plain_password, "utf-8")
+        if str(login_response.get(param_error_code)) == INVALID_CREDENTIALS_ERROR_CODE:
+            _LOGGER.error("Failed to login, the username or password was rejected")
 
-            md5hash = hashlib.new("md5")
-            md5hash.update(password_bytes)
+            raise InvalidCredentialsError
 
-            password_hashed = md5hash.hexdigest()
+        object_result = login_response.get(param_object_result) or {}
 
-            data = {param_username: config_data.username, "password": password_hashed}
+        self._login_details = object_result
 
-            login_response = await self._post_request(Endpoints.Login, data)
-            object_result = (login_response or {}).get(param_object_result) or {}
+        token = object_result.get(HTTP_HEADER_X_TOKEN)
 
-            self._login_details = object_result
+        if token is None:
+            _LOGGER.error(f"Failed to login, Response: {self._redact(login_response)}")
 
-            token = object_result.get(HTTP_HEADER_X_TOKEN)
+            raise LoginError
 
-            self.set_token(token)
+        self.set_token(token)
 
-            if token is not None:
-                await self._load_user_info()
+        try:
+            await self._load_user_info()
 
-        except Exception as ex:
-            exc_type, exc_obj, tb = sys.exc_info()
-            line_number = tb.tb_lineno
-
-            _LOGGER.error(f"Failed to login, Error: {ex}, Line: {line_number}")
+        except Exception:
             self.set_token()
-
-        if self._token is None:
-            raise LoginError()
+            raise
 
     async def _load_user_info(self):
         param_object_result = self._config_manager.get_api_param(APIParam.ObjectResult)
@@ -710,15 +753,33 @@ class AquaTempAPI:
         if endpoint == Endpoints.DeviceControl:
             _LOGGER.info(f"Sending request to control device, Data: {data}")
 
-        async with self._get_session().post(
-            url, headers=self._headers, json=data, ssl=False
-        ) as response:
-            response.raise_for_status()
+        try:
+            async with self._get_session().post(
+                url, headers=self._headers, json=data
+            ) as response:
+                response.raise_for_status()
 
-            result = await response.json()
-            _LOGGER.debug(f"Request to {url}, Body: {data}, Result: {result}")
+                result = await response.json()
+                _LOGGER.debug(
+                    f"Request to {url}, Body: {self._redact(data)}, "
+                    f"Result: {self._redact(result)}"
+                )
+
+        except Exception:
+            self._last_request_succeeded = False
+            raise
+
+        self._last_request_succeeded = True
 
         return result
+
+    @staticmethod
+    def _redact(data):
+        """Hide credentials and tokens, which users share when reporting issues."""
+        if not isinstance(data, dict | list):
+            return data
+
+        return async_redact_data(data, TO_REDACT)
 
     def get_device_data(self, device_code: str) -> dict:
         device_data = copy(self._devices.get(device_code, {}))

@@ -119,6 +119,9 @@ class BaseEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Device data is unavailable while the cloud reports the device offline."""
+        if self._entity_description.always_available:
+            return True
+
         if not super().available:
             return False
 

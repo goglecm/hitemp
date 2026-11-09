@@ -48,6 +48,11 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
             )
 
     def _update_attributes(self) -> None:
+        if self.entity_description.device_class in TEMPERATURE_DEVICE_CLASSES:
+            self._attr_native_unit_of_measurement = (
+                self.local_coordinator.get_temperature_unit(self.device_code)
+            )
+
         if self.entity_description.key == LAST_ERROR:
             self._attr_native_value = self.local_coordinator.last_error
         else:

@@ -26,6 +26,8 @@ class AquaTempEntityDescription(EntityDescription):
     is_protocol_code: bool = True
     # Diagnostic entities that must stay visible while the heat pump is offline
     available_when_offline: bool = False
+    # Entities describing the connection itself, needed most when polling fails
+    always_available: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -74,6 +76,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         is_protocol_code=False,
         available_when_offline=True,
+        always_available=True,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         on_value=True,
         translation_key=API_STATUS,
@@ -113,6 +116,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         is_protocol_code=False,
         available_when_offline=True,
+        always_available=True,
         translation_key=LAST_ERROR,
     ),
 ]
