@@ -3,5 +3,5 @@ def safe_float(value) -> float | None:
         return None
     try:
         return float(str(value))
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None

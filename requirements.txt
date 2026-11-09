@@ -1,7 +1,4 @@
-homeassistant
-aiohttp
+homeassistant==2026.11.1
 
-voluptuous
-
-xmltodict
-cryptography
+# Only used by utils/parse-resources.py
+xmltodict==1.0.4

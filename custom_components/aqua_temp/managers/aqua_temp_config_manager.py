@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 import aiofiles
-
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,

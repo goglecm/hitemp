@@ -1,4 +1,5 @@
 """Config flow to configure."""
+
 from __future__ import annotations
 
 from copy import copy
@@ -6,7 +7,6 @@ import logging
 from typing import Any
 
 from cryptography.fernet import InvalidToken
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler

@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from asyncio import sleep
 from copy import copy
 import hashlib
@@ -7,19 +8,18 @@ import logging
 import sys
 
 from aiohttp import ClientResponseError, ClientSession
+from homeassistant.components.climate.const import HVACMode
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.aqua_temp.models.exceptions import (
     InvalidTokenError,
     LoginError,
     OperationFailedException,
 )
-from homeassistant.components.climate.const import HVACMode
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..common.api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
-from ..common.utils import safe_float
 from ..common.consts import (
     API_MAX_ATTEMPTS,
     CONFIG_HVAC_MAXIMUM,
@@ -40,6 +40,7 @@ from ..common.consts import (
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
 )
 from ..common.endpoints import Endpoints
+from ..common.utils import safe_float
 from .aqua_temp_config_manager import AquaTempConfigManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -212,7 +213,7 @@ class AquaTempAPI:
 
         except ClientResponseError as cre:
             if cre.status == 401:
-                raise InvalidTokenError(f"Update device: {device_code}")
+                raise InvalidTokenError(f"Update device: {device_code}") from cre
 
             else:
                 raise cre

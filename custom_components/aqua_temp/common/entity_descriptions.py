@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from custom_components.aqua_temp.common.consts import API_STATUS, LAST_ERROR, POWER_MODE_ON
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
@@ -11,6 +10,12 @@ from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.helpers.entity import EntityDescription
+
+from custom_components.aqua_temp.common.consts import (
+    API_STATUS,
+    LAST_ERROR,
+    POWER_MODE_ON,
+)
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from abc import ABC
 import logging
 
@@ -91,10 +92,16 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
             hvac_mode = coordinator.get_device_hvac_mode(device_code)
             is_power_on = coordinator.get_device_power(device_code)
             fan_mode = coordinator.get_device_fan_mode(device_code)
-            current_temperature = coordinator.get_device_current_temperature(device_code)
+            current_temperature = coordinator.get_device_current_temperature(
+                device_code
+            )
             target_temperature = coordinator.get_device_target_temperature(device_code)
-            minimum_temperature = coordinator.get_device_minimum_temperature(device_code)
-            maximum_temperature = coordinator.get_device_maximum_temperature(device_code)
+            minimum_temperature = coordinator.get_device_minimum_temperature(
+                device_code
+            )
+            maximum_temperature = coordinator.get_device_maximum_temperature(
+                device_code
+            )
 
             if not is_power_on:
                 hvac_mode = HVACMode.OFF

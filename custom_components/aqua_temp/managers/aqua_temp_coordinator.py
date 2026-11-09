@@ -132,7 +132,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         except Exception as err:
             self._last_error = str(err)
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def get_temperature_unit(self, device_code: str):
         return self._config_manager.get_temperature_unit(device_code)

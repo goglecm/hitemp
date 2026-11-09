@@ -2,7 +2,6 @@ import logging
 import sys
 
 from cryptography.fernet import Fernet, InvalidToken
-
 from homeassistant.config_entries import STORAGE_VERSION
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
