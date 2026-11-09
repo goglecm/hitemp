@@ -116,6 +116,17 @@ class BaseEntity(CoordinatorEntity):
     def data(self) -> dict | None:
         return self._data
 
+    @property
+    def available(self) -> bool:
+        """Device data is unavailable while the cloud reports the device offline."""
+        if not super().available:
+            return False
+
+        if self._entity_description.available_when_offline:
+            return True
+
+        return self.local_coordinator.is_device_online(self.device_code)
+
     async def async_added_to_hass(self) -> None:
         """Populate the state from the coordinator before it is first written."""
         await super().async_added_to_hass()

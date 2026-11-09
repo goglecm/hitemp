@@ -69,6 +69,11 @@ CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
 API_STATUS = "api_status"
 LAST_ERROR = "last_error"
 
+DEVICE_IS_FAULT = "is_fault"
+DEVICE_STATUS = "device_status"
+DEVICE_FAULT = "fault"
+DEVICE_STATUS_ONLINE = "ONLINE"
+
 PRODUCT_ID_DEFAULT = "default"
 
 CONFIG_HVAC_MODES = "hvac_modes"

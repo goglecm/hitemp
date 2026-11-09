@@ -17,6 +17,22 @@ class OperationFailedException(Exception):
         return result
 
 
+class CloudError(Exception):
+    """The cloud answered a request with an error."""
+
+    operation: str
+    error: str
+
+    def __init__(self, operation: str, error: str):
+        self.operation = operation
+        self.error = error
+
+    def __str__(self):
+        result = f"{self.operation} failed, Error: {self.error}"
+
+        return result
+
+
 class LoginError(Exception):
     def __str__(self):
         result = "Failed to login"

@@ -10,15 +10,20 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
 from .common.entity_descriptions import AquaTempClimateEntityDescription
+from .common.utils import DEVICE_CLASS_TEMPERATURE, convert_temperature, round_to_step
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+# Only used until the device or its parameter files provide limits
+FALLBACK_MIN_TEMP_CELSIUS = 5.0
+FALLBACK_MAX_TEMP_CELSIUS = 90.0
 
 
 async def async_setup_entry(
@@ -57,11 +62,21 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity):
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_fan_mode = FAN_AUTO
 
-        self._attr_native_temperature_unit = coordinator.get_temperature_unit(
-            device_code
+        temperature_unit = coordinator.get_temperature_unit(device_code)
+
+        self._attr_native_temperature_unit = temperature_unit
+        self._attr_min_temp = convert_temperature(
+            FALLBACK_MIN_TEMP_CELSIUS,
+            DEVICE_CLASS_TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            temperature_unit,
         )
-        self._attr_min_temp = 5.0
-        self._attr_max_temp = 90.0
+        self._attr_max_temp = convert_temperature(
+            FALLBACK_MAX_TEMP_CELSIUS,
+            DEVICE_CLASS_TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            temperature_unit,
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature, and the HVAC mode if one is given."""
@@ -71,6 +86,8 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+
+        temperature = round_to_step(temperature, self.target_temperature_step)
 
         _LOGGER.debug(f"Set target temperature to: {temperature}")
 
@@ -105,8 +122,9 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity):
         fan_mode = coordinator.get_device_fan_mode(device_code)
         current_temperature = coordinator.get_device_current_temperature(device_code)
         target_temperature = coordinator.get_device_target_temperature(device_code)
-        minimum_temperature = coordinator.get_device_minimum_temperature(device_code)
-        maximum_temperature = coordinator.get_device_maximum_temperature(device_code)
+        minimum_temperature, maximum_temperature, step = (
+            coordinator.get_target_temperature_limits(device_code)
+        )
 
         if not is_power_on:
             hvac_mode = HVACMode.OFF
@@ -115,6 +133,7 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity):
             self._attr_min_temp = minimum_temperature
         if maximum_temperature is not None:
             self._attr_max_temp = maximum_temperature
+        self._attr_target_temperature_step = step
         self._attr_hvac_mode = hvac_mode
         self._attr_fan_mode = fan_mode
         self._attr_native_target_temperature = target_temperature

@@ -101,6 +101,74 @@ def test_number_descriptions_have_valid_ranges(product_id: str) -> None:
 
 
 @pytest.mark.parametrize("product_id", PRODUCTS_WITH_FILES)
+def test_temperature_parameters_are_in_celsius(product_id: str) -> None:
+    """Ranges of temperature parameters are written in °C and converted later."""
+    for item in _descriptions(product_id):
+        if item.get("device_class") in ("temperature", "temperature_delta"):
+            assert item["unit_of_measurement"] == "°C", item
+
+
+HITEMP = "1245226668902080512"
+
+# Ranges confirmed from the HiTemp app. Only these may be written.
+HITEMP_WRITABLE = {
+    "R01": (38, 60, 1),
+    "R03": (1, 20, 1),
+    "R04": (0, 1, 1),
+    "R05": (30, 90, 1),
+    "R06": (0, 450, 1),
+    "E01": (0, 1, 1),
+    "E02": (-20, 20, 1),
+    "E03": (0, 500, 1),
+    "E04": (0, 500, 1),
+    "H99": (0, 1, 1),
+}
+HITEMP_INSTALLER = {"E01", "E02", "E03", "E04", "H99"}
+
+
+def test_hitemp_only_confirmed_parameters_are_writable() -> None:
+    """Parameters whose range was not confirmed on the device are read-only."""
+    numbers = {
+        item["key"]: item
+        for item in _descriptions(HITEMP)
+        if item.get("platform") == Platform.NUMBER
+    }
+
+    assert set(numbers) == set(HITEMP_WRITABLE)
+
+    for key, (minimum, maximum, step) in HITEMP_WRITABLE.items():
+        item = numbers[key]
+        assert (
+            item["native_min_value"],
+            item["native_max_value"],
+            item["native_step"],
+        ) == (minimum, maximum, step), key
+
+        if key in HITEMP_INSTALLER:
+            assert item["enabled_by_default"] is False, key
+            assert item["entity_category"] == "config", key
+        else:
+            assert item.get("enabled_by_default", True) is True, key
+            assert "entity_category" not in item, key
+
+
+def test_hitemp_model_selection_is_read_only() -> None:
+    """H98 selects the unit model and must never be written from Home Assistant."""
+    h98 = next(item for item in _descriptions(HITEMP) if item["key"] == "H98")
+
+    assert h98["platform"] == Platform.SENSOR
+    assert h98["name"] == "Model selection [H98]"
+
+
+def test_hitemp_differences_use_temperature_delta() -> None:
+    """Hysteresis and superheat are temperature differences, not temperatures."""
+    classes = {item["key"]: item.get("device_class") for item in _descriptions(HITEMP)}
+
+    for key in ("R03", "R18", "N03", "N08", "E02"):
+        assert classes[key] == "temperature_delta", key
+
+
+@pytest.mark.parametrize("product_id", PRODUCTS_WITH_FILES)
 def test_mapping_codes_are_fetched(product_id: str) -> None:
     """Every protocol code used by the climate mapping must be requested."""
     mapping = _load(f"mapping.{product_id}.json")

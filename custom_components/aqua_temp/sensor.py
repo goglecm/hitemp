@@ -1,6 +1,6 @@
 import logging
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -8,7 +8,7 @@ from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
 from .common.consts import LAST_ERROR
 from .common.entity_descriptions import AquaTempSensorEntityDescription
-from .common.utils import safe_float
+from .common.utils import TEMPERATURE_DEVICE_CLASSES, safe_float
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
             entity_description.native_unit_of_measurement
         )
 
-        if entity_description.device_class == SensorDeviceClass.TEMPERATURE:
+        if entity_description.device_class in TEMPERATURE_DEVICE_CLASSES:
             self._attr_native_unit_of_measurement = coordinator.get_temperature_unit(
                 device_code
             )

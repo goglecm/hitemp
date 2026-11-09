@@ -683,7 +683,7 @@
         "name": "Circle of submitting data to Cloud [H32]"
       },
       "1245226668902080512_h98": {
-        "name": "Adjustable range of target temperature [H98]"
+        "name": "Model selection [H98]"
       },
       "1245226668902080512_h99": {
         "name": "Compensate to the shown temp [H99]"
@@ -1368,6 +1368,12 @@
   "exceptions": {
     "corrupted_encryption_key": {
       "message": "Corrupted password or encryption key, please follow the steps in {invalid_token_url}"
+    },
+    "device_offline": {
+      "message": "The heat pump {device} is offline, the command was not sent"
+    },
+    "command_failed": {
+      "message": "Sending the command to the heat pump {device} failed: {error}"
     }
   }
 }

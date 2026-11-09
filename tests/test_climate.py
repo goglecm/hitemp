@@ -158,19 +158,201 @@ async def test_set_temperature(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Setting the target writes R01 and the new value is read back."""
+    """Setting the target writes R01 once and the new value is read back."""
     device, _, climate = await _setup(hass, add_device, make_entry)
 
     await _call(
         hass, SERVICE_SET_TEMPERATURE, {ATTR_ENTITY_ID: climate, ATTR_TEMPERATURE: 55}
     )
 
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "R01", "value": 55.0}]
+    ]
     assert device.data["R01"] == "55.0"
     assert hass.states.get(climate).attributes[ATTR_TEMPERATURE] == 55.0
-    for params in fake_cloud.control_requests():
-        for param in params:
-            assert param["protocolCode"] == "R01"
-            assert param["value"] == 55.0
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_hitemp_limits_match_r01(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """The climate card is limited to the 38-60 °C range of R01 in whole degrees."""
+    _, _, climate = await _setup(hass, add_device, make_entry)
+
+    attributes = hass.states.get(climate).attributes
+    assert attributes["min_temp"] == 38.0
+    assert attributes["max_temp"] == 60.0
+    assert attributes["target_temp_step"] == 1
+
+
+@pytest.mark.parametrize("temperature", [37, 61, 75, 90])
+async def test_hitemp_rejects_unsafe_targets(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    temperature: float,
+) -> None:
+    """Targets outside 38-60 °C never reach the heat pump."""
+    _, _, climate = await _setup(hass, add_device, make_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await _call(
+            hass,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: climate, ATTR_TEMPERATURE: temperature},
+        )
+
+    assert not fake_cloud.control_requests()
+
+
+async def test_hitemp_target_is_rounded_to_whole_degrees(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Fractional targets are rounded to the 1 °C step of R01."""
+    device, _, climate = await _setup(hass, add_device, make_entry)
+
+    await _call(
+        hass,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: climate, ATTR_TEMPERATURE: 45.4},
+    )
+
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "R01", "value": 45.0}]
+    ]
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_hitemp_limits_in_fahrenheit(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """A device reporting °F gets the R01 range converted and narrowed to whole °F."""
+    device = add_device(HITEMP_FIXTURE)
+    device.data.update(R01="122")
+    entry = make_entry()
+    hass_storage[CONFIGURATION_FILE]["data"][entry.entry_id] = {
+        CONF_TEMPERATURE_UNIT: {device.code: UnitOfTemperature.FAHRENHEIT}
+    }
+    await setup_entry(hass, entry)
+
+    attributes = hass.states.get(
+        entity_id(hass, "climate", "Mode", device.code)
+    ).attributes
+    # 101-140 °F shown in the system's °C
+    assert attributes["min_temp"] == pytest.approx(38.3)
+    assert attributes["max_temp"] == pytest.approx(60.0)
+    assert attributes[ATTR_TEMPERATURE] == pytest.approx(50.0)
+
+
+async def test_aquatemp_set_temperature_writes_mode_target_and_setpoint(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """In heat mode the heat target R02 and the active setpoint are written."""
+    device, _, climate = await _setup(hass, add_device, make_entry, AQUATEMP_FIXTURE)
+
+    await _call(
+        hass, SERVICE_SET_TEMPERATURE, {ATTR_ENTITY_ID: climate, ATTR_TEMPERATURE: 30}
+    )
+
+    assert fake_cloud.control_requests() == [
+        [
+            {"deviceCode": device.code, "protocolCode": "R02", "value": 30.0},
+            {"deviceCode": device.code, "protocolCode": "Set_Temp", "value": 30.0},
+        ]
+    ]
+
+
+async def test_mode_switch_uses_new_mode_setpoint(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Switching heat to cool sets the active setpoint to the cool target R01."""
+    device, _, climate = await _setup(hass, add_device, make_entry, AQUATEMP_FIXTURE)
+
+    await _call(
+        hass,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate, ATTR_HVAC_MODE: HVACMode.COOL},
+    )
+
+    assert fake_cloud.control_requests() == [
+        [
+            {"deviceCode": device.code, "protocolCode": "Set_Temp", "value": 26.0},
+            {"deviceCode": device.code, "protocolCode": "Mode", "value": "0"},
+        ]
+    ]
+    state = hass.states.get(climate)
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ATTR_TEMPERATURE] == 26.0
+
+
+async def test_mode_already_active_is_not_rewritten(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Selecting heat on a stopped HiTemp only switches the power on."""
+    device, _, climate = await _setup(hass, add_device, make_entry, Power="0")
+
+    await _call(
+        hass,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate, ATTR_HVAC_MODE: HVACMode.HEAT},
+    )
+
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "power", "value": "1"}]
+    ]
+
+
+async def test_unknown_mode_writes_only_the_setpoint(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Without a mode-specific target only the generic setpoint is written."""
+    device, _, climate = await _setup(
+        hass, add_device, make_entry, AQUATEMP_FIXTURE, Mode="9"
+    )
+    assert hass.states.get(climate).attributes[ATTR_TEMPERATURE] == 28.0
+
+    await _call(
+        hass, SERVICE_SET_TEMPERATURE, {ATTR_ENTITY_ID: climate, ATTR_TEMPERATURE: 30}
+    )
+
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "Set_Temp", "value": 30.0}]
+    ]
+
+
+@pytest.mark.parametrize("power", [1, "1", True, "true"])
+@pytest.mark.usefixtures("fake_cloud")
+async def test_power_values_are_normalised(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    power: Any,
+) -> None:
+    """Power reported as a number or boolean is still recognised as on."""
+    _, _, climate = await _setup(hass, add_device, make_entry, Power=power)
+
+    assert hass.states.get(climate).state == HVACMode.HEAT
 
 
 async def test_set_temperature_out_of_range_is_rejected(

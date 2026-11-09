@@ -13,6 +13,8 @@ from homeassistant.helpers.entity import EntityDescription
 
 from custom_components.aqua_temp.common.consts import (
     API_STATUS,
+    DEVICE_IS_FAULT,
+    DEVICE_STATUS,
     LAST_ERROR,
     POWER_MODE_ON,
 )
@@ -22,6 +24,8 @@ from custom_components.aqua_temp.common.consts import (
 class AquaTempEntityDescription(EntityDescription):
     platform: Platform | None = None
     is_protocol_code: bool = True
+    # Diagnostic entities that must stay visible while the heat pump is offline
+    available_when_offline: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,6 +73,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         name="API Status",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_protocol_code=False,
+        available_when_offline=True,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         on_value=True,
         translation_key=API_STATUS,
@@ -79,22 +84,25 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         options=[UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT],
         entity_category=EntityCategory.CONFIG,
         is_protocol_code=False,
+        available_when_offline=True,
         translation_key="temperature_unit",
     ),
     AquaTempBinarySensorEntityDescription(
-        key="is_fault",
+        key=DEVICE_IS_FAULT,
         name="Fault",
         on_value=POWER_MODE_ON,
         is_protocol_code=False,
+        available_when_offline=True,
         device_class=BinarySensorDeviceClass.PROBLEM,
         attributes=["fault"],
         translation_key="is_fault",
     ),
     AquaTempBinarySensorEntityDescription(
-        key="device_status",
+        key=DEVICE_STATUS,
         name="Status",
         on_value="ONLINE",
         is_protocol_code=False,
+        available_when_offline=True,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         translation_key="device_status",
     ),
@@ -104,6 +112,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         name="Last Error",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_protocol_code=False,
+        available_when_offline=True,
         translation_key=LAST_ERROR,
     ),
 ]

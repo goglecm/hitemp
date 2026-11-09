@@ -17,6 +17,7 @@ class DomainFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a domain config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

@@ -6,11 +6,17 @@ import logging
 
 from cryptography.fernet import InvalidToken
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import slugify
 
 from .common.consts import DOMAIN, INVALID_TOKEN_SECTION
-from .managers.aqua_temp_config_manager import AquaTempConfigManager
+from .managers.aqua_temp_config_manager import (
+    AquaTempConfigManager,
+    load_disabled_by_default_number_keys,
+)
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 from .managers.password_manager import PasswordManager
 
@@ -43,6 +49,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(
         entry, config_manager.platforms
     )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:
+    """Migrate an entry created by an older version of the integration."""
+    if entry.version == 1 and entry.minor_version < 2:
+        await _async_disable_installer_parameters(hass, entry)
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    _LOGGER.info(
+        f"Migrated {entry.title} to version {entry.version}.{entry.minor_version}"
+    )
+
+
+async def _async_disable_installer_parameters(
+    hass: HomeAssistant, entry: AquaTempConfigEntry
+) -> None:
+    """Disable writable installer parameters that existing installs have enabled.
+
+    New installs create them disabled; this applies the same default to
+    entities created before 4.0.0. Entities disabled by the user stay as they are.
+    """
+    keys = await hass.async_add_executor_job(load_disabled_by_default_number_keys)
+    prefixes = tuple(slugify(f"{DOMAIN}_{Platform.NUMBER}_{key}") + "_" for key in keys)
+
+    registry = er.async_get(hass)
+
+    for registry_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if (
+            registry_entry.domain == Platform.NUMBER
+            and registry_entry.disabled_by is None
+            and registry_entry.unique_id.startswith(prefixes)
+        ):
+            _LOGGER.info(f"Disabling installer parameter {registry_entry.entity_id}")
+
+            registry.async_update_entity(
+                registry_entry.entity_id,
+                disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+            )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:

@@ -8,6 +8,7 @@ from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
 from .common.consts import API_STATUS
 from .common.entity_descriptions import AquaTempBinarySensorEntityDescription
+from .common.utils import normalize_state
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,10 @@ class AquaTempBinarySensorEntity(BaseEntity, BinarySensorEntity):
         else:
             state = device_data.get(self.entity_description.key)
 
-        is_on = str(state).lower() == str(self._entity_on_value).lower()
+        if state is None:
+            is_on = None
+        else:
+            is_on = normalize_state(state) == normalize_state(self._entity_on_value)
 
         attributes = {}
         if self._entity_attributes is not None:

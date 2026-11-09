@@ -56,6 +56,21 @@ def _load_json_file(file_path: str) -> Any | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_disabled_by_default_number_keys() -> set[str]:
+    """Return the keys of number entities that are disabled by default (blocking)."""
+    parameters = Path(__file__).parents[1] / "parameters"
+    keys = set()
+
+    for path in parameters.glob(f"{ProductParameter.ENTITY_DESCRIPTION}.*.json"):
+        for data_item in json.loads(path.read_text(encoding="utf-8")):
+            if data_item.get("platform") == Platform.NUMBER and not data_item.get(
+                "enabled_by_default", True
+            ):
+                keys.add(data_item["key"])
+
+    return keys
+
+
 class AquaTempConfigManager:
     _api_config: dict | None
     _translations: dict | None
@@ -226,7 +241,9 @@ class AquaTempConfigManager:
         product_id = self._get_product_id(
             device_code, ProductParameter.ENTITY_DESCRIPTION
         )
-        result = self._protocol_codes.get(product_id)
+        result = self._protocol_codes.get(
+            product_id, self._protocol_codes.get(PRODUCT_ID_DEFAULT, [])
+        )
 
         return result
 
@@ -239,41 +256,54 @@ class AquaTempConfigManager:
     def get_hvac_mode_pc_key(self, device_code: str, hvac_mode: str, key: str):
         config = self._get_pc_mapping(device_code)
 
-        hvac_modes = config.get(CONFIG_HVAC_MODES)
-        hvac_mode_config = hvac_modes.get(hvac_mode)
+        hvac_modes = config.get(CONFIG_HVAC_MODES) or {}
+        hvac_mode_config = hvac_modes.get(hvac_mode) or {}
         protocol_code_key = hvac_mode_config.get(key)
 
         return protocol_code_key
 
     def get_hvac_modes(self, device_code: str) -> list[str]:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
+        product_id = self._get_mapping_product_id(device_code)
 
         result = self._hvac_modes.get(product_id)
 
         return result
 
     def get_fan_modes(self, device_code: str) -> list[str]:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
+        product_id = self._get_mapping_product_id(device_code)
 
         result = self._fan_modes.get(product_id)
 
         return result
 
     def get_fan_reverse_mapping(self, device_code, fan_mode) -> str:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
+        product_id = self._get_mapping_product_id(device_code)
 
-        fan_modes = self._fan_modes_reverse.get(product_id)
+        fan_modes = self._fan_modes_reverse.get(product_id, {})
         result = fan_modes.get(fan_mode)
 
         return result
 
     def get_hvac_reverse_mapping(self, device_code, hvac_mode) -> str:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
+        product_id = self._get_mapping_product_id(device_code)
 
-        hvac_modes = self._hvac_modes_reverse.get(product_id)
+        hvac_modes = self._hvac_modes_reverse.get(product_id, {})
         result = hvac_modes.get(hvac_mode)
 
         return result
+
+    def get_number_description(
+        self, device_code: str, key: str | None
+    ) -> AquaTempNumberEntityDescription | None:
+        """Return the writable parameter description of a protocol code."""
+        for entity_description in self.get_entity_descriptions(device_code) or []:
+            if (
+                entity_description.key == key
+                and entity_description.platform == Platform.NUMBER
+            ):
+                return entity_description
+
+        return None
 
     def get_api_param(self, param: APIParam):
         result = self._api_config.get(str(param))
@@ -425,6 +455,8 @@ class AquaTempConfigManager:
                 entities.append(binary_sensor_entity)
 
             elif platform == Platform.NUMBER:
+                entity_category = data_item.get("entity_category")
+
                 number_entity = AquaTempNumberEntityDescription(
                     key=key,
                     name=data_item.get("name"),
@@ -433,6 +465,14 @@ class AquaTempConfigManager:
                     native_min_value=data_item.get("native_min_value"),
                     native_max_value=data_item.get("native_max_value"),
                     native_step=data_item.get("native_step"),
+                    entity_category=(
+                        None
+                        if entity_category is None
+                        else EntityCategory(entity_category)
+                    ),
+                    entity_registry_enabled_default=data_item.get(
+                        "enabled_by_default", True
+                    ),
                     translation_key=translation_key,
                 )
 
@@ -520,13 +560,18 @@ class AquaTempConfigManager:
 
         return product_id
 
-    def _get_pc_mapping(self, device_code) -> dict:
+    def _get_mapping_product_id(self, device_code: str) -> str:
         product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
 
-        result = self._protocol_codes_configuration.get(product_id)
+        if product_id not in self._protocol_codes_configuration:
+            product_id = PRODUCT_ID_DEFAULT
 
-        if result is None:
-            result = self._protocol_codes_configuration.get(PRODUCT_ID_DEFAULT)
+        return product_id
+
+    def _get_pc_mapping(self, device_code) -> dict:
+        product_id = self._get_mapping_product_id(device_code)
+
+        result = self._protocol_codes_configuration.get(product_id)
 
         return result
 

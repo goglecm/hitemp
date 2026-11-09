@@ -84,92 +84,65 @@
   {
     "key": "/01",
     "name": "Usage of OUT 05 [/01]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 2,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "/02",
     "name": "Usage of OUT 06 [/02]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 3,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "D01",
     "name": "Defrosting startup temp [D01]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": -30,
-    "native_max_value": 0,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "D02",
     "name": "Defrosting shutdown temp [D02]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 0,
-    "native_max_value": 30,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "D03",
     "name": "Duration of defrosting [D03]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min",
-    "native_min_value": 30,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "min"
   },
   {
     "key": "D04",
     "name": "Longest duration of defrosting [D04]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min",
-    "native_min_value": 1,
-    "native_max_value": 20,
-    "native_step": 1
+    "unit_of_measurement": "min"
   },
   {
     "key": "D05",
     "name": "Shortest duration of defrosting [D05]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min",
-    "native_min_value": 0,
-    "native_max_value": 8,
-    "native_step": 0.5
+    "unit_of_measurement": "min"
   },
   {
     "key": "D06",
     "name": "Defrosting way [D06]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 2,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "D07",
     "name": "Intelligent defrosting judgement [D07]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": -10,
-    "native_max_value": 20,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "E01",
@@ -179,17 +152,21 @@
     "unit_of_measurement": null,
     "native_min_value": 0,
     "native_max_value": 1,
-    "native_step": 1
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false
   },
   {
     "key": "E02",
     "name": "Target degree of supreheat [E02]",
     "platform": "number",
-    "device_class": "temperature",
+    "device_class": "temperature_delta",
     "unit_of_measurement": "\u00b0C",
     "native_min_value": -20,
     "native_max_value": 20,
-    "native_step": 1
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false
   },
   {
     "key": "E03",
@@ -199,7 +176,9 @@
     "unit_of_measurement": null,
     "native_min_value": 0,
     "native_max_value": 500,
-    "native_step": 1
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false
   },
   {
     "key": "E04",
@@ -209,67 +188,51 @@
     "unit_of_measurement": null,
     "native_min_value": 0,
     "native_max_value": 500,
-    "native_step": 1
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false
   },
   {
     "key": "E05",
     "name": "Position of EEV for defrosting [E05]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 500,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "G01",
     "name": "Disinfection target temp [G01]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 30,
-    "native_max_value": 70,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "G02",
     "name": "Duration of disinfection [G02]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min",
-    "native_min_value": 0,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "min"
   },
   {
     "key": "G03",
     "name": "Startup point of disinfection [G03]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "h",
-    "native_min_value": 0,
-    "native_max_value": 23,
-    "native_step": 1
+    "unit_of_measurement": "h"
   },
   {
     "key": "G04",
     "name": "Circle of disinfection [G04]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "d",
-    "native_min_value": 1,
-    "native_max_value": 99,
-    "native_step": 1
+    "unit_of_measurement": "d"
   },
   {
     "key": "H01",
     "name": "Remenber the status of device when power down [H01]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "H03",
@@ -281,52 +244,37 @@
   {
     "key": "H07",
     "name": "Temperature unit [H07]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "H30",
     "name": "Device address [H30]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 1,
-    "native_max_value": 255,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "H31",
     "name": "Intelligent control mode [H31]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "H32",
     "name": "Circle of submitting data to Cloud [H32]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min",
-    "native_min_value": 1,
-    "native_max_value": 255,
-    "native_step": 1
+    "unit_of_measurement": "min"
   },
   {
     "key": "H98",
-    "name": "Adjustable range of target temperature [H98]",
-    "platform": "number",
+    "name": "Model selection [H98]",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 2,
-    "native_max_value": 3,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "H99",
@@ -336,117 +284,86 @@
     "unit_of_measurement": null,
     "native_min_value": 0,
     "native_max_value": 1,
-    "native_step": 1
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false
   },
   {
     "key": "N01",
     "name": "The sensor to control solar water pump [N01]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "N02",
     "name": "Longest running time of solar water pump [N02]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min",
-    "native_min_value": 1,
-    "native_max_value": 30,
-    "native_step": 1
+    "unit_of_measurement": "min"
   },
   {
     "key": "N03",
     "name": "Temp hysteresis of solar water pump [N03]",
-    "platform": "number",
-    "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 0,
-    "native_max_value": 20,
-    "native_step": 1
+    "platform": "sensor",
+    "device_class": "temperature_delta",
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "N04",
     "name": "Activate the nighttime temp decreases mode [N04]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "N05",
     "name": "Startup point of the nighttime temp decreases mode [N05]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 23,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "N06",
     "name": "Shutdown point of the nighttime temp decreases mode [N06]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "h",
-    "native_min_value": 0,
-    "native_max_value": 23,
-    "native_step": 1
+    "unit_of_measurement": "h"
   },
   {
     "key": "N07",
     "name": "Startup temp of decreasing solar water temp [N07]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 40,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "N08",
     "name": "Temp hysteresis of stopping decreasing solar water temp [N08]",
-    "platform": "number",
-    "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 1,
-    "native_max_value": 40,
-    "native_step": 1
+    "platform": "sensor",
+    "device_class": "temperature_delta",
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "N09",
     "name": "Solar water releasing temp [N09]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 50,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "N10",
     "name": "Shutdown temp of solar water pump [N10]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 50,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "N11",
     "name": "Working mode of solar water pump [N11]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "R01",
@@ -455,14 +372,14 @@
     "device_class": "temperature",
     "unit_of_measurement": "\u00b0C",
     "native_min_value": 38,
-    "native_max_value": 75,
-    "native_step": 1.0
+    "native_max_value": 60,
+    "native_step": 1
   },
   {
     "key": "R03",
     "name": "Hysteresis of heat pump startup(bottom sensor) [R03]",
     "platform": "number",
-    "device_class": "temperature",
+    "device_class": "temperature_delta",
     "unit_of_measurement": "\u00b0C",
     "native_min_value": 1,
     "native_max_value": 20,
@@ -495,118 +412,85 @@
     "device_class": "duration",
     "unit_of_measurement": "min",
     "native_min_value": 0,
-    "native_max_value": 90,
+    "native_max_value": 450,
     "native_step": 1
   },
   {
     "key": "R07",
     "name": "Booster replaces heat pump? [R07]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "R08",
     "name": "Setpoint of ambient temp to activate booster to replace heat pump [R08]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": -20,
-    "native_max_value": 10,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R09",
     "name": "Setpoint of ambient temp to activate booster without delay [R09]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 0,
-    "native_max_value": 30,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R10",
     "name": "Setpoint of ambient temp to activate booster with delay [R10]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 10,
-    "native_max_value": 40,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R12",
     "name": "Ambient temp of shutting down compressor compulsively [R12]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": -30,
-    "native_max_value": -5,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R14",
     "name": "The target temp of second heating source [R14]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 38,
-    "native_max_value": 78,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R15",
     "name": "Maximal ambient temp of working compressor [R15]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 55,
-    "native_max_value": 80,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R17",
     "name": "Enable top sensor to control compressor? [R17]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "unit_of_measurement": null
   },
   {
     "key": "R18",
     "name": "Hysteresis of heat pump startup(top sensor) [R18]",
-    "platform": "number",
-    "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 1,
-    "native_max_value": 20,
-    "native_step": 1
+    "platform": "sensor",
+    "device_class": "temperature_delta",
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R19",
     "name": "Setpoint 1 of ambient temp to stop compressor [R19]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 30,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "R20",
     "name": "Setpoint 2 of ambient temp to stop compressor [R20]",
-    "platform": "number",
+    "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
-    "native_min_value": 30,
-    "native_max_value": 90,
-    "native_step": 1
+    "unit_of_measurement": "\u00b0C"
   },
   {
     "key": "O01",

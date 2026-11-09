@@ -1,8 +1,10 @@
+from collections.abc import Awaitable, Callable
 import logging
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -11,9 +13,12 @@ from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
     DATA_ITEM_LOGIN_DETAILS,
+    DEVICE_STATUS,
+    DEVICE_STATUS_ONLINE,
     DOMAIN,
     UPDATE_API_INTERVAL,
 )
+from ..common.utils import convert_range
 from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 
@@ -128,33 +133,100 @@ class AquaTempCoordinator(DataUpdateCoordinator):
     def get_temperature_unit(self, device_code: str):
         return self._config_manager.get_temperature_unit(device_code)
 
-    async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
-        await self._api.set_hvac_mode(device_code, hvac_mode)
+    def is_device_online(self, device_code: str) -> bool:
+        """Return False only when the cloud reports the device as not online."""
+        status = self.get_device_data(device_code).get(DEVICE_STATUS)
 
-        await self.async_request_refresh()
+        return status is None or str(status).upper() == DEVICE_STATUS_ONLINE
+
+    async def _async_send(
+        self, device_code: str, command: Callable[[], Awaitable[None]]
+    ) -> None:
+        """Send a command to an online device, then refresh its state."""
+        if not self.is_device_online(device_code):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_offline",
+                translation_placeholders={"device": device_code},
+            )
+
+        try:
+            await command()
+
+        except HomeAssistantError:
+            raise
+
+        except Exception as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"device": device_code, "error": str(ex)},
+            ) from ex
+
+        finally:
+            await self.async_request_refresh()
+
+    async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
+        await self._async_send(
+            device_code, lambda: self._api.set_hvac_mode(device_code, hvac_mode)
+        )
 
     async def turn_on(self, device_code: str):
         """Power the device on in the mode it was last running in."""
-        await self._api.turn_on(device_code)
-
-        await self.async_request_refresh()
+        await self._async_send(device_code, lambda: self._api.turn_on(device_code))
 
     async def set_temperature(self, device_code: str, temperature: float):
-        await self._api.set_temperature(device_code, temperature)
-
-        await self.async_request_refresh()
+        await self._async_send(
+            device_code, lambda: self._api.set_temperature(device_code, temperature)
+        )
 
     async def set_fan_mode(self, device_code: str, fan_mode):
-        await self._api.set_fan_mode(device_code, fan_mode)
-
-        await self.async_request_refresh()
+        await self._async_send(
+            device_code, lambda: self._api.set_fan_mode(device_code, fan_mode)
+        )
 
     async def set_protocol_code_value(
         self, device_code: str, protocol_code: str, value
     ):
-        await self._api.set_protocol_code_value(device_code, protocol_code, value)
+        await self._async_send(
+            device_code,
+            lambda: self._api.set_protocol_code_value(
+                device_code, protocol_code, value
+            ),
+        )
 
-        await self.async_request_refresh()
+    def get_target_temperature_limits(
+        self, device_code: str
+    ) -> tuple[float | None, float | None, float | None]:
+        """Return the minimum, maximum and step of the current target temperature.
+
+        Limits reported by the device for its current mode take precedence.
+        Otherwise the range of the writable parameter holding the target is
+        used, converted to the unit the device reports in.
+        """
+        minimum = self._api.get_device_minimum_temperature(device_code)
+        maximum = self._api.get_device_maximum_temperature(device_code)
+        step = None
+
+        target_code = self._api.get_target_temperature_protocol_code(device_code)
+        description = self._config_manager.get_number_description(
+            device_code, target_code
+        )
+
+        if description is not None:
+            static_minimum, static_maximum = convert_range(
+                description.native_min_value,
+                description.native_max_value,
+                description.device_class,
+                description.native_unit_of_measurement,
+                self.get_temperature_unit(device_code),
+            )
+
+            minimum = static_minimum if minimum is None else minimum
+            maximum = static_maximum if maximum is None else maximum
+            step = description.native_step
+
+        return minimum, maximum, step
 
     async def set_temperature_unit(self, device_code: str, option: str):
         await self._config_manager.update_temperature_unit(device_code, option)
@@ -175,16 +247,6 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         current_temperature = self._api.get_device_current_temperature(device_code)
 
         return current_temperature
-
-    def get_device_minimum_temperature(self, device_code: str) -> float | None:
-        minimum_temperature = self._api.get_device_minimum_temperature(device_code)
-
-        return minimum_temperature
-
-    def get_device_maximum_temperature(self, device_code: str) -> float | None:
-        maximum_temperature = self._api.get_device_maximum_temperature(device_code)
-
-        return maximum_temperature
 
     def get_device_hvac_mode(self, device_code: str) -> HVACMode:
         hvac_mode = self._api.get_device_hvac_mode(device_code)

@@ -28,12 +28,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import deprecation, frame
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import deprecation, entity_registry as er, frame
+from homeassistant.util import dt as dt_util, slugify
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from custom_components.aqua_temp.common.consts import CONFIGURATION_FILE
+from custom_components.aqua_temp.common.consts import CONFIGURATION_FILE, DOMAIN
 from custom_components.aqua_temp.managers.aqua_temp_coordinator import (
     AquaTempCoordinator,
 )
@@ -155,6 +155,45 @@ async def test_new_device_is_added_after_relogin(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id(hass, "climate", "Mode", pool.code))
+
+
+async def test_migration_disables_installer_parameters(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Existing installs get the new opt-in default for installer parameters."""
+    device = add_device(HITEMP_FIXTURE)
+    entry = make_entry(minor_version=1)
+    registry = er.async_get(hass)
+
+    def register(platform: str, key: str, disabled_by=None) -> str:
+        return registry.async_get_or_create(
+            platform,
+            DOMAIN,
+            slugify(f"{DOMAIN}_{platform}_{key}_{device.code}"),
+            config_entry=entry,
+            disabled_by=disabled_by,
+        ).entity_id
+
+    e01 = register("number", "E01")
+    h99 = register("number", "H99")
+    e02 = register("number", "E02", er.RegistryEntryDisabler.USER)
+    r01 = register("number", "R01")
+    e01_sensor = register("sensor", "E01")
+
+    await setup_entry(hass, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (entry.version, entry.minor_version) == (1, 2)
+    integration = er.RegistryEntryDisabler.INTEGRATION
+    assert registry.async_get(e01).disabled_by is integration
+    assert registry.async_get(h99).disabled_by is integration
+    assert registry.async_get(e02).disabled_by is er.RegistryEntryDisabler.USER
+    assert registry.async_get(r01).disabled_by is None
+    assert registry.async_get(e01_sensor).disabled_by is None
+    assert hass.states.get(r01).state == "50.0"
 
 
 class _ClimateUsingDeprecatedAttribute(ClimateEntity):
