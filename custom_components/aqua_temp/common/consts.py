@@ -7,6 +7,7 @@ DOMAIN = "aqua_temp"
 DEFAULT_NAME = "Aqua Temp"
 SIGNAL_AQUA_TEMP_DEVICE_NEW = f"signal_{DOMAIN}_device_new"
 CONFIGURATION_FILE = f"{DOMAIN}.config.json"
+STORAGE_VERSION = 1
 LEGACY_KEY_FILE = f"{DOMAIN}.key"
 
 UPDATE_API_INTERVAL = timedelta(minutes=5)

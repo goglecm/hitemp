@@ -1,8 +1,9 @@
 import logging
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.core import Event
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from ..common.api_types import APIParam
@@ -20,20 +21,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AquaTempCoordinator(DataUpdateCoordinator):
-    """My custom coordinator."""
+    """Poll the cloud and hold the state of every device of an account."""
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
         config_manager: AquaTempConfigManager,
     ):
-        """Initialize my coordinator."""
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=config_manager.entry_title,
             update_interval=UPDATE_API_INTERVAL,
-            update_method=self._async_update_data,
         )
 
         self._api = AquaTempAPI(hass, config_manager)
@@ -63,21 +65,10 @@ class AquaTempCoordinator(DataUpdateCoordinator):
     def login_details(self):
         return self._api.login_details
 
-    async def on_home_assistant_start(self, _event_data: Event):
-        await self.initialize()
-
-    async def initialize(self):
-        _LOGGER.debug("Initializing coordinator")
-
-        entry = self.config_manager.entry
-        platforms = self.config_manager.platforms
-        await self.hass.config_entries.async_forward_entry_setups(entry, platforms)
-
-        _LOGGER.info(f"Start loading {DOMAIN} integration, Entry ID: {entry.entry_id}")
-
-        await self._api.initialize()
-
-        await self.async_request_refresh()
+    @property
+    def device_codes(self) -> list[str]:
+        """Return the devices announced to the platforms so far."""
+        return self._api.dispatched_devices
 
     def get_device(self, device_code: str) -> DeviceInfo:
         param_nickname = self._config_manager.get_api_param(APIParam.Nickname)
@@ -139,6 +130,12 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
     async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
         await self._api.set_hvac_mode(device_code, hvac_mode)
+
+        await self.async_request_refresh()
+
+    async def turn_on(self, device_code: str):
+        """Power the device on in the mode it was last running in."""
+        await self._api.turn_on(device_code)
 
         await self.async_request_refresh()
 

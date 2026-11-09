@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TEMPERATURE_UNIT,
@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
@@ -31,6 +31,7 @@ from ..common.consts import (
     DOMAIN,
     PRODUCT_ID_DEFAULT,
     PRODUCT_IDS,
+    STORAGE_VERSION,
     ProductParameter,
 )
 from ..common.entity_descriptions import (

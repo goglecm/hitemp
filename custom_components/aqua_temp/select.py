@@ -1,11 +1,10 @@
-from abc import ABC
 import logging
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
 from .common.entity_descriptions import AquaTempSelectEntityDescription
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
@@ -14,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: AquaTempConfigEntry, async_add_entities
 ):
     await async_setup_base_entry(
         hass,
@@ -25,7 +24,7 @@ async def async_setup_entry(
     )
 
 
-class AquaTempSelectEntity(BaseEntity, SelectEntity, ABC):
+class AquaTempSelectEntity(BaseEntity, SelectEntity):
     """Representation of a sensor."""
 
     def __init__(
@@ -48,11 +47,5 @@ class AquaTempSelectEntity(BaseEntity, SelectEntity, ABC):
         """Change the selected option."""
         await self.local_coordinator.set_temperature_unit(self._device_code, option)
 
-    def _handle_coordinator_update(self) -> None:
-        """Fetch new state parameters for the sensor."""
-        try:
-            self._attr_current_option = self._get_temperature_unit()
-        except Exception as ex:
-            _LOGGER.error(f"Failed to update {self.entity_description.key}: {ex}")
-
-        self.async_write_ha_state()
+    def _update_attributes(self) -> None:
+        self._attr_current_option = self._get_temperature_unit()

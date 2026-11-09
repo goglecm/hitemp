@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
 
-from ..common.consts import CONF_TITLE, DEFAULT_NAME
+from ..common.consts import CONF_TITLE, DEFAULT_NAME, INVALID_TOKEN_SECTION
 from ..models.config_data import DATA_KEYS, ConfigData
 from ..models.exceptions import LoginError
 from .aqua_temp_api import AquaTempAPI
@@ -99,7 +99,10 @@ class IntegrationFlowManager:
         schema = ConfigData.default_schema(user_input)
 
         return self._flow_handler.async_show_form(
-            step_id=self._flow_id, data_schema=schema, errors=form_errors
+            step_id=self._flow_id,
+            data_schema=schema,
+            errors=form_errors,
+            description_placeholders={"invalid_token_url": INVALID_TOKEN_SECTION},
         )
 
     async def remap_entry_data(self, options: dict[str, Any]) -> dict[str, Any]:

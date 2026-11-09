@@ -2,7 +2,6 @@ import logging
 import sys
 
 from cryptography.fernet import Fernet, InvalidToken
-from homeassistant.config_entries import STORAGE_VERSION
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
@@ -13,6 +12,7 @@ from ..common.consts import (
     DOMAIN,
     INVALID_TOKEN_SECTION,
     STORAGE_DATA_KEY,
+    STORAGE_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,12 +142,18 @@ class PasswordManager:
 
     def _encrypt(self, data: str) -> str:
         if data is not None:
+            if self._crypto is None:
+                raise InvalidToken
+
             data = self._crypto.encrypt(data.encode()).decode()
 
         return data
 
     def _decrypt(self, data: str) -> str:
         if data is not None and len(data) > 0:
+            if self._crypto is None:
+                raise InvalidToken
+
             data = self._crypto.decrypt(data.encode()).decode()
 
         return data

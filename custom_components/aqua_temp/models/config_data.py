@@ -1,7 +1,7 @@
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
-import voluptuous as vol
-from voluptuous import Schema
+import probatio as vol
+from probatio import Schema
 
 from ..common.api_types import API_TYPE_LEGACY, API_TYPES, APIType
 from ..common.consts import CONF_API_TYPE, CONF_TITLE, DEFAULT_NAME

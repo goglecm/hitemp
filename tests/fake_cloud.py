@@ -324,6 +324,9 @@ class FakeCloud:
         if endpoint == "device/sendDevicePassthroughInstruction":
             return self._response(style, None)
 
+        if endpoint == "app/device/control":
+            return self._control(style, user, body)
+
         device = self.devices.get(body.get(keys["device_code"]))
         if device is None or user not in device.access:
             return self._error(style, "-2", "Device not found")
@@ -352,9 +355,6 @@ class FakeCloud:
             if device.is_fault and device.fault_description is not None:
                 faults.append({"description": device.fault_description})
             return self._response(style, faults)
-
-        if endpoint == "app/device/control":
-            return self._control(style, user, body)
 
         raise AssertionError(f"Unexpected endpoint {endpoint}")
 

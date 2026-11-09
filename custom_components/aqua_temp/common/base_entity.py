@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import logging
 import sys
+from typing import TYPE_CHECKING
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -12,24 +14,27 @@ from ..managers.aqua_temp_coordinator import AquaTempCoordinator
 from .consts import ADD_COMPONENT_SIGNALS, DOMAIN
 from .entity_descriptions import AquaTempEntityDescription
 
+if TYPE_CHECKING:
+    from .. import AquaTempConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_base_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AquaTempConfigEntry,
     platform: Platform,
     entity_type: type,
     async_add_entities,
 ):
+    coordinator = entry.runtime_data
+
     @callback
     def _async_handle_device(entry_id: str, device_code: str):
         if entry.entry_id != entry_id:
             return
 
         try:
-            coordinator = hass.data[DOMAIN][entry.entry_id]
-
             config_manager = coordinator.config_manager
 
             entity_descriptions = config_manager.get_entity_descriptions(device_code)
@@ -42,7 +47,7 @@ async def async_setup_base_entry(
 
             _LOGGER.debug(f"Setting up {platform} entities: {entities}")
 
-            async_add_entities(entities, True)
+            async_add_entities(entities)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -56,6 +61,9 @@ async def async_setup_base_entry(
         entry.async_on_unload(
             async_dispatcher_connect(hass, add_component_signal, _async_handle_device)
         )
+
+    for device_code in coordinator.device_codes:
+        _async_handle_device(entry.entry_id, device_code)
 
 
 class BaseEntity(CoordinatorEntity):
@@ -107,3 +115,25 @@ class BaseEntity(CoordinatorEntity):
     @property
     def data(self) -> dict | None:
         return self._data
+
+    async def async_added_to_hass(self) -> None:
+        """Populate the state from the coordinator before it is first written."""
+        await super().async_added_to_hass()
+
+        self._safe_update_attributes()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Refresh the state from the coordinator."""
+        self._safe_update_attributes()
+
+        self.async_write_ha_state()
+
+    def _safe_update_attributes(self) -> None:
+        try:
+            self._update_attributes()
+        except Exception as ex:
+            _LOGGER.error(f"Failed to update {self.entity_description.key}: {ex}")
+
+    def _update_attributes(self) -> None:
+        """Copy the coordinator's data into the entity attributes."""

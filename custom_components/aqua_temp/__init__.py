@@ -1,96 +1,61 @@
+"""The Aqua Temp / HiTemp heat pump integration."""
+
+from __future__ import annotations
+
 import logging
-import sys
 
 from cryptography.fernet import InvalidToken
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from custom_components.aqua_temp.models.exceptions import LoginError
-
-from .common.consts import DEFAULT_NAME, DOMAIN, INVALID_TOKEN_SECTION
+from .common.consts import DOMAIN, INVALID_TOKEN_SECTION
 from .managers.aqua_temp_config_manager import AquaTempConfigManager
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 from .managers.password_manager import PasswordManager
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup(_hass, _config):
-    return True
+type AquaTempConfigEntry = ConfigEntry[AquaTempCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Shinobi Video component."""
-    initialized = False
+async def async_setup_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:
+    """Set up an Aqua Temp account."""
+    entry_config = dict(entry.data)
 
     try:
-        entry_config = {key: entry.data[key] for key in entry.data}
-
         await PasswordManager.decrypt(hass, entry_config, entry.entry_id)
+    except InvalidToken as ex:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="corrupted_encryption_key",
+            translation_placeholders={"invalid_token_url": INVALID_TOKEN_SECTION},
+        ) from ex
 
-        config_manager = AquaTempConfigManager(hass, entry)
-        await config_manager.initialize(entry_config)
+    config_manager = AquaTempConfigManager(hass, entry)
+    await config_manager.initialize(entry_config)
 
-        is_initialized = config_manager.is_initialized
+    coordinator = AquaTempCoordinator(hass, entry, config_manager)
+    await coordinator.async_config_entry_first_refresh()
 
-        if is_initialized:
-            coordinator = AquaTempCoordinator(hass, config_manager)
+    entry.runtime_data = coordinator
 
-            hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-            if hass.is_running:
-                await coordinator.initialize()
-
-            else:
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, coordinator.on_home_assistant_start
-                )
-
-            _LOGGER.info("Finished loading integration")
-
-        initialized = is_initialized
-
-    except InvalidToken:
-        _LOGGER.error(
-            "Corrupted password or encryption key, "
-            f"please follow steps in {INVALID_TOKEN_SECTION}"
-        )
-
-    except LoginError:
-        _LOGGER.error(f"Failed to login {DEFAULT_NAME} API, cannot log integration")
-
-    except Exception as ex:
-        exc_type, exc_obj, tb = sys.exc_info()
-        line_number = tb.tb_lineno
-
-        _LOGGER.error(
-            f"Failed to load {DEFAULT_NAME}, error: {ex}, line: {line_number}"
-        )
-
-    return initialized
+    await hass.config_entries.async_forward_entry_setups(
+        entry, config_manager.platforms
+    )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
+async def async_unload_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:
+    """Unload an Aqua Temp account."""
     _LOGGER.info(f"Unloading {DOMAIN} integration, Entry ID: {entry.entry_id}")
 
-    try:
-        coordinator: AquaTempCoordinator = hass.data[DOMAIN][entry.entry_id]
+    await hass.config_entries.async_unload_platforms_or_raise(
+        entry, entry.runtime_data.config_manager.platforms
+    )
 
-        await coordinator.config_manager.remove(entry.entry_id)
 
-        platforms = coordinator.config_manager.platforms
+async def async_remove_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:
+    """Delete the stored preferences of a removed account."""
+    config_manager = AquaTempConfigManager(hass, entry)
 
-        for platform in platforms:
-            await hass.config_entries.async_forward_entry_unload(entry, platform)
-
-        del hass.data[DOMAIN][entry.entry_id]
-
-    except Exception as ex:
-        _LOGGER.error(
-            f"Failed to unload {DOMAIN} integration, Entry ID: {entry.entry_id}, Error: {ex}"
-        )
-        return False
-
-    return True
+    await config_manager.remove(entry.entry_id)

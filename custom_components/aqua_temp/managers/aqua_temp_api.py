@@ -91,15 +91,25 @@ class AquaTempAPI:
 
         return result
 
+    @property
+    def dispatched_devices(self) -> list[str]:
+        return list(self._dispatched_devices)
+
+    def _get_session(self) -> ClientSession:
+        if self._session is None:
+            if self._hass is None:
+                self._session = ClientSession()
+            else:
+                self._session = async_create_clientsession(hass=self._hass)
+
+        return self._session
+
     async def initialize(self, throw_error: bool = False):
         try:
             _LOGGER.debug(f"Initializing API, Throw Error: {throw_error}")
 
             if self._session is None:
-                if self._hass is None:
-                    self._session = ClientSession()
-                else:
-                    self._session = async_create_clientsession(hass=self._hass)
+                self._get_session()
 
                 await self._connect()
 
@@ -227,6 +237,10 @@ class AquaTempAPI:
                 self._headers.pop(HTTP_HEADER_X_TOKEN)
         else:
             self._headers[HTTP_HEADER_X_TOKEN] = token
+
+    async def turn_on(self, device_code: str):
+        """Power the device on without changing its mode."""
+        await self._set_power_mode(device_code, POWER_MODE_ON)
 
     async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
         if hvac_mode == HVACMode.OFF:
@@ -610,7 +624,7 @@ class AquaTempAPI:
         if endpoint == Endpoints.DeviceControl:
             _LOGGER.info(f"Sending request to control device, Data: {data}")
 
-        async with self._session.post(
+        async with self._get_session().post(
             url, headers=self._headers, json=data, ssl=False
         ) as response:
             response.raise_for_status()

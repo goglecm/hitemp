@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Generator
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from cryptography.fernet import Fernet
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import slugify
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -31,6 +34,29 @@ GENERIC_FIXTURE = "device_generic.json"
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Enable loading the integration from custom_components."""
+
+
+@pytest.fixture(autouse=True)
+def retry_sleep() -> Generator[AsyncMock]:
+    """Skip the delay between API retries."""
+    with patch(
+        "custom_components.aqua_temp.managers.aqua_temp_api.sleep", AsyncMock()
+    ) as mock_sleep:
+        yield mock_sleep
+
+
+def entity_id(hass: HomeAssistant, platform: str, key: str, device_code: str) -> str:
+    """Return the entity ID of an integration entity from its unique ID parts."""
+    unique_id = slugify(f"{DOMAIN}_{platform}_{key}_{device_code}")
+    result = er.async_get(hass).async_get_entity_id(platform, DOMAIN, unique_id)
+    assert result is not None, f"no {platform} entity for {key} of {device_code}"
+    return result
+
+
+async def setup_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Set up a config entry and wait for its platforms."""
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
