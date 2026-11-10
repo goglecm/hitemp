@@ -231,6 +231,5 @@ The HiTemp parameter file is maintained by hand: do not regenerate it with
 
 ## License
 
-Changes made in this repository are available under the [MIT licence](LICENSE).
-Code inherited from the projects this one continues was published without a
-licence; see [NOTICE](NOTICE.md).
+MIT, see [LICENSE](LICENSE). The authors of the original project agreed to
+the MIT licence for their work; see [NOTICE](NOTICE.md).
