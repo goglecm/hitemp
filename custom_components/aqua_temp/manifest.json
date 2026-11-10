@@ -1,6 +1,11 @@
 {
   "domain": "aqua_temp",
   "name": "Aqua Temp",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "climate.water_heaters",
+    "water.pools_spas"
+  ],
   "codeowners": ["@goglecm"],
   "config_flow": true,
   "dependencies": [],
