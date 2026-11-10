@@ -228,3 +228,9 @@ built from captured payloads. CI also runs hassfest and the HACS action.
 
 The HiTemp parameter file is maintained by hand: do not regenerate it with
 `utils/parse-resources.py`, which does not know the writable parameters.
+
+## License
+
+Changes made in this repository are available under the [MIT licence](LICENSE).
+Code inherited from the projects this one continues was published without a
+licence; see [NOTICE](NOTICE.md).
