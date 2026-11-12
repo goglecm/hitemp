@@ -1,0 +1,99 @@
+# HiTemp heat pump dashboard.
+#
+# Add a dashboard, open its raw configuration editor and paste this file.
+# Replace every "heat_pump" in the entity IDs with the start of your heat
+# pump's entity IDs, which comes from its device name. Installs from before
+# 4.1.0 keep their old entity IDs; pick those entities in the card editors
+# instead. E02 is disabled by default: enable it on its entity page to see it
+# in the superheat graph, or remove it from the card.
+title: Heat pump
+views:
+  - title: Heat pump
+    path: heat-pump
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Controls
+          - type: thermostat
+            entity: climate.heat_pump
+          - type: entities
+            entities:
+              - number.heat_pump_r01_target_water_temperature
+              - number.heat_pump_r03_start_hysteresis_bottom_sensor
+              - select.heat_pump_m17_fan_speed
+              - sensor.heat_pump_s01_remote_on_off_input
+          - type: heading
+            heading: Status
+          - type: entities
+            entities:
+              - binary_sensor.heat_pump_status
+              - binary_sensor.heat_pump_api_status
+              - sensor.heat_pump_cloud_status
+              - binary_sensor.heat_pump_fault
+              - sensor.heat_pump_fault_details
+              - sensor.heat_pump_o01_compressor
+              - sensor.heat_pump_o02_electric_heater_booster
+              - sensor.heat_pump_o03_4_way_valve
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Water
+          - type: history-graph
+            title: Water temperatures and target
+            hours_to_show: 24
+            entities:
+              - entity: sensor.heat_pump_t03_top_water_temperature_flow
+                name: Flow (T03)
+              - entity: sensor.heat_pump_t02_bottom_water_temperature_return
+                name: Return (T02)
+              - entity: number.heat_pump_r01_target_water_temperature
+                name: Target (R01)
+          - type: history-graph
+            title: Water temperature rise
+            hours_to_show: 24
+            entities:
+              - entity: sensor.heat_pump_water_dt_t03_t02
+                name: Flow - return
+          - type: statistics-graph
+            title: Compressor hours per day
+            chart_type: bar
+            period: day
+            days_to_show: 30
+            stat_types:
+              - change
+            entities:
+              - entity: sensor.heat_pump_o08_compressor_running_hours
+                name: Compressor (O08)
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Refrigerant circuit
+          - type: history-graph
+            title: Air, coil and suction
+            hours_to_show: 24
+            entities:
+              - entity: sensor.heat_pump_t01_ambient_temperature
+                name: Ambient (T01)
+              - entity: sensor.heat_pump_t04_coil_temperature
+                name: Coil (T04)
+              - entity: sensor.heat_pump_t05_suction_temperature
+                name: Suction (T05)
+          - type: history-graph
+            title: Superheat against its target
+            hours_to_show: 24
+            entities:
+              - entity: sensor.heat_pump_superheat_t05_t04
+                name: Superheat (T05 - T04)
+              - entity: number.heat_pump_e02_target_superheat
+                name: Target (E02)
+          - type: history-graph
+            title: Expansion valve position
+            hours_to_show: 24
+            entities:
+              - entity: sensor.heat_pump_o07_eev_position
+                name: EEV (O07)

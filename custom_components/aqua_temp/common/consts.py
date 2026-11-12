@@ -35,6 +35,7 @@ APP_HEARTBEAT_VALUE = "23205"
 LIVE_DATA_SETTLE_SECONDS = 2
 
 FAULT_WORD_CODES = [f"Fault{index}" for index in range(1, 11)]
+# The PCB software code and version, as on the app's About page
 BOARD_VERSION_CODES = ["MainBoard Version", "code_version"]
 # Output and switch states packed into one value, bit order unconfirmed
 BITWORD_CODES = ["O01~015", "O01~014", "O01~023", "S01~S06", "S01~S10"]

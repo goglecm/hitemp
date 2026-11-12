@@ -17,6 +17,7 @@ from ..common.consts import (
     CONF_LIVE_DATA,
     CONF_TITLE,
     DEFAULT_NAME,
+    HITEMP_GUIDE_URL,
     INVALID_TOKEN_SECTION,
 )
 from ..models.config_data import ConfigData
@@ -101,7 +102,10 @@ class IntegrationFlowManager:
             step_id=self._flow_id,
             data_schema=schema,
             errors=form_errors,
-            description_placeholders={"invalid_token_url": INVALID_TOKEN_SECTION},
+            description_placeholders={
+                "invalid_token_url": INVALID_TOKEN_SECTION,
+                "guide_url": HITEMP_GUIDE_URL,
+            },
         )
 
     async def async_step_reauth(self, user_input: dict | None = None):

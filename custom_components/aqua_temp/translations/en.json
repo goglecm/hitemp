@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up Aqua Temp integration",
-        "description": "Set up your Aqua Temp credentials",
+        "description": "Log in with your Aqua Temp or HiTemp account. The [HiTemp parameter guide]({guide_url}) explains every code and which ones are safe to change.",
         "data": {
           "title": "Title",
           "username": "Username",
@@ -13,7 +13,7 @@
         },
         "data_description": {
           "api_type": "The app the account was created with",
-          "live_data": "Ask the heat pump to upload its live values before each poll, like the app does when it is open. Without it the cloud leaves the switch, output and some temperature readings empty."
+          "live_data": "Before each poll, send the request the app sends while it is open (app_heartbeat), so the heat pump uploads its current values, and read the fault, version and switch codes it may then provide. Turn it off if the heat pump behaves differently with it."
         }
       },
       "reauth_confirm": {
@@ -39,7 +39,7 @@
     "step": {
       "init": {
         "title": "Set up Aqua Temp integration",
-        "description": "Set up your Aqua Temp credentials",
+        "description": "Log in with your Aqua Temp or HiTemp account. The [HiTemp parameter guide]({guide_url}) explains every code and which ones are safe to change.",
         "data": {
           "title": "Title",
           "username": "Username",
@@ -50,7 +50,7 @@
         "data_description": {
           "password": "Leave empty to keep the current password",
           "api_type": "The app the account was created with",
-          "live_data": "Ask the heat pump to upload its live values before each poll, like the app does when it is open. Without it the cloud leaves the switch, output and some temperature readings empty."
+          "live_data": "Before each poll, send the request the app sends while it is open (app_heartbeat), so the heat pump uploads its current values, and read the fault, version and switch codes it may then provide. Turn it off if the heat pump behaves differently with it."
         }
       }
     },

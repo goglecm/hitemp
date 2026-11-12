@@ -1,5 +1,56 @@
 # Changelog
 
+## 4.1.0
+
+_Minimum HA Version: 2026.11.0_
+
+### HiTemp parameters
+
+- Every HiTemp code is rebuilt from the app: names start with the code (for
+  example `R01 Target water temperature`), ranges and steps match the app
+  (0.5 °C for temperatures), and each entity explains itself with the
+  attributes `code`, `app_name`, `level`, `range`, `app_value`, `confidence`,
+  `description` and `guidance`
+- New [parameter guide](docs/HITEMP_PARAMETERS.md) with every code as the app
+  shows it, the raw cloud values, how the codes work together and what is
+  still uncertain, and an example [dashboard](docs/hitemp-dashboard.yaml)
+- Codes with app labels read `label (raw)`, for example `Standard (0)`
+- New selects that send the raw value: `M17` fan speed, `R04` (both enabled),
+  and `E01`, `H99`, `D06`, `R07`, `H01` (disabled, under Configuration)
+- Defrost (`D01`-`D05`, `D07`), disinfection (`G01`-`G04`), booster ambient
+  settings (`R08`-`R10`) and `H32` become writable, disabled by default under
+  Configuration
+- `O07` (EEV position) is a measurement in steps and can be graphed; `O08` and
+  `O09` are running hours that keep increasing statistics
+- New calculated sensors: superheat (`T05 - T04`) and water ΔT (`T03 - T02`)
+- The solar codes, `T06`, `T11`, `T12`, `S02` and `O10`-`O15` are disabled by
+  default
+
+### Status and faults
+
+- Last Error is replaced by **Cloud status** (OK, Session expired, Login
+  rejected, Cannot connect, Cloud error) and **Fault details** (`No fault` or
+  the cloud's description)
+- Entities without a value from the cloud are unavailable instead of unknown
+- The cloud's Chinese session-expired message is logged with its meaning
+- The device page shows the MAC address, serial number, board and Wi-Fi
+  versions and a link to the guide
+
+### Live data
+
+- New **Request live data** option, on by default: before each poll the
+  integration sends the request the app sends while it is open, then reads
+  the fault, version and switch codes related boards provide. Diagnostics show
+  which codes returned a value
+
+### Upgrading
+
+- Entities that moved to another platform (for example `E01`, `R04` and `H99`
+  from number to select) get new entity IDs; the old entities and Last Error
+  are removed. Update automations that use them
+- Names of existing entities change to the new code-first names; their entity
+  IDs stay the same
+
 ## 4.0.0
 
 _Minimum HA Version: 2026.11.0_

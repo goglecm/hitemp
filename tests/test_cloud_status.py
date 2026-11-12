@@ -208,7 +208,7 @@ async def test_device_info(
     device_entry = _device_entry(hass, entry)
 
     assert device_entry.serial_number == device.code
-    assert device_entry.sw_version == "PCB 679 / 1.0, Wi-Fi V1.1"
+    assert device_entry.sw_version == "PCB 679 (version 1.0), Wi-Fi V1.1"
     assert device_entry.model_id == PRODUCT_ID_HITEMP
     assert device_entry.configuration_url == HITEMP_GUIDE_URL
 
@@ -222,7 +222,39 @@ async def test_software_version_follows_the_heat_pump(
 
     await _refresh(hass, entry)
 
-    assert _device_entry(hass, entry).sw_version == "PCB 679 / 1.1, Wi-Fi V1.1"
+    assert _device_entry(hass, entry).sw_version == "PCB 679 (version 1.1), Wi-Fi V1.1"
+
+
+@pytest.mark.parametrize(
+    ("live_data", "list_extra", "sw_version"),
+    [
+        ({"MainBoard Version": "679"}, {}, "PCB 679"),
+        (
+            {"code_version": "1.0"},
+            {"wifiSoftwareVer": "V1.1"},
+            "PCB version 1.0, Wi-Fi V1.1",
+        ),
+        ({}, {"wifiSoftwareVer": "V1.1"}, "Wi-Fi V1.1"),
+        ({}, {}, None),
+    ],
+)
+@pytest.mark.usefixtures("fake_cloud")
+async def test_software_version_shows_what_is_known(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    live_data: dict[str, str],
+    list_extra: dict[str, str],
+    sw_version: str | None,
+) -> None:
+    """Only the versions the heat pump reported are shown."""
+    device = add_device(HITEMP_FIXTURE)
+    device.live_data = live_data
+    device.list_extra = list_extra
+    entry = make_entry()
+    await setup_entry(hass, entry)
+
+    assert _device_entry(hass, entry).sw_version == sw_version
 
 
 @pytest.mark.usefixtures("fake_cloud")

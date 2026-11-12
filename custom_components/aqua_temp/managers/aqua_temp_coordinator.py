@@ -53,13 +53,15 @@ def _software_version(device_data: dict) -> str | None:
     """Describe the board and Wi-Fi module versions the cloud reported."""
     parts = []
 
-    board = [
-        str(device_data[code])
-        for code in BOARD_VERSION_CODES
-        if device_data.get(code) not in (None, "")
-    ]
-    if board:
-        parts.append(f"PCB {' / '.join(board)}")
+    board_code, board_version = (
+        device_data.get(code) or None for code in BOARD_VERSION_CODES
+    )
+    if board_code and board_version:
+        parts.append(f"PCB {board_code} (version {board_version})")
+    elif board_code:
+        parts.append(f"PCB {board_code}")
+    elif board_version:
+        parts.append(f"PCB version {board_version}")
 
     for key in WIFI_VERSION_KEYS:
         if device_data.get(key):
