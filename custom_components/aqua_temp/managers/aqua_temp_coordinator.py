@@ -237,6 +237,10 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         await self.async_request_refresh()
 
+    def get_live_data_report(self, device_code: str) -> dict:
+        """Return the last heartbeat result and which codes had a value."""
+        return self._api.get_live_data_report(device_code)
+
     def get_device_data(self, device_code: str) -> dict | None:
         device_data = self._api.get_device_data(device_code)
 

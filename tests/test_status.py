@@ -160,7 +160,8 @@ async def test_failed_data_request_marks_entities_unavailable(
 
     assert hass.states.get(sensor).state == STATE_UNAVAILABLE
     assert not entry.runtime_data.last_update_success
-    assert len(fake_cloud.endpoint_requests("app/device/getDataByCode")) == 4
+    main_reads = [codes for codes in fake_cloud.data_requests() if "R01" in codes]
+    assert len(main_reads) == 4
 
     fake_cloud.data_error = None
     await _refresh(hass, entry)

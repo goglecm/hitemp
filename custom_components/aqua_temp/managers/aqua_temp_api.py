@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.redact import async_redact_data
+from homeassistant.util import dt as dt_util
 
 from custom_components.aqua_temp.models.exceptions import (
     CloudConnectionError,
@@ -26,6 +27,8 @@ from custom_components.aqua_temp.models.exceptions import (
 from ..common.api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
 from ..common.consts import (
     API_MAX_ATTEMPTS,
+    APP_HEARTBEAT_CODE,
+    APP_HEARTBEAT_VALUE,
     CONFIG_HVAC_MAXIMUM,
     CONFIG_HVAC_MINIMUM,
     CONFIG_HVAC_SET,
@@ -42,6 +45,8 @@ from ..common.consts import (
     DEVICE_STATUS,
     HEADERS,
     HTTP_HEADER_X_TOKEN,
+    LIVE_DATA_SETTLE_SECONDS,
+    LIVE_PROBE_CODES,
     POWER_MODE_OFF,
     POWER_MODE_ON,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
@@ -95,6 +100,12 @@ class AquaTempAPI:
         self._dispatched_devices = []
         self._device_list_request_data = {}
 
+        # Per device: last heartbeat result, probe codes still worth reading,
+        # and which requested codes came back with a value
+        self._heartbeat_results: dict[str, dict] = {}
+        self._probe_codes: dict[str, list[str]] = {}
+        self._code_reports: dict[str, dict[str, list[str]]] = {}
+
     @property
     def is_connected(self):
         """Return whether the API is logged in and its last request succeeded."""
@@ -121,6 +132,16 @@ class AquaTempAPI:
     @property
     def dispatched_devices(self) -> list[str]:
         return list(self._dispatched_devices)
+
+    def get_live_data_report(self, device_code: str) -> dict:
+        """Return what the last poll learned about the device's codes."""
+        report = self._code_reports.get(device_code, {})
+
+        return {
+            "heartbeat": self._heartbeat_results.get(device_code),
+            "codes_with_value": report.get("with_value", []),
+            "codes_without_value": report.get("without_value", []),
+        }
 
     def _get_session(self) -> ClientSession:
         if self._session is None:
@@ -242,7 +263,16 @@ class AquaTempAPI:
             if param_keep_alive:
                 await self._send_passthrough_instruction(device_code)
 
+            elif self._config_manager.config_data.live_data:
+                await self._send_app_heartbeat(device_code)
+
+            else:
+                self._set_heartbeat_result(device_code, "disabled")
+
             await self._fetch_data(device_code)
+
+            if not param_keep_alive:
+                await self._fetch_probe_codes(device_code)
 
             await self._fetch_status(device_code)
 
@@ -516,9 +546,8 @@ class AquaTempAPI:
 
         raise CloudError(operation, f"{error_code}: {error_msg}")
 
-    async def _fetch_data(self, device_code: str):
-        codes = self._config_manager.get_supported_protocol_codes(device_code) or []
-
+    async def _read_codes(self, device_code: str, codes: list[str]) -> dict:
+        """Read protocol codes; codes without a value map to None."""
         param_device_code = self._config_manager.get_api_param(APIParam.DeviceCode)
         param_protocal_codes = self._config_manager.get_api_param(
             APIParam.ProtocalCodes
@@ -545,10 +574,98 @@ class AquaTempAPI:
 
             values[code] = value
 
-        device_data = self._devices[device_code]
+        return {code: values.get(code) for code in codes}
 
+    async def _fetch_data(self, device_code: str):
+        codes = self._config_manager.get_supported_protocol_codes(device_code) or []
+
+        values = await self._read_codes(device_code, codes)
+
+        self._devices[device_code].update(values)
+        self._code_reports[device_code] = {
+            "with_value": [code for code in codes if values[code] is not None],
+            "without_value": [code for code in codes if values[code] is None],
+        }
+
+    async def _fetch_probe_codes(self, device_code: str):
+        """Read the live codes of the board family the device may support."""
+        codes = self._probe_codes.setdefault(device_code, list(LIVE_PROBE_CODES))
+
+        if not codes:
+            return
+
+        values = await self._read_probe_batch(device_code, codes)
+
+        # Codes the cloud rejected are not requested again until a restart
+        self._probe_codes[device_code] = [code for code in codes if code in values]
+
+        self._devices[device_code].update(values)
+
+        report = self._code_reports.setdefault(
+            device_code, {"with_value": [], "without_value": []}
+        )
         for code in codes:
-            device_data[code] = values.get(code)
+            if values.get(code) is None:
+                report["without_value"].append(code)
+            else:
+                report["with_value"].append(code)
+
+    async def _read_probe_batch(self, device_code: str, codes: list[str]) -> dict:
+        """Read probe codes, narrowing down codes the cloud rejects."""
+        try:
+            return await self._read_codes(device_code, codes)
+
+        except CloudError as ex:
+            if len(codes) == 1:
+                _LOGGER.debug(f"Device {device_code} does not support {codes[0]}: {ex}")
+                return {}
+
+        middle = len(codes) // 2
+
+        return {
+            **await self._read_probe_batch(device_code, codes[:middle]),
+            **await self._read_probe_batch(device_code, codes[middle:]),
+        }
+
+    def _set_heartbeat_result(self, device_code: str, result: str):
+        self._heartbeat_results[device_code] = {
+            "result": result,
+            "time": dt_util.utcnow().isoformat(),
+        }
+
+    async def _send_app_heartbeat(self, device_code: str):
+        """Ask the board to upload its live data, as the official apps do."""
+        request_data = {
+            DEVICE_CONTROL_PARAM: [
+                self._control_param(
+                    device_code, APP_HEARTBEAT_CODE, APP_HEARTBEAT_VALUE
+                )
+            ]
+        }
+
+        try:
+            self._check_response(
+                await self._post_request(
+                    Endpoints.DeviceControl, request_data, log_control=False
+                ),
+                f"Request live data of device {device_code}",
+            )
+
+        except CloudError as ex:
+            previous = self._heartbeat_results.get(device_code, {})
+
+            if not str(previous.get("result", "")).startswith("rejected"):
+                _LOGGER.warning(
+                    f"The cloud rejected the live data request of {device_code}, "
+                    f"reading the values it already has. Error: {ex}"
+                )
+
+            self._set_heartbeat_result(device_code, f"rejected: {ex}")
+            return
+
+        self._set_heartbeat_result(device_code, "ok")
+
+        await sleep(LIVE_DATA_SETTLE_SECONDS)
 
     async def _send_passthrough_instruction(self, device_code: str):
         param_device_code = self._config_manager.get_api_param(APIParam.DeviceCode)
@@ -743,14 +860,17 @@ class AquaTempAPI:
                 _LOGGER.info(f"Discovering device {device_code}")
 
     async def _post_request(
-        self, endpoint: Endpoints, data: dict | list | None = None
+        self,
+        endpoint: Endpoints,
+        data: dict | list | None = None,
+        log_control: bool = True,
     ) -> dict | None:
         param_url = self._config_manager.get_api_param(APIParam.URL)
         param_suffix = self._config_manager.get_api_param(APIParam.Suffix)
 
         url = f"{param_url}/{endpoint}{param_suffix}"
 
-        if endpoint == Endpoints.DeviceControl:
+        if endpoint == Endpoints.DeviceControl and log_control:
             _LOGGER.info(f"Sending request to control device, Data: {data}")
 
         try:

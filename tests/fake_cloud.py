@@ -112,6 +112,11 @@ class FakeDevice:
     status: str = "ONLINE"
     is_fault: bool = False
     fault_description: str | None = None
+    # Values the board only uploads after an app heartbeat
+    live_data: dict[str, Any] = field(default_factory=dict)
+    # Extra fields of the device list entry, like the Wi-Fi module version
+    list_extra: dict[str, Any] = field(default_factory=dict)
+    heartbeats: int = 0
 
     @classmethod
     def from_fixture(cls, name: str, owner: str) -> FakeDevice:
@@ -125,6 +130,8 @@ class FakeDevice:
             model=raw.get("model"),
             data=dict(raw["data"]),
             access={owner: "owned"},
+            live_data=dict(raw.get("live_data", {})),
+            list_extra=dict(raw.get("list_extra", {})),
         )
 
     def find_code(self, code: str) -> str | None:
@@ -149,6 +156,8 @@ class FakeCloud:
         self.data_error: str | None = None
         self.control_error: str | None = None
         self.login_response: dict[str, Any] | None = None
+        self.heartbeat_error: str | None = None
+        self.rejected_codes: set[str] = set()
         self.http_status: dict[str, int | list[int]] = {}
         self._token_counter = 0
         self._sessions: list[aiohttp.ClientSession] = []
@@ -174,10 +183,29 @@ class FakeCloud:
         return [request for request in self.requests if request.endpoint == endpoint]
 
     def control_requests(self) -> list[list[dict[str, Any]]]:
-        """Return the parameter lists of every device control request."""
+        """Return the parameter lists of every device control request.
+
+        Live data requests (app heartbeats) are listed by heartbeat_requests.
+        """
         return [
             request.body["param"]
             for request in self.endpoint_requests("app/device/control")
+            if not _is_heartbeat(request.body)
+        ]
+
+    def heartbeat_requests(self) -> list[CloudRequest]:
+        """Return the app heartbeats received."""
+        return [
+            request
+            for request in self.endpoint_requests("app/device/control")
+            if _is_heartbeat(request.body)
+        ]
+
+    def data_requests(self) -> list[list[str]]:
+        """Return the codes of every getDataByCode request."""
+        return [
+            request.body.get("protocalCodes") or request.body.get("protocal_codes")
+            for request in self.endpoint_requests("app/device/getDataByCode")
         ]
 
     def clear_requests(self) -> None:
@@ -349,6 +377,8 @@ class FakeCloud:
             if self.data_error is not None:
                 return self._error(style, "-3", self.data_error)
             codes = body.get(keys["protocal_codes"]) or []
+            if self.rejected_codes.intersection(codes):
+                return self._error(style, "-6", "Unsupported protocol code")
             return self._response(
                 style,
                 [
@@ -398,6 +428,7 @@ class FakeCloud:
                 keys["device_status"]: device.status,
                 keys["is_fault"]: device.is_fault,
             }
+            item |= device.list_extra
             if style == "camel":
                 # The real service returns both spellings for these fields.
                 item |= {
@@ -412,6 +443,9 @@ class FakeCloud:
 
     def _control(self, style: str, user: str, body: Any) -> dict[str, Any]:
         keys = KEYS[style]
+
+        if _is_heartbeat(body):
+            return self._heartbeat(style, user, body)
 
         if self.control_error is not None:
             return self._error(style, "-4", self.control_error)
@@ -440,3 +474,28 @@ class FakeCloud:
             device.data[stored_code] = value if isinstance(value, str) else str(value)
 
         return self._response(style, None)
+
+    def _heartbeat(self, style: str, user: str, body: Any) -> dict[str, Any]:
+        keys = KEYS[style]
+
+        if self.heartbeat_error is not None:
+            return self._error(style, "-7", self.heartbeat_error)
+
+        for param in body["param"]:
+            device = self.devices.get(param.get(keys["device_code"]))
+            if device is None or user not in device.access:
+                return self._error(style, "-5", "Invalid parameter")
+            if param.get("value") != "23205":
+                return self._error(style, "-5", "Invalid parameter")
+            device.heartbeats += 1
+            device.data.update(device.live_data)
+
+        return self._response(style, None)
+
+
+def _is_heartbeat(body: Any) -> bool:
+    params = body.get("param") if isinstance(body, dict) else None
+    return bool(params) and all(
+        (param.get("protocolCode") or param.get("protocol_code")) == "app_heartbeat"
+        for param in params
+    )

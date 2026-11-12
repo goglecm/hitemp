@@ -78,7 +78,11 @@ def _async_get_diagnostics(
         for device_code in devices:
             if _identifier(device_code) == device_id:
                 data |= _async_device_as_dict(
-                    hass, entry, device_id, devices[device_code]
+                    hass,
+                    entry,
+                    device_id,
+                    devices[device_code],
+                    coordinator.get_live_data_report(device_code),
                 )
 
     else:
@@ -87,7 +91,11 @@ def _async_get_diagnostics(
         data.update(
             devices=[
                 _async_device_as_dict(
-                    hass, entry, _identifier(device_code), devices[device_code]
+                    hass,
+                    entry,
+                    _identifier(device_code),
+                    devices[device_code],
+                    coordinator.get_live_data_report(device_code),
                 )
                 for device_code in devices
             ]
@@ -98,7 +106,11 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-    hass: HomeAssistant, entry: ConfigEntry, device_id: str, device_data: dict
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_id: str,
+    device_data: dict,
+    live_data: dict,
 ) -> dict[str, Any]:
     """Represent a heat pump and its entities as a dictionary."""
     device_registry = dr.async_get(hass)
@@ -116,6 +128,7 @@ def _async_device_as_dict(
             "disabled": ha_device.disabled,
             "disabled_by": ha_device.disabled_by,
             "data": device_data,
+            "live_data": live_data,
             "entities": [],
         }
 

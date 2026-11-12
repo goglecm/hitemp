@@ -18,6 +18,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.aqua_temp.common.consts import (
     CONF_API_TYPE,
+    CONF_LIVE_DATA,
     CONF_TITLE,
     CONFIGURATION_FILE,
     DOMAIN,
@@ -31,6 +32,7 @@ USER_INPUT = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
     CONF_API_TYPE: "hi_temp",
+    CONF_LIVE_DATA: True,
 }
 
 
@@ -74,7 +76,8 @@ async def test_user_flow_creates_entry(
     assert result["title"] == "My Heat Pump"
     assert result["result"].unique_id == f"hi_temp_{USERNAME}"
     data = result["data"]
-    assert set(data) == {CONF_USERNAME, CONF_PASSWORD, CONF_API_TYPE}
+    assert set(data) == {CONF_USERNAME, CONF_PASSWORD, CONF_API_TYPE, CONF_LIVE_DATA}
+    assert data[CONF_LIVE_DATA] is True
     assert data[CONF_USERNAME] == USERNAME
     assert data[CONF_API_TYPE] == "hi_temp"
 
@@ -206,6 +209,33 @@ async def test_options_flow_keeps_password_and_api_type(
     assert loaded_entry.state is ConfigEntryState.LOADED
     # validated, then reloaded with the same credentials
     assert len(fake_cloud.endpoint_requests("app/user/login")) == 2
+
+
+async def test_options_flow_turns_off_live_data(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """Live data requests can be switched off and stay off after the reload."""
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+    assert _schema_keys(result)[CONF_LIVE_DATA].default() is True
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_TITLE: "Heat Pump",
+            CONF_USERNAME: USERNAME,
+            CONF_API_TYPE: "hi_temp",
+            CONF_LIVE_DATA: False,
+        },
+    )
+    await hass.async_block_till_done()
+    fake_cloud.clear_requests()
+    await loaded_entry.runtime_data.async_refresh()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert loaded_entry.data[CONF_LIVE_DATA] is False
+    assert not fake_cloud.heartbeat_requests()
 
 
 async def test_options_flow_changes_password(

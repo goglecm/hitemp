@@ -24,6 +24,27 @@ HTTP_HEADER_X_TOKEN = "x-token"
 
 CONF_TITLE = "title"
 CONF_API_TYPE = "api_type"
+CONF_LIVE_DATA = "live_data"
+
+# Sent by the official apps before reading live values: the board then uploads
+# its live block (outputs, switches, fault words, versions) to the cloud.
+APP_HEARTBEAT_CODE = "app_heartbeat"
+APP_HEARTBEAT_VALUE = "23205"
+LIVE_DATA_SETTLE_SECONDS = 2
+
+# Live codes used by the same board family, read separately from the main
+# request so that a code the device does not know cannot break the poll.
+LIVE_PROBE_CODES = [
+    *(f"Fault{index}" for index in range(1, 11)),
+    "ModeState",
+    "code_version",
+    "MainBoard Version",
+    "O01~015",
+    "O01~014",
+    "O01~023",
+    "S01~S06",
+    "S01~S10",
+]
 
 PRODUCT_IDS = [
     "1245226668902080512",  # Hitemp

@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowHandler
 
 from ..common.consts import (
     CONF_API_TYPE,
+    CONF_LIVE_DATA,
     CONF_TITLE,
     DEFAULT_NAME,
     INVALID_TOKEN_SECTION,
@@ -142,10 +143,13 @@ class IntegrationFlowManager:
         if self._entry is None:
             return {}
 
+        config_data = ConfigData.from_dict(self._entry.data)
+
         return {
             CONF_TITLE: self._entry.title,
             CONF_USERNAME: self._entry.data.get(CONF_USERNAME),
-            CONF_API_TYPE: ConfigData.from_dict(self._entry.data).api_type,
+            CONF_API_TYPE: config_data.api_type,
+            CONF_LIVE_DATA: config_data.live_data,
         }
 
     async def _async_stored_password(self) -> str | None:
@@ -233,4 +237,5 @@ class IntegrationFlowManager:
             CONF_USERNAME: credentials[CONF_USERNAME],
             CONF_PASSWORD: credentials[CONF_PASSWORD],
             CONF_API_TYPE: config_data.api_type,
+            CONF_LIVE_DATA: config_data.live_data,
         }

@@ -4,7 +4,7 @@ import probatio as vol
 from probatio import Schema
 
 from ..common.api_types import API_TYPE_LEGACY, API_TYPES, APIType
-from ..common.consts import CONF_API_TYPE, CONF_TITLE, DEFAULT_NAME
+from ..common.consts import CONF_API_TYPE, CONF_LIVE_DATA, CONF_TITLE, DEFAULT_NAME
 
 PASSWORD_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
@@ -20,6 +20,7 @@ class ConfigData:
         self._username = None
         self._password = None
         self._api_type = None
+        self._live_data = True
 
     @property
     def username(self) -> str:
@@ -39,9 +40,15 @@ class ConfigData:
 
         return api_type
 
+    @property
+    def live_data(self) -> bool:
+        """Whether to request live data from the heat pump before each read."""
+        return self._live_data
+
     def update(self, data: dict):
         self._password = data.get(CONF_PASSWORD)
         self._username = data.get(CONF_USERNAME)
+        self._live_data = bool(data.get(CONF_LIVE_DATA, True))
 
         api_type = data.get(CONF_API_TYPE, str(APIType.AquaTempOld))
 
@@ -102,6 +109,9 @@ class ConfigData:
                     )
                 )
             ),
+            vol.Required(
+                CONF_LIVE_DATA, default=user_input.get(CONF_LIVE_DATA, True)
+            ): selector.BooleanSelector(),
         }
 
         schema = vol.Schema(new_user_input)

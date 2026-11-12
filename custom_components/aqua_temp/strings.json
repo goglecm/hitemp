@@ -8,10 +8,12 @@
           "title": "Title",
           "username": "Username",
           "password": "Password",
-          "api_type": "API type"
+          "api_type": "API type",
+          "live_data": "Request live data"
         },
         "data_description": {
-          "api_type": "The app the account was created with"
+          "api_type": "The app the account was created with",
+          "live_data": "Ask the heat pump to upload its live values before each poll, like the app does when it is open. Without it the cloud leaves the switch, output and some temperature readings empty."
         }
       },
       "reauth_confirm": {
@@ -42,11 +44,13 @@
           "title": "Title",
           "username": "Username",
           "password": "Password",
-          "api_type": "API type"
+          "api_type": "API type",
+          "live_data": "Request live data"
         },
         "data_description": {
           "password": "Leave empty to keep the current password",
-          "api_type": "The app the account was created with"
+          "api_type": "The app the account was created with",
+          "live_data": "Ask the heat pump to upload its live values before each poll, like the app does when it is open. Without it the cloud leaves the switch, output and some temperature readings empty."
         }
       }
     },
