@@ -174,6 +174,22 @@ YES` the heater heats to `R05` instead of `R01`. `S05` (heater
 - **Empty codes:** the cloud returned nothing for `S01`-`S06`, `O01`-`O06`,
   `O10`-`O15`, `T11`, `T12`, `ver` and `software_code`, even while `1158` read 23205.
 
+A fourth log, with one read per minute and no changes in the app (18:44 to
+23:13), showed:
+
+- Three defrosts, at 19:12, 20:01 and 20:48, each about 3 minutes long and
+  45-49 minutes apart (`D03` = 45). Each started with the coil (`T04`) at
+  about -3 °C (`D01`). During each, bit 2 of `2051` was set, bits 11 and 12
+  of `2050` cleared and bit 10 set, the EEV moved to 480 (`E05`), the suction
+  temperature jumped to 25-36 °C and the coil warmed up.
+- The unit was switched off at 21:31 and 22:55 and on at 22:18, not from
+  Home Assistant. While off, `2050` held only bits 0 and 5 (bit 2 came back
+  2-3 minutes later) and the EEV sat at 480. Each switch raised `T21`/`2027`
+  by 4, so the on/off state is written to the controller's memory (`H01` =
+  YES remembers it).
+- After each start the EEV opened at 240 (`E03`) and worked down to 100
+  (`E04`) within about 20 minutes, when bit 2 of `2050` cleared.
+
 A third log, while modes, vacation, the timers and the clock were changed in
 the app (17:37 to 18:16), showed:
 
@@ -232,8 +248,21 @@ packed status words, for example register `2050`, where bit 8 followed the
 compressor and bit 9 the electric heater. The integration therefore reads
 `2050` and shows it, with the compressor and heater bits as binary sensors,
 and reads the other codes that scan found (listed at the end of this guide)
-for diagnostics. Which bits mean what on the S300 still has to be confirmed
-by comparing them with the app.
+for diagnostics.
+
+The bits decoded so far on a Trianco S300:
+
+| Word   | Bit    | Set while                                                  | Confidence |
+| ------ | ------ | ---------------------------------------------------------- | ---------- |
+| `2050` | 0      | the unit is switched off                                   | observed   |
+| `2050` | 2      | the coil is above about -3 °C (`D01`); meaning unconfirmed | uncertain  |
+| `2050` | 5      | always, so far                                             | observed   |
+| `2050` | 8      | the compressor runs (**Compressor running**)               | observed   |
+| `2050` | 9      | the electric heater is on (**Electric heater on**)         | observed   |
+| `2050` | 10     | defrosting, probably the 4-way valve                       | observed   |
+| `2050` | 11, 12 | the fan runs; which bit is which speed isn't known yet     | uncertain  |
+| `2051` | 1      | always, so far                                             | observed   |
+| `2051` | 2      | defrosting (**Defrost**)                                   | observed   |
 
 To find out, download the diagnostics of the heat pump while it runs. The
 `live_data` section lists the result of the last heartbeat, which codes had a
@@ -410,7 +439,7 @@ The heat pump reports 1, which the app can't name either, so the active function
 
 - **D01 Defrost start temperature**: Coil temperature (T04) below which a defrost can start. Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). A lower D01 means fewer, later defrosts. Change it only if the coil ices up or defrosts too often.
 - **D02 Defrost end temperature**: Coil temperature (T04) at which a defrost ends. Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). A higher D02 clears the ice more thoroughly but lasts longer.
-- **D03 Defrost interval**: Minimum time between two defrosts. The app calls it 'Duration of defrosting', but a 30-90 minute range only makes sense as the interval, as in the PHNIX manuals.
+- **D03 Defrost interval**: Minimum time between two defrosts. The app calls it 'Duration of defrosting', but a 30-90 minute range only makes sense as the interval, as in the PHNIX manuals; a Trianco S300 with D03 = 45 defrosted every 45-49 minutes.
 - **D04 Maximum defrost time**: Longest a defrost may last.
 - **D05 Minimum defrost time**: Shortest a defrost lasts.
 - **D06 Defrost method**: How defrosts are started. Values: Standard (0), Economic (1), Intelligent (2). Standard uses D01-D05; Intelligent also uses D07. What Economic changes isn't documented. Your heat pump reports 0 = Standard; 1 and 2 follow the app's order.
@@ -649,7 +678,7 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 | Code   | Name in Home Assistant     | Raw cloud value    | Cloud type and range | Home Assistant               | Confidence |
 | ------ | -------------------------- | ------------------ | -------------------- | ---------------------------- | ---------- |
 | `T21`  | T21 Settings write counter | `3136`             |                      | sensor, Diagnostic           | observed   |
-| `2051` | 2051 Status bits           | `0000000000000010` |                      | sensor, Diagnostic           | uncertain  |
+| `2051` | 2051 Status bits           | `0000000000000010` |                      | sensor, Diagnostic           | observed   |
 | `1142` | 1142 Flags                 | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
 | `1151` | 1151 Flags                 | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
 | `2085` | 2085 Flags                 | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
@@ -658,7 +687,7 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 | `L28`  | L28 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
 
 - **T21 Settings write counter**: Counter that rises with every settings change, equal to register 2027. It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes.
-- **2051 Status bits**: Packed status word; bit 1 has been set on a Trianco S300 so far.
+- **2051 Status bits**: Packed status word: bit 2 is set during defrost, bit 1 has always been set.
 - **1142 Flags**: Flag word, all bits clear so far.
 - **1151 Flags**: Flag word. It read 1 after the app's Align the device time.
 - **2085 Flags**: Flag word, all bits clear so far.
@@ -668,21 +697,23 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 
 ### Found by a scan of a related model
 
-These come from the scan of an Indol PV300 with the same product ID. Their meaning on the S300 is not confirmed yet.
+These come from the scan of an Indol PV300 with the same product ID. The status bits have since been checked on a Trianco S300; the rest is not confirmed there.
 
 | Code                 | Name in Home Assistant                   | Raw cloud value    | Cloud type and range | Home Assistant               | Confidence |
 | -------------------- | ---------------------------------------- | ------------------ | -------------------- | ---------------------------- | ---------- |
 | `2050`               | 2050 Operating status bits               | `0001100100100000` |                      | sensor, Diagnostic           | uncertain  |
-| `compressor_running` | Compressor running (2050 bit 8)          |                    |                      | binary_sensor, Sensors       | uncertain  |
-| `electric_heater_on` | Electric heater on (2050 bit 9)          |                    |                      | binary_sensor, Sensors       | uncertain  |
+| `compressor_running` | Compressor running (2050 bit 8)          |                    |                      | binary_sensor, Sensors       | observed   |
+| `electric_heater_on` | Electric heater on (2050 bit 9)          |                    |                      | binary_sensor, Sensors       | observed   |
+| `defrost`            | Defrost (2051 bit 2)                     |                    |                      | binary_sensor, Sensors       | observed   |
 | `M06`                | M06 Electric heating                     | `0`                |                      | sensor, Diagnostic, disabled | uncertain  |
 | `O29`                | O29 Fan speed                            | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
 | `T07`                | T07 Discharge temperature (unconfirmed)  | `-30.0`            |                      | sensor, Sensors, disabled    | uncertain  |
 | `T09`                | T09 Compressor temperature (unconfirmed) | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
 
-- **2050 Operating status bits**: Packed operating status word, shown as its 16 bits (bit 0 is the last). On an Indol PV300 with the same product ID (github.com/victor987/hitemp), bit 8 was set while the compressor ran and bit 9 while the electric heater was on; bits 2 and 5 were always set. Compare the bits with the app's O codes to confirm them on your heat pump.
-- **Compressor running (2050 bit 8)**: Bit 8 of the operating status word 2050. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), this bit followed the compressor. Not yet confirmed on other models.
-- **Electric heater on (2050 bit 9)**: Bit 9 of the operating status word 2050. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), this bit followed the electric heater. Not yet confirmed on other models.
+- **2050 Operating status bits**: Packed operating status word, shown as its 16 bits (bit 0 is the last). The bits decoded so far are listed under [Live data](#live-data-the-app-heartbeat).
+- **Compressor running (2050 bit 8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID.
+- **Electric heater on (2050 bit 9)**: Bit 9 of the operating status word 2050. Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.
+- **Defrost (2051 bit 2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.
 - **M06 Electric heating**: Electric heater request register. Values: Off (0), On (1). On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here.
 - **O29 Fan speed**: Fan speed in revolutions per minute. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default.
 - **T07 Discharge temperature (unconfirmed)**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature.

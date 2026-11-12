@@ -92,6 +92,8 @@ views:
             entities:
               - entity: binary_sensor.heat_pump_compressor_running_2050_bit_8
                 name: Compressor
+              - entity: binary_sensor.heat_pump_defrost_2051_bit_2
+                name: Defrost
               - entity: sensor.heat_pump_t06_discharge_temperature
                 name: Discharge (T06)
           - type: history-graph

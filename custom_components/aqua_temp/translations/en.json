@@ -94,6 +94,9 @@
       "1245226668902080512_electric_heater_on": {
         "name": "Electric heater on (2050 bit 9)"
       },
+      "1245226668902080512_defrost": {
+        "name": "Defrost (2051 bit 2)"
+      },
       "1245226668902080512_vacation_mode": {
         "name": "Vacation mode (1129 bit 0)"
       }

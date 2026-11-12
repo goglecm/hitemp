@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.3.0
+
+_Minimum HA Version: 2026.11.0_
+
+### New
+
+- **Defrost** binary sensor (bit 2 of `2051`): a log of a Trianco S300 at one
+  read per minute showed it set during every defrost, with the EEV at its
+  defrost position and the fan stopped
+
+### Changes
+
+- **Compressor running** and **Electric heater on** are marked as observed,
+  confirmed against the app on a Trianco S300
+- The guide lists the status bits decoded so far (unit off, compressor,
+  electric heater, defrost, fan) and what the log showed about defrost timing
+  (`D01`, `D03`, `D05`) and the on/off state being stored in the controller's
+  memory
+
 ## 4.2.0
 
 _Minimum HA Version: 2026.11.0_

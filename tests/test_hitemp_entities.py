@@ -587,3 +587,22 @@ async def test_code_changes_are_reported(
     await hass.async_block_till_done()
 
     assert hass.states.get(changes).state == "No changes"
+
+
+@pytest.mark.parametrize(
+    ("word", "state"), [("0000000000000110", STATE_ON), ("0000000000000010", STATE_OFF)]
+)
+@pytest.mark.usefixtures("fake_cloud")
+async def test_defrost_follows_status_word_2051(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    word: str,
+    state: str,
+) -> None:
+    """Bit 2 of 2051 was set during every defrost of a Trianco S300."""
+    device = await _setup(hass, add_device, make_entry, **{"2051": word})
+
+    defrost = hass.states.get(entity_id(hass, "binary_sensor", "defrost", device.code))
+    assert defrost.state == state
+    assert defrost.attributes["calculated_from"] == "2051 bit 2"
