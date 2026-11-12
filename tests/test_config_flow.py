@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
 import logging
 from typing import Any
 from unittest.mock import patch
@@ -20,6 +21,7 @@ from custom_components.aqua_temp.common.consts import (
     CONF_API_TYPE,
     CONF_LIVE_DATA,
     CONF_TITLE,
+    CONF_UPDATE_INTERVAL,
     CONFIGURATION_FILE,
     DOMAIN,
 )
@@ -33,6 +35,7 @@ USER_INPUT = {
     CONF_PASSWORD: PASSWORD,
     CONF_API_TYPE: "hi_temp",
     CONF_LIVE_DATA: True,
+    CONF_UPDATE_INTERVAL: 5,
 }
 
 
@@ -76,8 +79,15 @@ async def test_user_flow_creates_entry(
     assert result["title"] == "My Heat Pump"
     assert result["result"].unique_id == f"hi_temp_{USERNAME}"
     data = result["data"]
-    assert set(data) == {CONF_USERNAME, CONF_PASSWORD, CONF_API_TYPE, CONF_LIVE_DATA}
+    assert set(data) == {
+        CONF_USERNAME,
+        CONF_PASSWORD,
+        CONF_API_TYPE,
+        CONF_LIVE_DATA,
+        CONF_UPDATE_INTERVAL,
+    }
     assert data[CONF_LIVE_DATA] is True
+    assert data[CONF_UPDATE_INTERVAL] == 5
     assert data[CONF_USERNAME] == USERNAME
     assert data[CONF_API_TYPE] == "hi_temp"
 
@@ -236,6 +246,31 @@ async def test_options_flow_turns_off_live_data(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert loaded_entry.data[CONF_LIVE_DATA] is False
     assert not fake_cloud.heartbeat_requests()
+
+
+async def test_options_flow_changes_the_update_interval(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    loaded_entry: MockConfigEntry,
+) -> None:
+    """The poll interval can be shortened down to the heat pump's upload interval."""
+    result = await hass.config_entries.options.async_init(loaded_entry.entry_id)
+    assert _schema_keys(result)[CONF_UPDATE_INTERVAL].default() == 5
+
+    await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_TITLE: "Heat Pump",
+            CONF_USERNAME: USERNAME,
+            CONF_API_TYPE: "hi_temp",
+            CONF_LIVE_DATA: True,
+            CONF_UPDATE_INTERVAL: 1.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert loaded_entry.data[CONF_UPDATE_INTERVAL] == 1
+    assert loaded_entry.runtime_data.update_interval == timedelta(minutes=1)
 
 
 async def test_options_flow_changes_password(

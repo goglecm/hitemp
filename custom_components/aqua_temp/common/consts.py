@@ -1,4 +1,3 @@
-from datetime import timedelta
 from enum import StrEnum
 
 from homeassistant.components.climate.const import FAN_AUTO, FAN_LOW, HVACMode
@@ -10,7 +9,10 @@ CONFIGURATION_FILE = f"{DOMAIN}.config.json"
 STORAGE_VERSION = 1
 LEGACY_KEY_FILE = f"{DOMAIN}.key"
 
-UPDATE_API_INTERVAL = timedelta(minutes=5)
+# Minutes between polls; the heat pump itself uploads every H32 minutes
+DEFAULT_UPDATE_INTERVAL = 5
+MIN_UPDATE_INTERVAL = 1
+MAX_UPDATE_INTERVAL = 60
 
 ADD_COMPONENT_SIGNALS = [SIGNAL_AQUA_TEMP_DEVICE_NEW]
 
@@ -27,6 +29,7 @@ HTTP_HEADER_X_TOKEN = "x-token"
 CONF_TITLE = "title"
 CONF_API_TYPE = "api_type"
 CONF_LIVE_DATA = "live_data"
+CONF_UPDATE_INTERVAL = "update_interval"
 
 # Sent by the official apps before reading live values: the board then uploads
 # its live block (outputs, switches, fault words, versions) to the cloud.
@@ -35,8 +38,11 @@ APP_HEARTBEAT_VALUE = "23205"
 LIVE_DATA_SETTLE_SECONDS = 2
 
 FAULT_WORD_CODES = [f"Fault{index}" for index in range(1, 11)]
-# The PCB software code and version, as on the app's About page
+# The PCB software code and version, as on the app's About page, under the
+# names of the live data block and as HiTemp registers; then the display's
 BOARD_VERSION_CODES = ["MainBoard Version", "code_version"]
+REGISTER_BOARD_VERSION_CODES = ["2012", "2011"]
+DISPLAY_VERSION_CODES = ["2014", "2013"]
 # Output and switch states packed into one value, bit order unconfirmed
 BITWORD_CODES = ["O01~015", "O01~014", "O01~023", "S01~S06", "S01~S10"]
 WIFI_VERSION_KEYS = ["wifiSoftwareVer", "wifi_software_ver"]
@@ -63,16 +69,14 @@ PRODUCT_ID_HITEMP = "1245226668902080512"
 # (github.com/victor987/hitemp), read for diagnostics until their meaning on
 # other models is known
 HITEMP_DISCOVERY_CODES = [
-    *("2051", "2085", "1129", "1133", "1142", "1151", "T08", "F03", "L28"),
     *("2011", "2012", "2013", "2014", "2026", "2027", "2057", "2058", "2059"),
-    *("2068", "2069", "2070", "2071", "T20", "T21"),
+    *("2068", "2069", "2070", "2071"),
     *(f"O{index}" for index in (18, 19, 21, 22, 23, 24, 25, 26, 27, 28)),
     *("M07", "M12", "M13", "M14", "M15", "M16"),
     *("R02", "R11", "R13", "R16", "H09", "H16", "E06"),
     *(f"C0{index}" for index in (1, 2, 3, 5, 6, 7, 8, 9)),
     *("D10", "D11", "D12", "D13"),
     *(f"F{index:02}" for index in (1, 2, 4, 5, 6, 7, 9, 10, 11, 12, 13)),
-    *("L02", "L03", "L04", *(f"L{index:02}" for index in range(6, 14))),
     *("L29", "L30", "L31", "L32"),
 ]
 PRODUCT_PROBE_CODES = {PRODUCT_ID_HITEMP: HITEMP_DISCOVERY_CODES}
@@ -120,6 +124,8 @@ CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
 
 API_STATUS = "api_status"
 CLOUD_STATUS = "cloud_status"
+CODE_CHANGES = "code_changes"
+NO_CODE_CHANGES = "No changes"
 
 DEVICE_IS_FAULT = "is_fault"
 DEVICE_STATUS = "device_status"

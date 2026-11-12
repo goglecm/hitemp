@@ -16,6 +16,7 @@ from ..common.consts import (
     CONF_API_TYPE,
     CONF_LIVE_DATA,
     CONF_TITLE,
+    CONF_UPDATE_INTERVAL,
     DEFAULT_NAME,
     HITEMP_GUIDE_URL,
     INVALID_TOKEN_SECTION,
@@ -154,6 +155,7 @@ class IntegrationFlowManager:
             CONF_USERNAME: self._entry.data.get(CONF_USERNAME),
             CONF_API_TYPE: config_data.api_type,
             CONF_LIVE_DATA: config_data.live_data,
+            CONF_UPDATE_INTERVAL: config_data.update_interval,
         }
 
     async def _async_stored_password(self) -> str | None:
@@ -242,4 +244,5 @@ class IntegrationFlowManager:
             CONF_PASSWORD: credentials[CONF_PASSWORD],
             CONF_API_TYPE: config_data.api_type,
             CONF_LIVE_DATA: config_data.live_data,
+            CONF_UPDATE_INTERVAL: config_data.update_interval,
         }

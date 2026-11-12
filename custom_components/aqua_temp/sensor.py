@@ -1,12 +1,13 @@
+from datetime import date
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import Platform
+from homeassistant.const import MAX_LENGTH_STATE_STATE as MAX_STATE_LENGTH, Platform
 from homeassistant.core import HomeAssistant
 
 from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
-from .common.consts import CLOUD_STATUS, DEVICE_FAULT
+from .common.consts import CLOUD_STATUS, CODE_CHANGES, DEVICE_FAULT, NO_CODE_CHANGES
 from .common.entity_descriptions import AquaTempSensorEntityDescription
 from .common.utils import (
     TEMPERATURE_DEVICE_CLASSES,
@@ -71,8 +72,14 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
             state = self._get_cloud_status()
         elif description.key == DEVICE_FAULT:
             state = self._get_fault()
+        elif description.key == CODE_CHANGES:
+            state = self._get_code_changes()
         elif description.difference_of is not None:
             state = self._get_difference(*description.difference_of)
+        elif description.time_of is not None:
+            state = self._get_time(*description.time_of)
+        elif description.date_of is not None:
+            state = self._get_date(*description.date_of)
         elif description.value_labels is not None:
             state = self._get_label(description.value_labels)
         elif description.bitword:
@@ -102,6 +109,51 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
         self._attr_extra_state_attributes = fault_words
 
         return state
+
+    def _get_code_changes(self) -> str:
+        """List the codes that changed at the last poll, with old and new values."""
+        report = self.local_coordinator.get_code_changes(self.device_code)
+        changes = report["changes"]
+
+        self._attr_extra_state_attributes = {
+            "time": report["time"],
+            "changes": {
+                code: f"{change['from']} -> {change['to']}"
+                for code, change in changes.items()
+            },
+        }
+
+        if not changes:
+            return NO_CODE_CHANGES
+
+        return ", ".join(changes)[:MAX_STATE_LENGTH]
+
+    def _get_whole_numbers(self, *keys: str) -> list[int] | None:
+        values = [safe_float(self._get_raw_value(key)) for key in keys]
+
+        if any(value is None or not value.is_integer() for value in values):
+            return None
+
+        return [int(value) for value in values]
+
+    def _get_time(self, hour_key: str, minute_key: str) -> str | None:
+        values = self._get_whole_numbers(hour_key, minute_key)
+
+        if values is None or not (0 <= values[0] <= 23 and 0 <= values[1] <= 59):
+            return None
+
+        return f"{values[0]:02}:{values[1]:02}"
+
+    def _get_date(self, year_key: str, month_key: str, day_key: str) -> date | None:
+        values = self._get_whole_numbers(year_key, month_key, day_key)
+
+        if values is None:
+            return None
+
+        try:
+            return date(2000 + values[0], values[1], values[2])
+        except ValueError:
+            return None
 
     def _get_bitword(self) -> str | None:
         word = parse_bitword(self._get_raw_value())

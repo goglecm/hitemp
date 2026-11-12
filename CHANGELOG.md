@@ -1,5 +1,32 @@
 # Changelog
 
+## 4.2.0
+
+_Minimum HA Version: 2026.11.0_
+
+### New
+
+- **Operating mode select** (`mode_real`): Intelligent, Eco, Hybrid and Fast
+  heating, as on the app's Select Mode page, confirmed on a Trianco S300
+- **Update interval** option: read the cloud every 1 to 60 minutes (default 5)
+- **Code changes** sensor: after each read, the codes whose values changed,
+  with old and new values; also logged at the info level
+- Read-only, decoded by changing settings in the app: **Vacation mode**
+  (`1129` bit 0) and its date (`L02`-`L04`), the two timers' on and off times
+  (`L06`-`L13`) and switches (`1133`), the **T21 settings write counter**, and
+  further flag words
+- The device page shows the display's software code and version too, read
+  from `2011`-`2014`
+
+### Changes
+
+- `T06` is shown as the discharge temperature and enabled; on the S300 it
+  follows the compressor while `T07` reads -30.0 (no sensor)
+- `T07`, `O29` and `M06` are disabled by default: on the S300 they read
+  -30.0, 0 and 0 while the compressor and electric heater ran
+- The guide explains the modes, the timer page codes, how often values
+  update, and what the third log showed
+
 ## 4.1.1
 
 _Minimum HA Version: 2026.11.0_

@@ -63,13 +63,14 @@ Go to **Settings → Devices & services → Add integration** and choose
 **Aqua Temp**. Every account is a separate entry, and every heat pump of the
 account becomes a device.
 
-| Field             | Description                                                                    |
-| ----------------- | ------------------------------------------------------------------------------ |
-| Title             | Name of the entry                                                              |
-| Username          | Account username                                                               |
-| Password          | Account password, stored encrypted                                             |
-| API type          | The app the account was created with: Aqua Temp, HiTemp or Aqua Temp ≤1.5.8    |
-| Request live data | Send the app's live data request before each poll, see [Live data](#live-data) |
+| Field             | Description                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------- |
+| Title             | Name of the entry                                                                                    |
+| Username          | Account username                                                                                     |
+| Password          | Account password, stored encrypted                                                                   |
+| API type          | The app the account was created with: Aqua Temp, HiTemp or Aqua Temp ≤1.5.8                          |
+| Request live data | Send the app's live data request before each poll, see [Live data](#live-data)                       |
+| Update interval   | Minutes between reads of the cloud (1-60, default 5); the heat pump itself uploads every H32 minutes |
 
 | Error                       | Meaning                                                                      |
 | --------------------------- | ---------------------------------------------------------------------------- |
@@ -142,7 +143,7 @@ HiTemp (1245226668902080512):
 | Parameters                     | Entities | Enabled by default |
 | ------------------------------ | -------- | ------------------ |
 | R01, R03, R05, R06             | number   | Yes (Controls)     |
-| R04, M17 (fan after heating)   | select   | Yes (Controls)     |
+| R04, M17, mode_real (mode)     | select   | Yes (Controls)     |
 | E02-E04, D01-D05, D07, G01-G04 | number   | No (Configuration) |
 | R08-R10, H32                   | number   | No (Configuration) |
 | E01, H99, D06, R07, H01        | select   | No (Configuration) |
@@ -167,7 +168,8 @@ Assistant too.
 ### What to change and what to leave
 
 - **Daily use:** `R01` (target water temperature, also set by the climate
-  entity). Heating is started with the remote on/off input `S01` on the board
+  entity) and the operating mode `mode_real` (Eco, Hybrid, Fast heating or
+  Intelligent, as in the app). Heating is started with the remote on/off input `S01` on the board
   (`DI05` in the Trianco S300 manual). `M17` only sets what the fan does once
   the target is reached: low, high or off.
 - **Booster, if one is fitted:** `R04`-`R06` in Controls, `R07`-`R10` in
@@ -212,6 +214,15 @@ fan speed and a discharge temperature. These are not yet confirmed on every
 model: compare them with the app, and attach the diagnostics of the heat pump
 to an [issue](https://github.com/goglecm/hitemp/issues) to help confirm
 them. The guide explains the details.
+
+### Finding out what a setting changes
+
+The **Code changes** sensor lists, after each read, the codes whose values
+changed since the previous read, with the old and new values; live readings
+such as temperatures are left out. Change one setting in the app, wait for the
+next read (or lower the **Update interval**), and the sensor and the log show
+which codes moved. The vacation, timer and clock codes in the guide were found
+this way.
 
 ## Troubleshooting
 

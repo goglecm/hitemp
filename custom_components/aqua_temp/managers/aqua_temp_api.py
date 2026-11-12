@@ -131,6 +131,7 @@ class AquaTempAPI:
         self._heartbeat_results: dict[str, dict] = {}
         self._probe_codes: dict[str, list[str]] = {}
         self._code_reports: dict[str, dict[str, list[str]]] = {}
+        self._code_changes: dict[str, dict] = {}
 
     @property
     def is_connected(self):
@@ -291,6 +292,7 @@ class AquaTempAPI:
 
                 self._config_manager.set_device(device_code, product_id)
 
+            previous_data = {} if new_device else dict(self._devices[device_code])
             param_keep_alive = self._config_manager.get_api_param(APIParam.KeepAlive)
 
             if param_keep_alive:
@@ -308,6 +310,8 @@ class AquaTempAPI:
                 await self._fetch_probe_codes(device_code)
 
             await self._fetch_status(device_code)
+
+            self._record_code_changes(device_code, previous_data)
 
             if new_device:
                 self._dispatched_devices.append(device_code)
@@ -682,6 +686,33 @@ class AquaTempAPI:
             **await self._read_probe_batch(device_code, codes[:middle]),
             **await self._read_probe_batch(device_code, codes[middle:]),
         }
+
+    def get_code_changes(self, device_code: str) -> dict:
+        """Return the settings and status codes that changed at the last poll."""
+        return self._code_changes.get(device_code, {"time": None, "changes": {}})
+
+    def _record_code_changes(self, device_code: str, previous_data: dict):
+        """Note which codes changed since the last poll, live readings excepted."""
+        live_codes = self._config_manager.get_live_codes(device_code)
+        changes = {
+            code: {"from": previous_data[code], "to": value}
+            for code, value in self._devices[device_code].items()
+            if code in previous_data
+            and code not in live_codes
+            and previous_data[code] != value
+        }
+
+        self._code_changes[device_code] = {
+            "time": dt_util.utcnow().isoformat(),
+            "changes": changes,
+        }
+
+        if changes:
+            described = ", ".join(
+                f"{code} {change['from']!r} -> {change['to']!r}"
+                for code, change in changes.items()
+            )
+            _LOGGER.info(f"Codes of {device_code} changed: {described}")
 
     def _set_heartbeat_result(self, device_code: str, result: str):
         self._heartbeat_results[device_code] = {

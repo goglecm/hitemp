@@ -4,7 +4,16 @@ import probatio as vol
 from probatio import Schema
 
 from ..common.api_types import API_TYPE_LEGACY, API_TYPES, APIType
-from ..common.consts import CONF_API_TYPE, CONF_LIVE_DATA, CONF_TITLE, DEFAULT_NAME
+from ..common.consts import (
+    CONF_API_TYPE,
+    CONF_LIVE_DATA,
+    CONF_TITLE,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_NAME,
+    DEFAULT_UPDATE_INTERVAL,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
+)
 
 PASSWORD_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
@@ -21,6 +30,7 @@ class ConfigData:
         self._password = None
         self._api_type = None
         self._live_data = True
+        self._update_interval = DEFAULT_UPDATE_INTERVAL
 
     @property
     def username(self) -> str:
@@ -45,10 +55,22 @@ class ConfigData:
         """Whether to request live data from the heat pump before each read."""
         return self._live_data
 
+    @property
+    def update_interval(self) -> int:
+        """Minutes between polls of the cloud."""
+        return self._update_interval
+
     def update(self, data: dict):
         self._password = data.get(CONF_PASSWORD)
         self._username = data.get(CONF_USERNAME)
         self._live_data = bool(data.get(CONF_LIVE_DATA, True))
+        self._update_interval = min(
+            max(
+                int(data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)),
+                MIN_UPDATE_INTERVAL,
+            ),
+            MAX_UPDATE_INTERVAL,
+        )
 
         api_type = data.get(CONF_API_TYPE, str(APIType.AquaTempOld))
 
@@ -112,6 +134,18 @@ class ConfigData:
             vol.Required(
                 CONF_LIVE_DATA, default=user_input.get(CONF_LIVE_DATA, True)
             ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_UPDATE_INTERVAL,
+                default=user_input.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=MIN_UPDATE_INTERVAL,
+                    max=MAX_UPDATE_INTERVAL,
+                    step=1,
+                    unit_of_measurement="min",
+                    mode=selector.NumberSelectorMode.BOX,
+                )
+            ),
         }
 
         schema = vol.Schema(new_user_input)

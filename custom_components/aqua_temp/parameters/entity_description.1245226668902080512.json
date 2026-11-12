@@ -14,7 +14,7 @@
     "key": "Mode",
     "name": "Mode",
     "platform": null,
-    "description": "Mode written by the climate entity, 2 = heat."
+    "description": "Active mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (seen in the app on a Trianco S300). In vacation mode_real keeps the mode to return to."
   },
   {
     "key": "Manual-mute",
@@ -31,17 +31,21 @@
   {
     "key": "mode_real",
     "name": "mode_real Operating mode",
-    "platform": "sensor",
+    "app_name": "Select Mode",
+    "platform": "select",
     "options": {
       "0": "Intelligent",
       "2": "Eco",
-      "3": "Standard",
-      "4": "High demand"
+      "3": "Hybrid",
+      "4": "Fast heating"
     },
     "entity_category": null,
-    "confidence": "uncertain",
-    "description": "Operating mode the heat pump reports; the climate entity reads it and writes 2 when it switches heating on from another mode.",
-    "guidance": "The Trianco S300 manual lists Standard, Eco, Vacation, Intelligent and High demand. On an Indol PV300 with the same product ID, 0 = Intelligent, 2 = Eco (heat pump only), 3 = heat pump plus heater after the delay (Standard here) and 4 = heat pump plus heater at once (High demand); those labels are used here but aren't confirmed on the S300. The climate entity shows all of them as heat and doesn't change the mode when heating is already on.",
+    "level": "App settings",
+    "app_range": "Intelligent Mode, Eco Mode, Hybrid Mode, Fast Heating Mode",
+    "app_value": "Eco Mode",
+    "confidence": "observed",
+    "description": "Operating mode, as on the app's Select Mode page. Hybrid is the manual's Standard mode and Fast heating its High demand mode.",
+    "guidance": "Eco: heat pump only. Hybrid: the electric heater helps if the target isn't reached after R06 minutes. Fast heating: the electric heater runs at once. Intelligent: chooses between them by the ambient temperature (R08-R10). Without an electric heater fitted, Eco is the mode to use. Vacation is set on the app's Timer page and shows as Mode 7 and the Vacation mode sensor. The values were confirmed by switching modes in the app on a Trianco S300.",
     "cloud_type": "ENUM"
   },
   {
@@ -1530,16 +1534,15 @@
   },
   {
     "key": "T06",
-    "name": "T06 Solar/discharge temperature (unconfirmed)",
+    "name": "T06 Discharge temperature",
     "platform": "sensor",
     "device_class": "temperature",
     "unit_of_measurement": "°C",
     "state_class": "measurement",
     "entity_category": null,
-    "enabled_by_default": false,
-    "confidence": "uncertain",
+    "confidence": "observed",
     "description": "Not shown in the app. The vendor parameter file calls it the solar temperature.",
-    "guidance": "Your installation has no solar circuit, yet T06 rose from about 63 to 87 °C while the compressor ran and dropped when it stopped. That fits the compressor discharge (hot gas) temperature, but it isn't confirmed.",
+    "guidance": "On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while T07 reads -30.0, the value of a missing sensor. That fits the compressor discharge (hot gas) temperature, which the manual's P81/E04 protections watch.",
     "cloud_type": "TEMP1"
   },
   {
@@ -1605,9 +1608,10 @@
       "1": "On"
     },
     "entity_category": "diagnostic",
+    "enabled_by_default": false,
     "confidence": "uncertain",
-    "description": "Electric heater switch, probably the app's Electric heating switch.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. Read-only here."
+    "description": "Electric heater request register.",
+    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here."
   },
   {
     "key": "O29",
@@ -1617,9 +1621,10 @@
     "state_class": "measurement",
     "display_precision": 0,
     "entity_category": null,
+    "enabled_by_default": false,
     "confidence": "uncertain",
     "description": "Fan speed in revolutions per minute.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running; the S300's fan runs at 830 rpm according to its manual."
+    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default."
   },
   {
     "key": "T07",
@@ -1629,9 +1634,10 @@
     "unit_of_measurement": "°C",
     "state_class": "measurement",
     "entity_category": null,
+    "enabled_by_default": false,
     "confidence": "uncertain",
     "description": "Not shown in the app.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature."
+    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature."
   },
   {
     "key": "T09",
@@ -1645,6 +1651,245 @@
     "confidence": "uncertain",
     "description": "Not shown in the app.",
     "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 30-40 °C and dropped when the compressor started."
+  },
+  {
+    "key": "vacation_mode",
+    "name": "Vacation mode (1129 bit 0)",
+    "platform": "binary_sensor",
+    "bit_of": ["1129", 0],
+    "entity_category": null,
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "On while vacation mode is set on the app's Timer page.",
+    "guidance": "Turning vacation mode on in the app set this bit, changed Mode to 7 and stored the date in L02-L04; turning it off cleared the bit. Read-only."
+  },
+  {
+    "key": "vacation_date",
+    "name": "Vacation date (L02-L04)",
+    "platform": "sensor",
+    "device_class": "date",
+    "date_of": ["L02", "L03", "L04"],
+    "entity_category": "diagnostic",
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "Date set for vacation mode on the app's Timer page.",
+    "guidance": "The app showed 28-05-2010 while L02-L04 read 10, 5 and 28. Read-only."
+  },
+  {
+    "key": "timer1_on",
+    "name": "Timer 1 on (L06:L07)",
+    "platform": "sensor",
+    "time_of": ["L06", "L07"],
+    "entity_category": "diagnostic",
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "On time of timer 1 on the app's Timer page.",
+    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L07 holds the minutes. Whether the timer is switched on is in 1133. Read-only."
+  },
+  {
+    "key": "timer1_off",
+    "name": "Timer 1 off (L08:L09)",
+    "platform": "sensor",
+    "time_of": ["L08", "L09"],
+    "entity_category": "diagnostic",
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "Off time of timer 1 on the app's Timer page.",
+    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L09 holds the minutes. Whether the timer is switched on is in 1133. Read-only."
+  },
+  {
+    "key": "timer2_on",
+    "name": "Timer 2 on (L10:L11)",
+    "platform": "sensor",
+    "time_of": ["L10", "L11"],
+    "entity_category": "diagnostic",
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "On time of timer 2 on the app's Timer page.",
+    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only."
+  },
+  {
+    "key": "timer2_off",
+    "name": "Timer 2 off (L12:L13)",
+    "platform": "sensor",
+    "time_of": ["L12", "L13"],
+    "entity_category": "diagnostic",
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "Off time of timer 2 on the app's Timer page.",
+    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only."
+  },
+  {
+    "key": "1133",
+    "name": "1133 Timer switches",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "level": "App settings",
+    "confidence": "observed",
+    "description": "The on/off switches of the app's two timers, as bits.",
+    "guidance": "Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet."
+  },
+  {
+    "key": "1129",
+    "name": "1129 Vacation flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "confidence": "observed",
+    "description": "Flag word whose bit 0 is vacation mode."
+  },
+  {
+    "key": "T21",
+    "name": "T21 Settings write counter",
+    "platform": "sensor",
+    "state_class": "total_increasing",
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "confidence": "observed",
+    "description": "Counter that rises with every settings change, equal to register 2027.",
+    "guidance": "It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes."
+  },
+  {
+    "key": "T20",
+    "name": "T20",
+    "platform": null,
+    "description": "Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11)."
+  },
+  {
+    "key": "L02",
+    "name": "L02",
+    "platform": null,
+    "description": "Vacation year (20YY), from the app's Timer page."
+  },
+  {
+    "key": "L03",
+    "name": "L03",
+    "platform": null,
+    "description": "Vacation month, from the app's Timer page."
+  },
+  {
+    "key": "L04",
+    "name": "L04",
+    "platform": null,
+    "description": "Vacation day, from the app's Timer page."
+  },
+  {
+    "key": "L06",
+    "name": "L06",
+    "platform": null,
+    "description": "Timer 1 on hour, from the app's Timer page."
+  },
+  {
+    "key": "L07",
+    "name": "L07",
+    "platform": null,
+    "description": "Timer 1 on minute, from the app's Timer page."
+  },
+  {
+    "key": "L08",
+    "name": "L08",
+    "platform": null,
+    "description": "Timer 1 off hour, from the app's Timer page."
+  },
+  {
+    "key": "L09",
+    "name": "L09",
+    "platform": null,
+    "description": "Timer 1 off minute, from the app's Timer page."
+  },
+  {
+    "key": "L10",
+    "name": "L10",
+    "platform": null,
+    "description": "Timer 2 on hour, from the app's Timer page."
+  },
+  {
+    "key": "L11",
+    "name": "L11",
+    "platform": null,
+    "description": "Timer 2 on minute, from the app's Timer page."
+  },
+  {
+    "key": "L12",
+    "name": "L12",
+    "platform": null,
+    "description": "Timer 2 off hour, from the app's Timer page."
+  },
+  {
+    "key": "L13",
+    "name": "L13",
+    "platform": null,
+    "description": "Timer 2 off minute, from the app's Timer page."
+  },
+  {
+    "key": "2051",
+    "name": "2051 Status bits",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "confidence": "uncertain",
+    "description": "Packed status word; bit 1 has been set on a Trianco S300 so far."
+  },
+  {
+    "key": "1142",
+    "name": "1142 Flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Flag word, all bits clear so far."
+  },
+  {
+    "key": "1151",
+    "name": "1151 Flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Flag word. It read 1 after the app's Align the device time."
+  },
+  {
+    "key": "2085",
+    "name": "2085 Flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Flag word, all bits clear so far."
+  },
+  {
+    "key": "T08",
+    "name": "T08 Flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Sensor status flags on an Indol PV300 with the same product ID; all clear so far."
+  },
+  {
+    "key": "F03",
+    "name": "F03 Flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Configuration flags, all clear so far."
+  },
+  {
+    "key": "L28",
+    "name": "L28 Flags",
+    "platform": "sensor",
+    "bitword": true,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Schedule flags, all clear so far."
   },
   {
     "key": "superheat",

@@ -1,5 +1,5 @@
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import re
 from typing import Any
@@ -24,6 +24,7 @@ from ..common.consts import (
     DEVICE_IS_FAULT,
     DEVICE_STATUS,
     DEVICE_STATUS_ONLINE,
+    DISPLAY_VERSION_CODES,
     DOMAIN,
     FAULT_WITHOUT_DESCRIPTION,
     FAULT_WORD_CODES,
@@ -31,7 +32,7 @@ from ..common.consts import (
     NO_FAULT,
     PRODUCT_ID_HITEMP,
     PROJECT_URL,
-    UPDATE_API_INTERVAL,
+    REGISTER_BOARD_VERSION_CODES,
     WIFI_VERSION_KEYS,
     CloudStatus,
 )
@@ -49,19 +50,28 @@ _LOGGER = logging.getLogger(__name__)
 MAC_ADDRESS = re.compile(r"[0-9A-Fa-f]{12}")
 
 
+def _describe_version(device_data: dict, part: str, codes: list[str]) -> str | None:
+    software_code, version = (device_data.get(code) or None for code in codes)
+
+    if software_code and version:
+        return f"{part} {software_code} (version {version})"
+    if software_code:
+        return f"{part} {software_code}"
+    if version:
+        return f"{part} version {version}"
+
+    return None
+
+
 def _software_version(device_data: dict) -> str | None:
-    """Describe the board and Wi-Fi module versions the cloud reported."""
+    """Describe the board, display and Wi-Fi module versions the cloud reported."""
     parts = []
 
-    board_code, board_version = (
-        device_data.get(code) or None for code in BOARD_VERSION_CODES
-    )
-    if board_code and board_version:
-        parts.append(f"PCB {board_code} (version {board_version})")
-    elif board_code:
-        parts.append(f"PCB {board_code}")
-    elif board_version:
-        parts.append(f"PCB version {board_version}")
+    board = _describe_version(device_data, "PCB", BOARD_VERSION_CODES)
+    board = board or _describe_version(device_data, "PCB", REGISTER_BOARD_VERSION_CODES)
+    display = _describe_version(device_data, "display", DISPLAY_VERSION_CODES)
+
+    parts.extend(part for part in (board, display) if part is not None)
 
     for key in WIFI_VERSION_KEYS:
         if device_data.get(key):
@@ -86,7 +96,9 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             _LOGGER,
             config_entry=config_entry,
             name=config_manager.entry_title,
-            update_interval=UPDATE_API_INTERVAL,
+            update_interval=timedelta(
+                minutes=config_manager.config_data.update_interval
+            ),
         )
 
         self._api = AquaTempAPI(hass, config_manager)
@@ -355,6 +367,10 @@ class AquaTempCoordinator(DataUpdateCoordinator):
     def get_live_data_report(self, device_code: str) -> dict:
         """Return the last heartbeat result and which codes had a value."""
         return self._api.get_live_data_report(device_code)
+
+    def get_code_changes(self, device_code: str) -> dict:
+        """Return the codes that changed at the last poll."""
+        return self._api.get_code_changes(device_code)
 
     def get_device_data(self, device_code: str) -> dict | None:
         device_data = self._api.get_device_data(device_code)

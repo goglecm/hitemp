@@ -208,7 +208,10 @@ async def test_device_info(
     device_entry = _device_entry(hass, entry)
 
     assert device_entry.serial_number == device.code
-    assert device_entry.sw_version == "PCB 679 (version 1.0), Wi-Fi V1.1"
+    assert (
+        device_entry.sw_version
+        == "PCB 679 (version 1.0), display 741 (version 1.0), Wi-Fi V1.1"
+    )
     assert device_entry.model_id == PRODUCT_ID_HITEMP
     assert device_entry.configuration_url == HITEMP_GUIDE_URL
 
@@ -222,7 +225,10 @@ async def test_software_version_follows_the_heat_pump(
 
     await _refresh(hass, entry)
 
-    assert _device_entry(hass, entry).sw_version == "PCB 679 (version 1.1), Wi-Fi V1.1"
+    assert (
+        _device_entry(hass, entry).sw_version
+        == "PCB 679 (version 1.1), display 741 (version 1.0), Wi-Fi V1.1"
+    )
 
 
 @pytest.mark.parametrize(
@@ -235,6 +241,12 @@ async def test_software_version_follows_the_heat_pump(
             "PCB version 1.0, Wi-Fi V1.1",
         ),
         ({}, {"wifiSoftwareVer": "V1.1"}, "Wi-Fi V1.1"),
+        (
+            {"2012": "679", "2011": "1.0", "2014": "741", "2013": "1.0"},
+            {},
+            "PCB 679 (version 1.0), display 741 (version 1.0)",
+        ),
+        ({"2011": "1.0"}, {}, "PCB version 1.0"),
         ({}, {}, None),
     ],
 )
@@ -249,6 +261,8 @@ async def test_software_version_shows_what_is_known(
 ) -> None:
     """Only the versions the heat pump reported are shown."""
     device = add_device(HITEMP_FIXTURE)
+    for code in ("2011", "2012", "2013", "2014"):
+        device.data.pop(code)
     device.live_data = live_data
     device.list_extra = list_extra
     entry = make_entry()
@@ -305,7 +319,9 @@ async def test_bitwords_are_shown_raw_in_diagnostics(
         hass, entry, _device_entry(hass, entry)
     )
 
-    assert diagnostics["device"]["live_data"]["bitwords"] == {
+    bitwords = diagnostics["device"]["live_data"]["bitwords"]
+    assert bitwords["1129"]["bits_set"] == []
+    assert {code: bitwords[code] for code in ("O01~015", "S01~S06")} == {
         "O01~015": {"value": "on"},
         "S01~S06": {
             "value": "13",

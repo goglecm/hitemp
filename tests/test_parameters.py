@@ -160,9 +160,10 @@ HITEMP_SELECTS = {
     "D06": {"0": "Standard", "1": "Economic", "2": "Intelligent"},
     "R07": {"0": "NO", "1": "YES"},
     "H01": {"0": "NO", "1": "YES"},
+    "mode_real": {"0": "Intelligent", "2": "Eco", "3": "Hybrid", "4": "Fast heating"},
 }
 # Writable codes shown without enabling them first
-HITEMP_DAILY = {"R01", "R03", "R04", "R05", "R06", "M17"}
+HITEMP_DAILY = {"R01", "R03", "R04", "R05", "R06", "M17", "mode_real"}
 
 # Every code the HiTemp app shows, by password level
 HITEMP_APP_CODES = {
@@ -181,7 +182,7 @@ HITEMP_APP_CODES = {
         *("S01", "S03", "S04", "S05", "S06"),
         *("O01", "O02", "O03", "O04", "O05", "O06", "O08", "O09"),
     },
-    "App settings": {"M17"},
+    "App settings": {"M17", "mode_real"},
 }
 CONFIDENCE_LEVELS = {"documented", "observed", "uncertain"}
 
@@ -271,6 +272,11 @@ def test_hitemp_entities_are_explained() -> None:
         elif "bit_of" in item:
             code, bit = item["bit_of"]
             assert item["name"].endswith(f"({code} bit {bit})"), key
+        elif "time_of" in item:
+            assert item["name"].endswith("({}:{})".format(*item["time_of"])), key
+        elif "date_of" in item:
+            first, *_, last = item["date_of"]
+            assert item["name"].endswith(f"({first}-{last})"), key
         elif key != "Power":
             assert item["name"].startswith(f"{key} "), key
 

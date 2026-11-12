@@ -9,11 +9,13 @@
           "username": "Username",
           "password": "Password",
           "api_type": "API type",
-          "live_data": "Request live data"
+          "live_data": "Request live data",
+          "update_interval": "Update interval"
         },
         "data_description": {
           "api_type": "The app the account was created with",
-          "live_data": "Before each poll, send the request the app sends while it is open (app_heartbeat), so the heat pump uploads its current values, and read the fault, version and switch codes it may then provide. Turn it off if the heat pump behaves differently with it."
+          "live_data": "Before each poll, send the request the app sends while it is open (app_heartbeat), so the heat pump uploads its current values, and read the fault, version and switch codes it may then provide. Turn it off if the heat pump behaves differently with it.",
+          "update_interval": "Minutes between reads of the cloud. The heat pump uploads its values every H32 minutes, so polling more often than that shows nothing new."
         }
       },
       "reauth_confirm": {
@@ -45,12 +47,14 @@
           "username": "Username",
           "password": "Password",
           "api_type": "API type",
-          "live_data": "Request live data"
+          "live_data": "Request live data",
+          "update_interval": "Update interval"
         },
         "data_description": {
           "password": "Leave empty to keep the current password",
           "api_type": "The app the account was created with",
-          "live_data": "Before each poll, send the request the app sends while it is open (app_heartbeat), so the heat pump uploads its current values, and read the fault, version and switch codes it may then provide. Turn it off if the heat pump behaves differently with it."
+          "live_data": "Before each poll, send the request the app sends while it is open (app_heartbeat), so the heat pump uploads its current values, and read the fault, version and switch codes it may then provide. Turn it off if the heat pump behaves differently with it.",
+          "update_interval": "Minutes between reads of the cloud. The heat pump uploads its values every H32 minutes, so polling more often than that shows nothing new."
         }
       }
     },
@@ -89,6 +93,9 @@
       },
       "1245226668902080512_electric_heater_on": {
         "name": "Electric heater on (2050 bit 9)"
+      },
+      "1245226668902080512_vacation_mode": {
+        "name": "Vacation mode (1129 bit 0)"
       }
     },
     "climate": {
@@ -99,6 +106,9 @@
     "select": {
       "temperature_unit": {
         "name": "Temperature Unit"
+      },
+      "1245226668902080512_mode_real": {
+        "name": "mode_real Operating mode"
       },
       "1245226668902080512_m17": {
         "name": "M17 Fan after heating"
@@ -132,6 +142,9 @@
           "cannot_connect": "Cannot connect",
           "cloud_error": "Cloud error"
         }
+      },
+      "code_changes": {
+        "name": "Code changes"
       },
       "fault": {
         "name": "Fault details"
@@ -1144,9 +1157,6 @@
       "1442284873216843776_t28": {
         "name": "Target frequency [T28]"
       },
-      "1245226668902080512_mode_real": {
-        "name": "mode_real Operating mode"
-      },
       "1245226668902080512_01": {
         "name": "/01 Use of OUT05"
       },
@@ -1307,7 +1317,7 @@
         "name": "T10 Displayed water temperature"
       },
       "1245226668902080512_t06": {
-        "name": "T06 Solar/discharge temperature (unconfirmed)"
+        "name": "T06 Discharge temperature"
       },
       "1245226668902080512_t11": {
         "name": "T11 Out-of-range protection count"
@@ -1329,6 +1339,51 @@
       },
       "1245226668902080512_t09": {
         "name": "T09 Compressor temperature (unconfirmed)"
+      },
+      "1245226668902080512_vacation_date": {
+        "name": "Vacation date (L02-L04)"
+      },
+      "1245226668902080512_timer1_on": {
+        "name": "Timer 1 on (L06:L07)"
+      },
+      "1245226668902080512_timer1_off": {
+        "name": "Timer 1 off (L08:L09)"
+      },
+      "1245226668902080512_timer2_on": {
+        "name": "Timer 2 on (L10:L11)"
+      },
+      "1245226668902080512_timer2_off": {
+        "name": "Timer 2 off (L12:L13)"
+      },
+      "1245226668902080512_1133": {
+        "name": "1133 Timer switches"
+      },
+      "1245226668902080512_1129": {
+        "name": "1129 Vacation flags"
+      },
+      "1245226668902080512_t21": {
+        "name": "T21 Settings write counter"
+      },
+      "1245226668902080512_2051": {
+        "name": "2051 Status bits"
+      },
+      "1245226668902080512_1142": {
+        "name": "1142 Flags"
+      },
+      "1245226668902080512_1151": {
+        "name": "1151 Flags"
+      },
+      "1245226668902080512_2085": {
+        "name": "2085 Flags"
+      },
+      "1245226668902080512_t08": {
+        "name": "T08 Flags"
+      },
+      "1245226668902080512_f03": {
+        "name": "F03 Flags"
+      },
+      "1245226668902080512_l28": {
+        "name": "L28 Flags"
       },
       "1245226668902080512_superheat": {
         "name": "Superheat (T05 - T04)"

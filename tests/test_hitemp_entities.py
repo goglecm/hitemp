@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 
 from homeassistant.components.climate import ATTR_FAN_MODE
 from homeassistant.components.select import (
@@ -333,7 +334,7 @@ async def test_unconfirmed_and_unused_codes_are_disabled(
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("T06", "T11", "T12", "S02", "O10", "O15", "N01", "N11"):
+    for key in ("T07", "T09", "T11", "T12", "S02", "O10", "O15", "O29", "N01", "M06"):
         entry = registry.async_get(entity_id(hass, "sensor", key, device.code))
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
 
@@ -428,7 +429,7 @@ async def test_status_word_is_not_requested_twice(
     assert "compressor_running" not in codes
 
 
-@pytest.mark.usefixtures("fake_cloud")
+@pytest.mark.usefixtures("fake_cloud", "entity_registry_enabled_by_default")
 async def test_operating_mode_and_related_readings(
     hass: HomeAssistant,
     add_device: Callable[..., FakeDevice],
@@ -440,11 +441,149 @@ async def test_operating_mode_and_related_readings(
     )
 
     assert hass.states.get(
-        entity_id(hass, "sensor", "mode_real", device.code)
-    ).state == ("Standard (3)")
+        entity_id(hass, "select", "mode_real", device.code)
+    ).state == ("Hybrid (3)")
     assert hass.states.get(entity_id(hass, "sensor", "M06", device.code)).state == (
         "On (1)"
     )
     fan = hass.states.get(entity_id(hass, "sensor", "O29", device.code))
     assert float(fan.state) == 830
     assert fan.attributes[ATTR_UNIT_OF_MEASUREMENT] == "rpm"
+
+
+async def test_operating_mode_select_writes_the_raw_mode(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Choosing Hybrid in Home Assistant writes mode_real 3, as the app does."""
+    device = await _setup(hass, add_device, make_entry, mode_real="2")
+    select = entity_id(hass, "select", "mode_real", device.code)
+
+    assert hass.states.get(select).attributes[ATTR_OPTIONS] == [
+        "Intelligent (0)",
+        "Eco (2)",
+        "Hybrid (3)",
+        "Fast heating (4)",
+    ]
+
+    await _select(hass, select, "Hybrid (3)")
+
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "mode_real", "value": "3"}]
+    ]
+    assert hass.states.get(select).state == "Hybrid (3)"
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_vacation_and_timers(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Vacation mode, its date and the timer times are decoded from their codes."""
+    device = await _setup(
+        hass,
+        add_device,
+        make_entry,
+        **{
+            "1129": "0000000000000001",
+            "1133": "0000000000001111",
+            "L02": "26",
+            "L03": "11",
+            "L04": "13",
+            "L06": "9",
+            "L07": "0",
+            "L12": "19",
+            "L13": "30",
+        },
+    )
+
+    assert hass.states.get(
+        entity_id(hass, "binary_sensor", "vacation_mode", device.code)
+    ).state == (STATE_ON)
+    vacation_date = hass.states.get(
+        entity_id(hass, "sensor", "vacation_date", device.code)
+    )
+    assert vacation_date.state == "2026-11-13"
+    assert vacation_date.attributes["calculated_from"] == "L02-L03-L04"
+    assert hass.states.get(
+        entity_id(hass, "sensor", "timer1_on", device.code)
+    ).state == ("09:00")
+    assert hass.states.get(
+        entity_id(hass, "sensor", "timer2_off", device.code)
+    ).state == ("19:30")
+    switches = hass.states.get(entity_id(hass, "sensor", "1133", device.code))
+    assert switches.attributes["bits_set"] == [0, 1, 2, 3]
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"L02": "26", "L03": "13", "L04": "1", "L06": "24", "L07": "0"},
+        {"L02": "", "L03": "11", "L04": "13", "L06": "9", "L07": ""},
+        {"L02": "26.5", "L03": "11", "L04": "13", "L06": "9", "L07": "61"},
+    ],
+)
+@pytest.mark.usefixtures("fake_cloud")
+async def test_impossible_dates_and_times_are_unavailable(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    data: dict[str, str],
+) -> None:
+    """A date or time the codes can't form is unavailable, not a wrong value."""
+    device = await _setup(hass, add_device, make_entry, **data)
+
+    for key in ("vacation_date", "timer1_on"):
+        assert hass.states.get(entity_id(hass, "sensor", key, device.code)).state == (
+            STATE_UNAVAILABLE
+        ), key
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_settings_write_counter(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """T21 counts settings writes and keeps increasing statistics."""
+    device = await _setup(hass, add_device, make_entry, T21="3136")
+
+    counter = hass.states.get(entity_id(hass, "sensor", "T21", device.code))
+    assert float(counter.state) == 3136
+    assert counter.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_code_changes_are_reported(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Settings changed in the app show up after the next poll; readings don't."""
+    device = await _setup(hass, add_device, make_entry)
+    entry = hass.config_entries.async_entries("aqua_temp")[0]
+    changes = entity_id(hass, "sensor", "code_changes", device.code)
+    assert hass.states.get(changes).state == "No changes"
+
+    device.data.update(Mode="3", mode_real="3", T02="45.0", L06="9")
+    caplog.set_level(logging.INFO)
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(changes)
+    assert state.state == "Mode, mode_real, L06"
+    assert state.attributes["changes"] == {
+        "Mode": "2 -> 3",
+        "mode_real": "2 -> 3",
+        "L06": "0 -> 9",
+    }
+    assert "Mode '2' -> '3'" in caplog.text
+
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(changes).state == "No changes"

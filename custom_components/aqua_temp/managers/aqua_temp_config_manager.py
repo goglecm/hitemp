@@ -110,6 +110,10 @@ def _parameter_info(data_item: dict) -> dict[str, Any] | None:
         code, bit = bit_of
         return {"calculated_from": f"{code} bit {bit}", **info}
 
+    for field, separator in (("time_of", ":"), ("date_of", "-")):
+        if (codes := data_item.get(field)) is not None:
+            return {"calculated_from": separator.join(codes), **info}
+
     return {"code": data_item["key"], **info}
 
 
@@ -383,6 +387,15 @@ class AquaTempConfigManager:
 
         return None
 
+    def get_live_codes(self, device_code: str) -> set[str]:
+        """Return the codes of live readings, which change on every poll."""
+        return {
+            description.key
+            for description in self.get_entity_descriptions(device_code) or []
+            if description.is_protocol_code
+            and getattr(description, "state_class", None) is not None
+        }
+
     def get_api_param(self, param: APIParam):
         result = self._api_config.get(str(param))
 
@@ -507,6 +520,8 @@ class AquaTempConfigManager:
 
             if platform == Platform.SENSOR:
                 difference_of = data_item.get("difference_of")
+                time_of = data_item.get("time_of")
+                date_of = data_item.get("date_of")
 
                 sensor_entity = AquaTempSensorEntityDescription(
                     **_common_fields(
@@ -524,7 +539,11 @@ class AquaTempConfigManager:
                         None if difference_of is None else tuple(difference_of)
                     ),
                     bitword=data_item.get("bitword", False),
-                    is_protocol_code=difference_of is None,
+                    time_of=None if time_of is None else tuple(time_of),
+                    date_of=None if date_of is None else tuple(date_of),
+                    is_protocol_code=difference_of is None
+                    and time_of is None
+                    and date_of is None,
                 )
 
                 entities.append(sensor_entity)

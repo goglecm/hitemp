@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import EntityDescription
 from custom_components.aqua_temp.common.consts import (
     API_STATUS,
     CLOUD_STATUS,
+    CODE_CHANGES,
     DEVICE_FAULT,
     DEVICE_IS_FAULT,
     DEVICE_STATUS,
@@ -68,6 +69,10 @@ class AquaTempSensorEntityDescription(
     difference_of: tuple[str, str] | None = None
     # A packed status word, shown as its bits
     bitword: bool = False
+    # Shown as HH:MM from an hour and a minute code
+    time_of: tuple[str, str] | None = None
+    # Shown as a date from year (20YY), month and day codes
+    date_of: tuple[str, str, str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -136,6 +141,13 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=[str(status) for status in CloudStatus],
         translation_key=CLOUD_STATUS,
+    ),
+    AquaTempSensorEntityDescription(
+        key=CODE_CHANGES,
+        name="Code changes",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_protocol_code=False,
+        translation_key=CODE_CHANGES,
     ),
     AquaTempSensorEntityDescription(
         key=DEVICE_FAULT,
