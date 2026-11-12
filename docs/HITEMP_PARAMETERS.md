@@ -94,8 +94,11 @@ Sources:
   your installation the bottom sensor is on the return pipe and the top
   sensor on the flow pipe. `S01` is the remote on/off input, the `DI05` and
   `GND` terminals in the manual, which are linked at the factory and can be
-  wired to a thermostat or volt-free contact. After stopping, the compressor
-  waits 3 minutes before it starts again.
+  wired to a thermostat or volt-free contact. The cloud never reports `S01`
+  itself, but opening the contacts sets `Power` to 0 and closing them sets it
+  to 1, so the Power sensor and the climate entity follow them. Each switch is
+  written to the controller's memory (see `T21` and `H01`). After stopping, the
+  compressor waits 3 minutes before it starts again.
 - **Operating modes** (Trianco S300 manual, app names in brackets): Eco (heat
   pump only), Standard (Hybrid: electric heater after `R06` minutes if the
   target isn't reached), High demand (Fast heating: electric heater without
@@ -182,11 +185,13 @@ A fourth log, with one read per minute and no changes in the app (18:44 to
   about -3 °C (`D01`). During each, bit 2 of `2051` was set, bits 11 and 12
   of `2050` cleared and bit 10 set, the EEV moved to 480 (`E05`), the suction
   temperature jumped to 25-36 °C and the coil warmed up.
-- The unit was switched off at 21:31 and 22:55 and on at 22:18, not from
-  Home Assistant. While off, `2050` held only bits 0 and 5 (bit 2 came back
-  2-3 minutes later) and the EEV sat at 480. Each switch raised `T21`/`2027`
-  by 4, so the on/off state is written to the controller's memory (`H01` =
-  YES remembers it).
+- The unit was switched off at 21:31:00 and 22:55:06 and on at 22:18:06 with
+  the remote on/off contacts (`S01`). `S01` stayed empty, but `Power` changed
+  at the next read each time (9 to 54 seconds later), and the compressor
+  stopped or started about a minute after that. While off, `2050` held only
+  bits 0 and 5 (bit 2 came back 2-3 minutes later) and the EEV sat at 480.
+  Each switch raised `T21`/`2027` by 4, so the on/off state is written to the
+  controller's memory, most likely because `H01` = YES remembers it.
 - After each start the EEV opened at 240 (`E03`) and worked down to 100
   (`E04`) within about 20 minutes, when bit 2 of `2050` cleared.
 
@@ -482,7 +487,7 @@ Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'cl
 | `H31` | Intelligent control mode                            | Centralized control, DTU&WIFI     | DTU&WIFI       | `1`             | ENUM, 0 to 1         | sensor, Diagnostic              | observed   |
 | `H32` | Circle of submitting data to Cloud                  | 1Min to 255Min, steps of 1Min     | 1Min           | `1`             | DIGI1, 1 to 255      | number, Configuration, disabled | observed   |
 
-- **H01 Remember power state**: Whether the heat pump returns to its previous on/off state after a power cut. Values: NO (0), YES (1). YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off.
+- **H01 Remember power state**: Whether the heat pump returns to its previous on/off state after a power cut. Values: NO (0), YES (1). YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.
 - **H03 Heating source**: Type of heat source. The app only offers Air source. Values: Air source (0).
 - **H07 Temperature unit**: Unit the heat pump reports temperatures in. Values: Celsius degree (0), Fahrenheit degree (1). The Temperature Unit select in Home Assistant must match it. If you change H07 in the app, change the select as well.
 - **H30 Device address**: Address of the controller on its communication bus. Read-only: a wrong address can cut the controller off from the Wi-Fi module.
@@ -567,13 +572,13 @@ The app shows `CL` (closed) or `OP` (open).
 | `S05` | Accelerate the running time of heater | CL, OP    | CL        | empty           |                      | sensor, Diagnostic | uncertain  |
 | `S06` | Second heating source                 | CL, OP    | OP        | empty           |                      | sensor, Diagnostic | uncertain  |
 
-- **S01 Remote on/off input**: Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off. Values: Open (0), Closed (1).
+- **S01 Remote on/off input**: Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off. Values: Open (0), Closed (1). The cloud never reports S01 itself, but its effect shows in Power and in bit 0 of 2050. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The app shows CL (closed) or OP (open); 1 = Closed is assumed for this entity, which stays unavailable.
 - **S03 Low pressure switch**: Low pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed OP while the heat pump ran normally, so Open isn't necessarily a fault. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 - **S04 High pressure switch**: High pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed CL during normal operation. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 - **S05 Heater acceleration input**: App name: 'Accelerate the running time of heater'. Values: Open (0), Closed (1). Probably the input that starts the booster without the R06 delay. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 - **S06 Second heating source input**: Second heating source input (see R14). Values: Open (0), Closed (1).
 
-**S01, S06:** In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
+**S06:** In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 
 ### Outputs and running hours
 
@@ -762,7 +767,7 @@ The climate entity and the Power sensor use some of these; the rest were request
 | `ver`           | Version                | empty           |                      | requested, no entity      |            |
 | `software_code` | Software Code          | empty           |                      | requested, no entity      |            |
 
-- **Power**: On/off state of the heat pump (1 = on). The climate entity turns it on and off.
+- **Power**: On/off state of the heat pump (1 = on). The climate entity turns it on and off. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The compressor stopped or started about a minute later. Each switch raised T21 by 4: the on/off state is written to the controller's memory, most likely because H01 = YES remembers it. Whether switching on from Home Assistant or the app overrides open contacts isn't known, so avoid switching it from both.
 - **Mode**: Active mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (seen in the app on a Trianco S300). In vacation mode_real keeps the mode to return to.
 - **T20**: Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11).
 - **L02**: Vacation year (20YY), from the app's Timer page.

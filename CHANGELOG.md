@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.3.1
+
+_Minimum HA Version: 2026.11.0_
+
+### Documentation
+
+- The remote on/off contacts (`S01`) are never reported by the cloud, but a
+  test on a Trianco S300 showed `Power` following them by the next read; the
+  Power, `S01` and `H01` explanations and the guide now say so
+- Each on/off, including from the contacts, raised the settings write counter
+  `T21` by 4, so it is most likely written to the controller's memory while
+  `H01` = YES
+
 ## 4.3.0
 
 _Minimum HA Version: 2026.11.0_

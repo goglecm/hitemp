@@ -8,7 +8,8 @@
     "entity_category": "diagnostic",
     "confidence": "observed",
     "description": "On/off state of the heat pump (1 = on). The climate entity turns it on and off.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "guidance": "On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The compressor stopped or started about a minute later. Each switch raised T21 by 4: the on/off state is written to the controller's memory, most likely because H01 = YES remembers it. Whether switching on from Home Assistant or the app overrides open contacts isn't known, so avoid switching it from both."
   },
   {
     "key": "Mode",
@@ -490,7 +491,7 @@
     "app_value": "YES",
     "confidence": "observed",
     "description": "Whether the heat pump returns to its previous on/off state after a power cut.",
-    "guidance": "YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off.",
+    "guidance": "YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.",
     "cloud_type": "ENUM"
   },
   {
@@ -1346,7 +1347,7 @@
     "app_value": "CL",
     "confidence": "uncertain",
     "description": "Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off.",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
+    "guidance": "The cloud never reports S01 itself, but its effect shows in Power and in bit 0 of 2050. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The app shows CL (closed) or OP (open); 1 = Closed is assumed for this entity, which stays unavailable."
   },
   {
     "key": "S02",
