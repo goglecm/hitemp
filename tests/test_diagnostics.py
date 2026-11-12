@@ -21,7 +21,7 @@ from custom_components.aqua_temp.diagnostics import (
 from .conftest import HITEMP_FIXTURE, PASSWORD, USERNAME, setup_entry
 from .fake_cloud import FakeCloud, FakeDevice, md5
 
-VOLATILE = props("last_changed", "last_reported", "last_updated", "time")
+VOLATILE = props("last_changed", "last_reported", "last_updated", "time", "since")
 
 
 @pytest.fixture

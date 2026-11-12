@@ -16,7 +16,9 @@ ADD_COMPONENT_SIGNALS = [SIGNAL_AQUA_TEMP_DEVICE_NEW]
 
 STORAGE_DATA_KEY = "key"
 
-INVALID_TOKEN_SECTION = "https://github.com/goglecm/hitemp#invalid-token"
+PROJECT_URL = "https://github.com/goglecm/hitemp"
+INVALID_TOKEN_SECTION = f"{PROJECT_URL}#invalid-token"
+HITEMP_GUIDE_URL = f"{PROJECT_URL}/blob/Custom-component/docs/HITEMP_PARAMETERS.md"
 
 DEFAULT_ENTRY_ID = "config"
 
@@ -32,22 +34,28 @@ APP_HEARTBEAT_CODE = "app_heartbeat"
 APP_HEARTBEAT_VALUE = "23205"
 LIVE_DATA_SETTLE_SECONDS = 2
 
+FAULT_WORD_CODES = [f"Fault{index}" for index in range(1, 11)]
+BOARD_VERSION_CODES = ["MainBoard Version", "code_version"]
+# Output and switch states packed into one value, bit order unconfirmed
+BITWORD_CODES = ["O01~015", "O01~014", "O01~023", "S01~S06", "S01~S10"]
+WIFI_VERSION_KEYS = ["wifiSoftwareVer", "wifi_software_ver"]
+
 # Live codes used by the same board family, read separately from the main
 # request so that a code the device does not know cannot break the poll.
 LIVE_PROBE_CODES = [
-    *(f"Fault{index}" for index in range(1, 11)),
+    *FAULT_WORD_CODES,
     "ModeState",
-    "code_version",
-    "MainBoard Version",
-    "O01~015",
-    "O01~014",
-    "O01~023",
-    "S01~S06",
-    "S01~S10",
+    *reversed(BOARD_VERSION_CODES),
+    *BITWORD_CODES,
 ]
 
+# Messages the cloud sends in Chinese, with their meaning
+CLOUD_MESSAGES = {"请重新登录": "session expired, please log in again"}
+
+PRODUCT_ID_HITEMP = "1245226668902080512"
+
 PRODUCT_IDS = [
-    "1245226668902080512",  # Hitemp
+    PRODUCT_ID_HITEMP,
     "1132174963097280512",  # Aqua Temp
     "1656269521923575808",  # Aqua Temp
     "1663080854333558784",  # Aqua Temp
@@ -88,12 +96,15 @@ CONFIG_SET_FAN = "fan"
 CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
 
 API_STATUS = "api_status"
-LAST_ERROR = "last_error"
+CLOUD_STATUS = "cloud_status"
 
 DEVICE_IS_FAULT = "is_fault"
 DEVICE_STATUS = "device_status"
 DEVICE_FAULT = "fault"
 DEVICE_STATUS_ONLINE = "ONLINE"
+
+NO_FAULT = "No fault"
+FAULT_WITHOUT_DESCRIPTION = "Fault reported without a description"
 
 PRODUCT_ID_DEFAULT = "default"
 
@@ -141,3 +152,13 @@ TO_REDACT = [
 class ProductParameter(StrEnum):
     MAPPING = "mapping"
     ENTITY_DESCRIPTION = "entity_description"
+
+
+class CloudStatus(StrEnum):
+    """Outcome of the last poll of the cloud."""
+
+    OK = "ok"
+    SESSION_EXPIRED = "session_expired"
+    LOGIN_REJECTED = "login_rejected"
+    CANNOT_CONNECT = "cannot_connect"
+    CLOUD_ERROR = "cloud_error"

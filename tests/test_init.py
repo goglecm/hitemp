@@ -190,7 +190,7 @@ async def test_migration_disables_installer_parameters(
     e04 = register("number", "E04")
     e02 = register("number", "E02", er.RegistryEntryDisabler.USER)
     r01 = register("number", "R01")
-    e01_sensor = register("sensor", "E01")
+    t02 = register("sensor", "T02")
 
     await setup_entry(hass, entry)
 
@@ -201,7 +201,7 @@ async def test_migration_disables_installer_parameters(
     assert registry.async_get(e04).disabled_by is integration
     assert registry.async_get(e02).disabled_by is er.RegistryEntryDisabler.USER
     assert registry.async_get(r01).disabled_by is None
-    assert registry.async_get(e01_sensor).disabled_by is None
+    assert registry.async_get(t02).disabled_by is None
     assert hass.states.get(r01).state == "50.0"
 
 

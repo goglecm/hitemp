@@ -8,12 +8,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from ..managers.aqua_temp_config_manager import PARAMETER_INFO_ATTRIBUTES
 from ..managers.aqua_temp_coordinator import AquaTempCoordinator
-from .consts import ADD_COMPONENT_SIGNALS, DOMAIN
+from .consts import ADD_COMPONENT_SIGNALS
 from .entity_descriptions import AquaTempEntityDescription
+from .utils import entity_unique_id
 
 if TYPE_CHECKING:
     from .. import AquaTempConfigEntry
@@ -94,14 +94,9 @@ class BaseEntity(CoordinatorEntity):
             entity_description, device_info
         )
 
-        unique_id_parts = [
-            DOMAIN,
-            entity_description.platform,
-            entity_description.key,
-            device_code,
-        ]
-
-        unique_id = slugify("_".join(unique_id_parts))
+        unique_id = entity_unique_id(
+            entity_description.platform, entity_description.key, device_code
+        )
 
         self._attr_device_info = device_info
         self._attr_name = entity_name

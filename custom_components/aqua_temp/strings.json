@@ -117,6 +117,19 @@
       }
     },
     "sensor": {
+      "cloud_status": {
+        "name": "Cloud status",
+        "state": {
+          "ok": "OK",
+          "session_expired": "Session expired",
+          "login_rejected": "Login rejected",
+          "cannot_connect": "Cannot connect",
+          "cloud_error": "Cloud error"
+        }
+      },
+      "fault": {
+        "name": "Fault details"
+      },
       "default_power": {
         "name": "Power"
       },

@@ -1,29 +1,72 @@
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 import logging
+import re
+from typing import Any
 
+from aiohttp import ClientError
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from ..common.api_types import APIParam
 from ..common.consts import (
+    BOARD_VERSION_CODES,
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
     DATA_ITEM_LOGIN_DETAILS,
+    DEVICE_FAULT,
+    DEVICE_IS_FAULT,
     DEVICE_STATUS,
     DEVICE_STATUS_ONLINE,
     DOMAIN,
+    FAULT_WITHOUT_DESCRIPTION,
+    FAULT_WORD_CODES,
+    HITEMP_GUIDE_URL,
+    NO_FAULT,
+    PRODUCT_ID_HITEMP,
+    PROJECT_URL,
     UPDATE_API_INTERVAL,
+    WIFI_VERSION_KEYS,
+    CloudStatus,
 )
 from ..common.utils import convert_range
-from ..models.exceptions import InvalidCredentialsError
+from ..models.exceptions import (
+    CloudConnectionError,
+    InvalidCredentialsError,
+    InvalidTokenError,
+)
 from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 
 _LOGGER = logging.getLogger(__name__)
+
+MAC_ADDRESS = re.compile(r"[0-9A-Fa-f]{12}")
+
+
+def _software_version(device_data: dict) -> str | None:
+    """Describe the board and Wi-Fi module versions the cloud reported."""
+    parts = []
+
+    board = [
+        str(device_data[code])
+        for code in BOARD_VERSION_CODES
+        if device_data.get(code) not in (None, "")
+    ]
+    if board:
+        parts.append(f"PCB {' / '.join(board)}")
+
+    for key in WIFI_VERSION_KEYS:
+        if device_data.get(key):
+            parts.append(f"Wi-Fi {device_data[key]}")
+            break
+
+    return ", ".join(parts) or None
 
 
 class AquaTempCoordinator(DataUpdateCoordinator):
@@ -46,14 +89,28 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         self._api = AquaTempAPI(hass, config_manager)
         self._config_manager = config_manager
-        self._last_error: str | None = None
+        self._cloud_status = CloudStatus.OK
+        self._cloud_status_message: str | None = None
+        self._cloud_status_since = dt_util.utcnow()
 
     @property
-    def last_error(self) -> str | None:
-        return self._last_error
+    def cloud_status(self) -> CloudStatus:
+        return self._cloud_status
 
-    def set_last_error(self, error: str | None):
-        self._last_error = error
+    @property
+    def cloud_status_message(self) -> str | None:
+        return self._cloud_status_message
+
+    @property
+    def cloud_status_since(self) -> datetime:
+        return self._cloud_status_since
+
+    def _set_cloud_status(self, status: CloudStatus, message: str | None = None):
+        if status != self._cloud_status:
+            self._cloud_status_since = dt_util.utcnow()
+
+        self._cloud_status = status
+        self._cloud_status_message = message
 
     @property
     def api_status(self):
@@ -80,19 +137,69 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         param_nickname = self._config_manager.get_api_param(APIParam.Nickname)
         param_device_id = self._config_manager.get_api_param(APIParam.DeviceId)
         param_custom_model = self._config_manager.get_api_param(APIParam.CustomModel)
+        param_product_id = self._config_manager.get_api_param(APIParam.ProductId)
 
         device_data = self.get_device_data(device_code)
         device_nickname = device_data.get(param_nickname) or device_code
         device_model = device_data.get(param_custom_model)
         device_id = device_data.get(param_device_id) or device_code
+        product_id = device_data.get(param_product_id)
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device_nickname,
             model=device_model,
+            model_id=product_id,
+            serial_number=device_code,
+            sw_version=_software_version(device_data),
+            configuration_url=(
+                HITEMP_GUIDE_URL if product_id == PRODUCT_ID_HITEMP else PROJECT_URL
+            ),
         )
 
+        # The device code of these Wi-Fi modules is their MAC address
+        if MAC_ADDRESS.fullmatch(device_code):
+            device_info["connections"] = {
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(device_code))
+            }
+
         return device_info
+
+    def get_fault_details(self, device_code: str) -> tuple[str | None, dict[str, Any]]:
+        """Return the fault text and the raw fault words the heat pump reported."""
+        device_data = self.get_device_data(device_code)
+        is_fault = device_data.get(DEVICE_IS_FAULT)
+
+        if is_fault is None:
+            text = None
+        elif is_fault:
+            text = device_data.get(DEVICE_FAULT) or FAULT_WITHOUT_DESCRIPTION
+        else:
+            text = NO_FAULT
+
+        fault_words = {
+            code: device_data[code]
+            for code in FAULT_WORD_CODES
+            if device_data.get(code) is not None
+        }
+
+        return text, fault_words
+
+    def _update_device_registry(self) -> None:
+        """Keep the software version on the device page current."""
+        registry = dr.async_get(self.hass)
+
+        for device_code in self.device_codes:
+            device_info = self.get_device(device_code)
+            (identifier,) = device_info["identifiers"]
+            device = registry.async_get_device_by_identifier(
+                identifier, self.config_entry.entry_id
+            )
+
+            if device is not None and device.sw_version != device_info["sw_version"]:
+                registry.async_update_device(
+                    device.id, sw_version=device_info["sw_version"]
+                )
 
     def get_debug_data(self) -> dict:
         config_data = self._config_manager.get_debug_data()
@@ -114,25 +221,31 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         try:
             await self._api.update()
 
-            config_data = self._config_manager.get_debug_data()
-
-            self._last_error = None
-
-            return {
-                DATA_ITEM_DEVICES: self.devices,
-                DATA_ITEM_LOGIN_DETAILS: self._api.login_details,
-                DATA_ITEM_CONFIG: config_data,
-            }
-
         except InvalidCredentialsError as err:
-            self._last_error = str(err)
+            self._set_cloud_status(CloudStatus.LOGIN_REJECTED, str(err))
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_credentials"
             ) from err
 
         except Exception as err:
-            self._last_error = str(err)
+            if isinstance(err, InvalidTokenError):
+                status = CloudStatus.SESSION_EXPIRED
+            elif isinstance(err, CloudConnectionError | ClientError | TimeoutError):
+                status = CloudStatus.CANNOT_CONNECT
+            else:
+                status = CloudStatus.CLOUD_ERROR
+
+            self._set_cloud_status(status, str(err) or type(err).__name__)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        self._set_cloud_status(CloudStatus.OK)
+        self._update_device_registry()
+
+        return {
+            DATA_ITEM_DEVICES: self.devices,
+            DATA_ITEM_LOGIN_DETAILS: self._api.login_details,
+            DATA_ITEM_CONFIG: self._config_manager.get_debug_data(),
+        }
 
     def get_temperature_unit(self, device_code: str):
         return self._config_manager.get_temperature_unit(device_code)

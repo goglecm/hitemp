@@ -13,6 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
 from .common.consts import CONF_API_TYPE, DOMAIN, INVALID_TOKEN_SECTION
+from .common.utils import entity_unique_id
 from .managers.aqua_temp_config_manager import (
     AquaTempConfigManager,
     load_disabled_by_default_number_keys,
@@ -50,6 +51,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(
         entry, config_manager.platforms
     )
+
+    _async_remove_stale_entities(hass, entry, coordinator)
+
+
+def _async_remove_stale_entities(
+    hass: HomeAssistant, entry: AquaTempConfigEntry, coordinator: AquaTempCoordinator
+) -> None:
+    """Remove entities of discovered devices that this version no longer provides.
+
+    This covers removed entities and entities that moved to another platform,
+    for example from number to select. Entities of devices the cloud did not
+    list are kept, as the device may come back.
+    """
+    config_manager = coordinator.config_manager
+    provided = set()
+    device_suffixes = []
+
+    for device_code in coordinator.device_codes:
+        device_suffixes.append(f"_{slugify(device_code)}")
+
+        for description in config_manager.get_entity_descriptions(device_code):
+            if description.platform is not None:
+                provided.add(
+                    entity_unique_id(description.platform, description.key, device_code)
+                )
+
+    if not device_suffixes:
+        return
+
+    registry = er.async_get(hass)
+
+    for registry_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if (
+            registry_entry.unique_id in provided
+            or not registry_entry.unique_id.endswith(tuple(device_suffixes))
+        ):
+            continue
+
+        _LOGGER.info(
+            f"Removing {registry_entry.entity_id}, which is no longer provided"
+        )
+
+        registry.async_remove(registry_entry.entity_id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:

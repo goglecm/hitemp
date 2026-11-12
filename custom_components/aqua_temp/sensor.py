@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
-from .common.consts import LAST_ERROR
+from .common.consts import CLOUD_STATUS, DEVICE_FAULT
 from .common.entity_descriptions import AquaTempSensorEntityDescription
 from .common.utils import (
     TEMPERATURE_DEVICE_CLASSES,
@@ -65,8 +65,10 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
                 self.local_coordinator.get_temperature_unit(self.device_code)
             )
 
-        if description.key == LAST_ERROR:
-            state = self.local_coordinator.last_error
+        if description.key == CLOUD_STATUS:
+            state = self._get_cloud_status()
+        elif description.key == DEVICE_FAULT:
+            state = self._get_fault()
         elif description.difference_of is not None:
             state = self._get_difference(*description.difference_of)
         elif description.value_labels is not None:
@@ -79,6 +81,23 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
 
         self._has_value = state is not None
         self._attr_native_value = state
+
+    def _get_cloud_status(self) -> str:
+        coordinator = self.local_coordinator
+
+        self._attr_extra_state_attributes = {
+            "message": coordinator.cloud_status_message,
+            "since": coordinator.cloud_status_since.isoformat(),
+        }
+
+        return coordinator.cloud_status
+
+    def _get_fault(self) -> str | None:
+        state, fault_words = self.local_coordinator.get_fault_details(self.device_code)
+
+        self._attr_extra_state_attributes = fault_words
+
+        return state
 
     def _get_difference(self, minuend_key: str, subtrahend_key: str) -> float | None:
         minuend = safe_float(self._get_raw_value(minuend_key))

@@ -21,14 +21,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from custom_components.aqua_temp.common.consts import API_STATUS, LAST_ERROR
+from custom_components.aqua_temp.common.consts import API_STATUS, CLOUD_STATUS
 
 from .conftest import GENERIC_FIXTURE, HITEMP_FIXTURE, entity_id, setup_entry
 from .fake_cloud import FakeCloud, FakeDevice
@@ -146,18 +145,24 @@ async def test_select_changes_units_without_reload(
 async def test_diagnostic_entities_stay_available_when_polling_fails(
     hass: HomeAssistant, fake_cloud: FakeCloud, hitemp: FakeDevice
 ) -> None:
-    """API Status and Last Error explain a failure instead of going unavailable."""
+    """API Status and Cloud status explain a failure instead of going unavailable."""
     code = hitemp.code
     entry = hass.config_entries.async_entries("aqua_temp")[0]
-    last_error = entity_id(hass, "sensor", LAST_ERROR, code)
-    assert hass.states.get(last_error).state == STATE_UNKNOWN
+    cloud_status = entity_id(hass, "sensor", CLOUD_STATUS, code)
+    state = hass.states.get(cloud_status)
+    assert state.state == "ok"
+    assert state.attributes["message"] is None
+    connected_since = state.attributes["since"]
 
     fake_cloud.network_down = True
     fake_cloud.expire_tokens()
     await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
-    assert hass.states.get(last_error).state == "Cloud unreachable"
+    state = hass.states.get(cloud_status)
+    assert state.state == "cannot_connect"
+    assert "Cloud unreachable" in state.attributes["message"]
+    assert state.attributes["since"] != connected_since
     assert hass.states.get(
         entity_id(hass, "binary_sensor", API_STATUS, code)
     ).state == (STATE_OFF)
@@ -172,7 +177,8 @@ async def test_diagnostic_entities_stay_available_when_polling_fails(
     await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
-    assert hass.states.get(last_error).state == STATE_UNKNOWN
+    assert hass.states.get(cloud_status).state == "ok"
+    assert hass.states.get(cloud_status).attributes["message"] is None
     assert hass.states.get(
         entity_id(hass, "binary_sensor", API_STATUS, code)
     ).state == (STATE_ON)

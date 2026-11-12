@@ -1,16 +1,23 @@
 import math
 
 from homeassistant.const import UnitOfTemperature
+from homeassistant.util import slugify
 from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     TemperatureDeltaConverter,
 )
+
+from .consts import DOMAIN
 
 DEVICE_CLASS_TEMPERATURE = "temperature"
 DEVICE_CLASS_TEMPERATURE_DELTA = "temperature_delta"
 TEMPERATURE_DEVICE_CLASSES = (DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TEMPERATURE_DELTA)
 
 UNLISTED_VALUE = "not listed in the app"
+
+
+def entity_unique_id(platform: str, key: str, device_code: str) -> str:
+    return slugify("_".join([DOMAIN, platform, key, device_code]))
 
 
 def raw_value_key(value) -> str | None:

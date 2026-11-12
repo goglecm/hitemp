@@ -19,10 +19,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from custom_components.aqua_temp.common.api_types import APIParam
 from custom_components.aqua_temp.common.consts import (
     API_STATUS,
+    CLOUD_STATUS,
     CONF_API_TYPE,
     CONFIGURATION_FILE,
+    DEVICE_FAULT,
     DOMAIN,
-    LAST_ERROR,
 )
 from custom_components.aqua_temp.managers.aqua_temp_config_manager import (
     AquaTempConfigManager,
@@ -142,7 +143,8 @@ async def test_protocol_codes_exclude_virtual_entities(hass: HomeAssistant) -> N
 
     for code in ("Power", "mode_real", "M17", "R01", "T10"):
         assert code in codes
-    for virtual in (API_STATUS, LAST_ERROR, "temperature_unit", "is_fault"):
+    virtual_codes = (API_STATUS, CLOUD_STATUS, DEVICE_FAULT, "temperature_unit")
+    for virtual in (*virtual_codes, "is_fault", "superheat", "water_delta_t"):
         assert virtual not in codes
 
 

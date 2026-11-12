@@ -29,6 +29,8 @@ from ..common.consts import (
     API_MAX_ATTEMPTS,
     APP_HEARTBEAT_CODE,
     APP_HEARTBEAT_VALUE,
+    BITWORD_CODES,
+    CLOUD_MESSAGES,
     CONFIG_HVAC_MAXIMUM,
     CONFIG_HVAC_MINIMUM,
     CONFIG_HVAC_SET,
@@ -62,6 +64,25 @@ INVALID_TOKEN_ERROR_CODE = "-100"
 INVALID_CREDENTIALS_ERROR_CODE = "-1"
 SUCCESS_ERROR_CODE = "0"
 SUCCESS_MESSAGE = "Success"
+
+
+def describe_cloud_message(message) -> str:
+    """Add the English meaning to messages the cloud sends in Chinese."""
+    meaning = CLOUD_MESSAGES.get(message)
+
+    return str(message) if meaning is None else f"{message} ({meaning})"
+
+
+def _describe_bitword(value) -> dict:
+    """Show a packed switch or output word in the forms needed to decode it."""
+    number = safe_float(value)
+
+    if number is None or not number.is_integer() or number < 0:
+        return {"value": value}
+
+    number = int(number)
+
+    return {"value": value, "hex": f"0x{number:04X}", "bits": f"{number:016b}"}
 
 
 class AquaTempAPI:
@@ -136,11 +157,17 @@ class AquaTempAPI:
     def get_live_data_report(self, device_code: str) -> dict:
         """Return what the last poll learned about the device's codes."""
         report = self._code_reports.get(device_code, {})
+        device_data = self._devices.get(device_code, {})
 
         return {
             "heartbeat": self._heartbeat_results.get(device_code),
             "codes_with_value": report.get("with_value", []),
             "codes_without_value": report.get("without_value", []),
+            "bitwords": {
+                code: _describe_bitword(device_data[code])
+                for code in BITWORD_CODES
+                if device_data.get(code) is not None
+            },
         }
 
     def _get_session(self) -> ClientSession:
@@ -501,7 +528,12 @@ class AquaTempAPI:
 
             if error_msg != "Success":
                 error_code = operation_response.get(param_error_code)
-                if error_code == "-100":
+                if error_code == INVALID_TOKEN_ERROR_CODE:
+                    _LOGGER.debug(
+                        f"Cloud session ended ({describe_cloud_message(error_msg)}), "
+                        "logging in again"
+                    )
+
                     self.set_token()
 
                     error = InvalidTokenError(
@@ -512,7 +544,9 @@ class AquaTempAPI:
 
                 else:
                     error = OperationFailedException(
-                        operation, request_data, f"{error_code}: {error_msg}"
+                        operation,
+                        request_data,
+                        f"{error_code}: {describe_cloud_message(error_msg)}",
                     )
 
         except Exception as ex:
@@ -542,9 +576,16 @@ class AquaTempAPI:
             return response
 
         if error_code == INVALID_TOKEN_ERROR_CODE:
+            _LOGGER.debug(
+                f"Cloud session ended ({describe_cloud_message(error_msg)}), "
+                "logging in again"
+            )
+
             raise InvalidTokenError(operation)
 
-        raise CloudError(operation, f"{error_code}: {error_msg}")
+        raise CloudError(
+            operation, f"{error_code}: {describe_cloud_message(error_msg)}"
+        )
 
     async def _read_codes(self, device_code: str, codes: list[str]) -> dict:
         """Read protocol codes; codes without a value map to None."""

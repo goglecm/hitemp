@@ -8,16 +8,18 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.climate import ClimateEntityDescription, HVACMode
 from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.select import SelectEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.helpers.entity import EntityDescription
 
 from custom_components.aqua_temp.common.consts import (
     API_STATUS,
+    CLOUD_STATUS,
+    DEVICE_FAULT,
     DEVICE_IS_FAULT,
     DEVICE_STATUS,
-    LAST_ERROR,
     POWER_MODE_ON,
+    CloudStatus,
 )
 
 
@@ -120,12 +122,23 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
     ),
     AquaTempClimateEntityDescription(key="Mode", name=None, translation_key="mode"),
     AquaTempSensorEntityDescription(
-        key=LAST_ERROR,
-        name="Last Error",
+        key=CLOUD_STATUS,
+        name="Cloud status",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_protocol_code=False,
         available_when_offline=True,
         always_available=True,
-        translation_key=LAST_ERROR,
+        device_class=SensorDeviceClass.ENUM,
+        options=[str(status) for status in CloudStatus],
+        translation_key=CLOUD_STATUS,
+    ),
+    AquaTempSensorEntityDescription(
+        key=DEVICE_FAULT,
+        name="Fault details",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_protocol_code=False,
+        available_when_offline=True,
+        requires_value=True,
+        translation_key=DEVICE_FAULT,
     ),
 ]
