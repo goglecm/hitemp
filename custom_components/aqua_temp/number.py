@@ -82,11 +82,10 @@ class AquaTempNumberEntity(BaseEntity, NumberEntity):
     def _update_attributes(self) -> None:
         self._update_unit()
 
-        device_data = self.local_coordinator.get_device_data(self.device_code)
-
-        state = device_data.get(self.entity_description.key)
+        state = self._get_raw_value()
 
         if isinstance(state, str):
             state = safe_float(state)
 
+        self._has_value = state is not None
         self._attr_native_value = state

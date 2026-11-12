@@ -96,7 +96,9 @@ async def test_live_data_can_be_turned_off(
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
     """Without the heartbeat only what the board uploads by itself is read."""
-    device, entry = await _setup(hass, add_device, make_entry, **{CONF_LIVE_DATA: False})
+    device, entry = await _setup(
+        hass, add_device, make_entry, **{CONF_LIVE_DATA: False}
+    )
 
     assert not fake_cloud.heartbeat_requests()
     data = entry.runtime_data.get_device_data(device.code)

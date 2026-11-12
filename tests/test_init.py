@@ -186,8 +186,8 @@ async def test_migration_disables_installer_parameters(
             disabled_by=disabled_by,
         ).entity_id
 
-    e01 = register("number", "E01")
-    h99 = register("number", "H99")
+    e03 = register("number", "E03")
+    e04 = register("number", "E04")
     e02 = register("number", "E02", er.RegistryEntryDisabler.USER)
     r01 = register("number", "R01")
     e01_sensor = register("sensor", "E01")
@@ -197,8 +197,8 @@ async def test_migration_disables_installer_parameters(
     assert entry.state is ConfigEntryState.LOADED
     assert (entry.version, entry.minor_version) == (1, 2)
     integration = er.RegistryEntryDisabler.INTEGRATION
-    assert registry.async_get(e01).disabled_by is integration
-    assert registry.async_get(h99).disabled_by is integration
+    assert registry.async_get(e03).disabled_by is integration
+    assert registry.async_get(e04).disabled_by is integration
     assert registry.async_get(e02).disabled_by is er.RegistryEntryDisabler.USER
     assert registry.async_get(r01).disabled_by is None
     assert registry.async_get(e01_sensor).disabled_by is None

@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.number import NumberDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -43,14 +43,28 @@ from ..common.entity_descriptions import (
     AquaTempBinarySensorEntityDescription,
     AquaTempEntityDescription,
     AquaTempNumberEntityDescription,
+    AquaTempSelectEntityDescription,
     AquaTempSensorEntityDescription,
 )
 from ..common.storage import get_storage_lock
+from ..common.utils import labelled_options
 from ..models.config_data import ConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
 CREDENTIAL_KEYS = (CONF_PASSWORD, CONF_USERNAME)
+
+# Parameter file fields shown as state attributes, in display order
+PARAMETER_INFO_ATTRIBUTES = {
+    "app_name": "app_name",
+    "level": "level",
+    "app_range": "range",
+    "app_value": "app_value",
+    "app_options": "app_options",
+    "confidence": "confidence",
+    "description": "description",
+    "guidance": "guidance",
+}
 
 
 def _load_json_file(file_path: str) -> Any | None:
@@ -68,6 +82,49 @@ def _device_class[T: StrEnum](device_classes: type[T], data_item: dict) -> T | N
     device_class = data_item.get("device_class")
 
     return None if device_class is None else device_classes(device_class)
+
+
+def _state_class(data_item: dict) -> SensorStateClass | None:
+    state_class = data_item.get("state_class")
+
+    return None if state_class is None else SensorStateClass(state_class)
+
+
+def _parameter_info(data_item: dict) -> dict[str, Any] | None:
+    """Return the explanation of a parameter, or None if the file has none."""
+    info = {
+        attribute: data_item[field]
+        for field, attribute in PARAMETER_INFO_ATTRIBUTES.items()
+        if data_item.get(field) is not None
+    }
+
+    if not info:
+        return None
+
+    if (difference_of := data_item.get("difference_of")) is not None:
+        return {"calculated_from": " - ".join(difference_of), **info}
+
+    return {"code": data_item["key"], **info}
+
+
+def _common_fields(
+    data_item: dict, translation_key: str, default_category: str | None
+) -> dict[str, Any]:
+    """Return the description fields every parameter file entity shares."""
+    entity_category = data_item.get("entity_category", default_category)
+
+    return {
+        "key": data_item["key"],
+        "name": data_item.get("name"),
+        "entity_category": (
+            None if entity_category is None else EntityCategory(entity_category)
+        ),
+        "entity_registry_enabled_default": data_item.get("enabled_by_default", True),
+        "translation_key": translation_key,
+        "requires_value": True,
+        "value_labels": data_item.get("options"),
+        "parameter_info": _parameter_info(data_item),
+    }
 
 
 def load_disabled_by_default_number_keys() -> set[str]:
@@ -443,52 +500,58 @@ class AquaTempConfigManager:
             translation_key = f"{product_id}_{key}".replace("/", "").lower()
 
             if platform == Platform.SENSOR:
+                difference_of = data_item.get("difference_of")
+
                 sensor_entity = AquaTempSensorEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
-                    device_class=_device_class(SensorDeviceClass, data_item),
+                    **_common_fields(
+                        data_item, translation_key, EntityCategory.DIAGNOSTIC
+                    ),
+                    device_class=(
+                        _device_class(SensorDeviceClass, data_item)
+                        if data_item.get("options") is None
+                        else SensorDeviceClass.ENUM
+                    ),
                     native_unit_of_measurement=data_item.get("unit_of_measurement"),
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    translation_key=translation_key,
+                    state_class=_state_class(data_item),
+                    suggested_display_precision=data_item.get("display_precision"),
+                    difference_of=(
+                        None if difference_of is None else tuple(difference_of)
+                    ),
+                    is_protocol_code=difference_of is None,
                 )
 
                 entities.append(sensor_entity)
 
             elif platform == Platform.BINARY_SENSOR:
                 binary_sensor_entity = AquaTempBinarySensorEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
+                    **_common_fields(
+                        data_item, translation_key, EntityCategory.DIAGNOSTIC
+                    ),
                     device_class=_device_class(BinarySensorDeviceClass, data_item),
                     on_value=data_item.get("on_value"),
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    translation_key=translation_key,
                 )
 
                 entities.append(binary_sensor_entity)
 
             elif platform == Platform.NUMBER:
-                entity_category = data_item.get("entity_category")
-
                 number_entity = AquaTempNumberEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
+                    **_common_fields(data_item, translation_key, None),
                     device_class=_device_class(NumberDeviceClass, data_item),
                     native_unit_of_measurement=data_item.get("unit_of_measurement"),
                     native_min_value=data_item.get("native_min_value"),
                     native_max_value=data_item.get("native_max_value"),
                     native_step=data_item.get("native_step"),
-                    entity_category=(
-                        None
-                        if entity_category is None
-                        else EntityCategory(entity_category)
-                    ),
-                    entity_registry_enabled_default=data_item.get(
-                        "enabled_by_default", True
-                    ),
-                    translation_key=translation_key,
                 )
 
                 entities.append(number_entity)
+
+            elif platform == Platform.SELECT:
+                select_entity = AquaTempSelectEntityDescription(
+                    **_common_fields(data_item, translation_key, None),
+                    options=labelled_options(data_item["options"]),
+                )
+
+                entities.append(select_entity)
 
             else:
                 entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))
@@ -560,11 +623,15 @@ class AquaTempConfigManager:
                 self.platforms.append(entity_description.platform)
 
     def _update_protocol_codes(self, product_id, entity_descriptions):
-        self._protocol_codes[product_id] = [
-            entity_description.key
-            for entity_description in entity_descriptions
-            if entity_description.is_protocol_code
-        ]
+        protocol_codes = []
+
+        for entity_description in entity_descriptions:
+            key = entity_description.key
+
+            if entity_description.is_protocol_code and key not in protocol_codes:
+                protocol_codes.append(key)
+
+        self._protocol_codes[product_id] = protocol_codes
 
     def _get_product_id(self, device_code: str, param: ProductParameter):
         device = self._devices.get(device_code, {})

@@ -55,8 +55,8 @@ async def test_initial_states(hass: HomeAssistant, hitemp: FakeDevice) -> None:
     assert bottom.state == "38.5"
     assert bottom.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
-    assert hass.states.get(entity_id(hass, "sensor", "T06", code)).state == (
-        STATE_UNKNOWN
+    assert hass.states.get(entity_id(hass, "sensor", "H07", code)).state == (
+        "Celsius degree (0)"
     )
     assert hass.states.get(entity_id(hass, "binary_sensor", "Power", code)).state == (
         STATE_ON
@@ -77,23 +77,23 @@ async def test_initial_states(hass: HomeAssistant, hitemp: FakeDevice) -> None:
 
 
 @pytest.mark.parametrize("value", ["abc", "", None])
-async def test_non_numeric_values_are_unknown(
+async def test_values_without_a_number_are_unavailable(
     hass: HomeAssistant,
     fake_cloud: FakeCloud,
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
     value: str | None,
 ) -> None:
-    """Values that are not numbers are shown as unknown, never as a stale number."""
+    """Values that are not numbers make the entity unavailable, never unknown."""
     device = add_device(HITEMP_FIXTURE)
     device.data.update(T02=value, R01=value)
     await setup_entry(hass, make_entry())
 
     assert hass.states.get(entity_id(hass, "sensor", "T02", device.code)).state == (
-        STATE_UNKNOWN
+        STATE_UNAVAILABLE
     )
     assert hass.states.get(entity_id(hass, "number", "R01", device.code)).state == (
-        STATE_UNKNOWN
+        STATE_UNAVAILABLE
     )
 
 

@@ -4,702 +4,1516 @@
     "name": "Power",
     "platform": "binary_sensor",
     "device_class": "power",
-    "on_value": "1"
+    "on_value": "1",
+    "entity_category": "diagnostic",
+    "confidence": "observed",
+    "description": "On/off state of the heat pump (1 = on). The climate entity turns it on and off."
   },
   {
     "key": "Mode",
     "name": "Mode",
-    "platform": null
+    "platform": null,
+    "description": "Mode written by the climate entity, 2 = heat."
   },
   {
     "key": "Manual-mute",
     "name": "Manual-mute",
-    "platform": null
+    "platform": null,
+    "description": "Fan mode code of other models, requested for compatibility. Empty on HiTemp."
   },
   {
     "key": "Set_Temp",
     "name": "Set_Temp",
-    "platform": null
+    "platform": null,
+    "description": "Setpoint code of other models, requested for compatibility. Empty on HiTemp."
   },
   {
     "key": "mode_real",
     "name": "mode_real",
-    "platform": null
+    "platform": null,
+    "description": "Mode the heat pump reports, read by the climate entity (2 = heat)."
   },
   {
     "key": "MO6",
     "name": "MO6",
-    "platform": null
+    "platform": null,
+    "description": "Requested by the original integration. Empty on HiTemp, meaning unknown."
   },
   {
     "key": "M17",
-    "name": "M17",
-    "platform": null
+    "name": "M17 Fan speed",
+    "app_name": "Ventilation / Air Speed",
+    "platform": "select",
+    "options": {
+      "0": "Off",
+      "1": "Low",
+      "2": "High"
+    },
+    "entity_category": null,
+    "level": "App settings",
+    "app_range": "Ventilation ON/OFF, Air Speed Low or High",
+    "app_value": "Low, later changed to High",
+    "confidence": "observed",
+    "description": "Fan speed chosen with the app's Ventilation switch and Air Speed knob.",
+    "guidance": "Your log shows 1 (Low), then 2 (High) right after you chose High in the app. A high fan speed moves more air over the coil, which usually helps efficiency and defrosting in cold weather. Off (0) is assumed to be the app's Ventilation switch turned off; what the fan does then while heating isn't confirmed. The climate entity's fan modes write the same code."
   },
   {
     "key": "2074",
     "name": "2074",
-    "platform": null
+    "platform": null,
+    "description": "Register requested by the original integration, meaning unknown."
   },
   {
     "key": "2075",
     "name": "2075",
-    "platform": null
+    "platform": null,
+    "description": "Register requested by the original integration, meaning unknown."
   },
   {
     "key": "2076",
     "name": "2076",
-    "platform": null
+    "platform": null,
+    "description": "Register requested by the original integration, meaning unknown."
   },
   {
     "key": "2077",
     "name": "2077",
-    "platform": null
+    "platform": null,
+    "description": "Register requested by the original integration, meaning unknown."
   },
   {
     "key": "1158",
     "name": "1158",
-    "platform": null
+    "platform": null,
+    "description": "Reads 23205 while the app's live data request (app_heartbeat) is active, 0 otherwise."
   },
   {
     "key": "1159",
     "name": "1159",
-    "platform": null
+    "platform": null,
+    "description": "Register requested by the original integration, meaning unknown."
   },
   {
     "key": "2064",
     "name": "2064",
-    "platform": null
+    "platform": null,
+    "description": "Register requested by the original integration, meaning unknown."
   },
   {
     "key": "ver",
     "name": "Version",
-    "platform": null
+    "platform": null,
+    "description": "Version code of other models. Empty on HiTemp, see code_version and MainBoard Version."
   },
   {
     "key": "software_code",
     "name": "Software Code",
-    "platform": null
+    "platform": null,
+    "description": "Software code of other models. Empty on HiTemp, see code_version and MainBoard Version."
   },
   {
     "key": "/01",
-    "name": "Usage of OUT 05 [/01]",
+    "name": "/01 Use of OUT05",
+    "app_name": "Usage of OUT 05",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {},
+    "app_options": ["Low speed", "Solar water pump"],
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "Low speed, Solar water pump",
+    "app_value": "1",
+    "confidence": "uncertain",
+    "description": "Function of output OUT05 (O05): fan low speed or solar water pump.",
+    "guidance": "The heat pump reports 1, which the app can't name either, so the active function isn't known. Read-only."
   },
   {
     "key": "/02",
-    "name": "Usage of OUT 06 [/02]",
+    "name": "/02 Use of OUT06",
+    "app_name": "Usage of OUT 06",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {},
+    "app_options": [
+      "No output",
+      "Solar water pump",
+      "Solar water release valve"
+    ],
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "No output, Solar water pump, Solar water release valve",
+    "app_value": "1",
+    "confidence": "uncertain",
+    "description": "Function of output OUT06 (O06): no output, solar water pump or solar water release valve.",
+    "guidance": "The heat pump reports 1, which the app can't name either, so the active function isn't known. Read-only."
   },
   {
     "key": "D01",
-    "name": "Defrosting startup temp [D01]",
-    "platform": "sensor",
+    "name": "D01 Defrost start temperature",
+    "app_name": "Defrosting startup temp",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": -30,
+    "native_max_value": 0,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "-30.0C to 0.0C, steps of 0.5C",
+    "app_value": "-3.0C",
+    "confidence": "documented",
+    "description": "Coil temperature (T04) below which a defrost can start.",
+    "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). A lower D01 means fewer, later defrosts. Change it only if the coil ices up or defrosts too often."
   },
   {
     "key": "D02",
-    "name": "Defrosting shutdown temp [D02]",
-    "platform": "sensor",
+    "name": "D02 Defrost end temperature",
+    "app_name": "Defrosting shutdown temp",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": 0,
+    "native_max_value": 30,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0.0C to 30.0C, steps of 0.5C",
+    "app_value": "13.0C",
+    "confidence": "documented",
+    "description": "Coil temperature (T04) at which a defrost ends.",
+    "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). A higher D02 clears the ice more thoroughly but lasts longer."
   },
   {
     "key": "D03",
-    "name": "Duration of defrosting [D03]",
-    "platform": "sensor",
+    "name": "D03 Defrost interval",
+    "app_name": "Duration of defrosting",
+    "platform": "number",
     "device_class": "duration",
-    "unit_of_measurement": "min"
+    "unit_of_measurement": "min",
+    "native_min_value": 30,
+    "native_max_value": 90,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "30Min to 90Min, steps of 1Min",
+    "app_value": "45Min",
+    "confidence": "documented",
+    "description": "Minimum time between two defrosts. The app calls it 'Duration of defrosting', but a 30-90 minute range only makes sense as the interval, as in the PHNIX manuals.",
+    "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). "
   },
   {
     "key": "D04",
-    "name": "Longest duration of defrosting [D04]",
-    "platform": "sensor",
+    "name": "D04 Maximum defrost time",
+    "app_name": "Longest duration of defrosting",
+    "platform": "number",
     "device_class": "duration",
-    "unit_of_measurement": "min"
+    "unit_of_measurement": "min",
+    "native_min_value": 1,
+    "native_max_value": 20,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "1Min to 20Min, steps of 1Min",
+    "app_value": "8Min",
+    "confidence": "documented",
+    "description": "Longest a defrost may last.",
+    "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). "
   },
   {
     "key": "D05",
-    "name": "Shortest duration of defrosting [D05]",
-    "platform": "sensor",
+    "name": "D05 Minimum defrost time",
+    "app_name": "Shortest duration of defrosting",
+    "platform": "number",
     "device_class": "duration",
-    "unit_of_measurement": "min"
+    "unit_of_measurement": "min",
+    "native_min_value": 1,
+    "native_max_value": 8,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "1Min to 8Min, steps of 1Min",
+    "app_value": "3Min",
+    "confidence": "documented",
+    "description": "Shortest a defrost lasts.",
+    "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). "
   },
   {
     "key": "D06",
-    "name": "Defrosting way [D06]",
-    "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "name": "D06 Defrost method",
+    "app_name": "Defrosting way",
+    "platform": "select",
+    "options": {
+      "0": "Standard",
+      "1": "Economic",
+      "2": "Intelligent"
+    },
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "Standard, Economic, Intelligent",
+    "app_value": "Standard",
+    "confidence": "observed",
+    "description": "How defrosts are started.",
+    "guidance": "Standard uses D01-D05; Intelligent also uses D07. What Economic changes isn't documented. Your heat pump reports 0 = Standard; 1 and 2 follow the app's order."
   },
   {
     "key": "D07",
-    "name": "Intelligent defrosting judgement [D07]",
-    "platform": "sensor",
+    "name": "D07 Intelligent defrost threshold",
+    "app_name": "Intelligent defrosting judgement",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": -10,
+    "native_max_value": 20,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "-10.0C to 20.0C, steps of 0.5C",
+    "app_value": "4.0C",
+    "confidence": "uncertain",
+    "description": "Threshold used by intelligent defrosting (D06 = Intelligent).",
+    "guidance": "Not documented; it probably compares the ambient and coil temperatures. It only matters with D06 = Intelligent. Leave it unchanged."
   },
   {
     "key": "E01",
-    "name": "EEV adjustment mode [E01]",
-    "platform": "number",
-    "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1,
+    "name": "E01 EEV control mode",
+    "app_name": "EEV adjustment mode",
+    "platform": "select",
+    "options": {
+      "0": "Manual",
+      "1": "Automatic"
+    },
     "entity_category": "config",
-    "enabled_by_default": false
+    "enabled_by_default": false,
+    "level": "002 (user)",
+    "app_range": "automatic, Manual",
+    "app_value": "automatic",
+    "confidence": "documented",
+    "description": "Whether the electronic expansion valve (EEV) regulates itself (Automatic) or not (Manual). 1 = Automatic is confirmed by the PHNIX PC1001 manual; the app lists the options in a different order.",
+    "guidance": "Keep Automatic. In Manual the valve no longer follows the superheat target E02, which can return liquid refrigerant to the compressor or starve the coil."
   },
   {
     "key": "E02",
-    "name": "Target degree of superheat [E02]",
+    "name": "E02 Target superheat",
+    "app_name": "Target degree of supreheat",
     "platform": "number",
     "device_class": "temperature_delta",
-    "unit_of_measurement": "\u00b0C",
+    "unit_of_measurement": "°C",
     "native_min_value": -20,
     "native_max_value": 20,
-    "native_step": 1,
+    "native_step": 0.5,
     "entity_category": "config",
-    "enabled_by_default": false
+    "enabled_by_default": false,
+    "level": "002 (user)",
+    "app_range": "-20.0C to 20.0C, steps of 0.5C",
+    "app_value": "5.0C",
+    "confidence": "documented",
+    "description": "Superheat the EEV aims for: suction minus coil temperature (T05 - T04).",
+    "guidance": "Compare it with the Superheat sensor. A higher target closes the valve further (less refrigerant, safer for the compressor, less heat); a lower one opens it. Change it only with an installer: too little superheat can return liquid to the compressor."
   },
   {
     "key": "E03",
-    "name": "Original position of EEV [E03]",
+    "name": "E03 EEV start position",
+    "app_name": "Original position of EEV",
     "platform": "number",
-    "device_class": null,
-    "unit_of_measurement": null,
+    "unit_of_measurement": "steps",
     "native_min_value": 0,
     "native_max_value": 500,
     "native_step": 1,
     "entity_category": "config",
-    "enabled_by_default": false
+    "enabled_by_default": false,
+    "level": "002 (user)",
+    "app_range": "0N to 500N",
+    "app_value": "240N",
+    "confidence": "documented",
+    "description": "EEV opening when the compressor starts.",
+    "guidance": "The valve starts at E03 (O07 reads 240 at start-up) and then regulates towards E02."
   },
   {
     "key": "E04",
-    "name": "Minimal opening position of EEV [E04]",
+    "name": "E04 EEV minimum position",
+    "app_name": "Minimal opening position of EEV",
     "platform": "number",
-    "device_class": null,
-    "unit_of_measurement": null,
+    "unit_of_measurement": "steps",
     "native_min_value": 0,
     "native_max_value": 500,
     "native_step": 1,
     "entity_category": "config",
-    "enabled_by_default": false
+    "enabled_by_default": false,
+    "level": "002 (user)",
+    "app_range": "0N to 500N",
+    "app_value": "100N",
+    "confidence": "documented",
+    "description": "Smallest opening the EEV may regulate down to.",
+    "guidance": "Your EEV often sits at this minimum because the measured superheat is below E02. Lowering E04 lets it close further and reduces the refrigerant flow; don't change it to chase the superheat reading without an installer."
   },
   {
     "key": "E05",
-    "name": "Position of EEV for defrosting [E05]",
+    "name": "E05 EEV defrost position",
+    "app_name": "Position of EEV for defrosting",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "unit_of_measurement": "steps",
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "0N to 500N",
+    "app_value": "480N",
+    "confidence": "documented",
+    "description": "EEV opening during defrost.",
+    "guidance": "O07 reads this value (480) during defrost and while the compressor is stopped."
   },
   {
     "key": "G01",
-    "name": "Disinfection target temp [G01]",
-    "platform": "sensor",
+    "name": "G01 Disinfection temperature",
+    "app_name": "Disinfection target temp",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": 30,
+    "native_max_value": 70,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "30.0C to 70.0C, steps of 0.5C",
+    "app_value": "60.0C",
+    "confidence": "observed",
+    "description": "Water temperature the disinfection cycle heats to.",
+    "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed."
   },
   {
     "key": "G02",
-    "name": "Duration of disinfection [G02]",
-    "platform": "sensor",
+    "name": "G02 Disinfection duration",
+    "app_name": "Duration of disinfection",
+    "platform": "number",
     "device_class": "duration",
-    "unit_of_measurement": "min"
+    "unit_of_measurement": "min",
+    "native_min_value": 0,
+    "native_max_value": 90,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0Min to 90Min, steps of 1Min",
+    "app_value": "0Min",
+    "confidence": "observed",
+    "description": "How long the water is held at G01.",
+    "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed."
   },
   {
     "key": "G03",
-    "name": "Startup point of disinfection [G03]",
-    "platform": "sensor",
-    "device_class": "duration",
-    "unit_of_measurement": "h"
+    "name": "G03 Disinfection start hour",
+    "app_name": "Startup point of disinfection",
+    "platform": "number",
+    "unit_of_measurement": "h",
+    "native_min_value": 0,
+    "native_max_value": 23,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0H to 23H, steps of 1H",
+    "app_value": "0H",
+    "confidence": "observed",
+    "description": "Hour of the day the disinfection starts.",
+    "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed."
   },
   {
     "key": "G04",
-    "name": "Circle of disinfection [G04]",
-    "platform": "sensor",
+    "name": "G04 Disinfection interval",
+    "app_name": "Circle of disinfection",
+    "platform": "number",
     "device_class": "duration",
-    "unit_of_measurement": "d"
+    "unit_of_measurement": "d",
+    "native_min_value": 1,
+    "native_max_value": 99,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "1Day to 99Day, steps of 1Day",
+    "app_value": "7Day",
+    "confidence": "observed",
+    "description": "Days between disinfection cycles.",
+    "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed."
   },
   {
     "key": "H01",
-    "name": "Remember the status of device when power down [H01]",
-    "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "name": "H01 Remember power state",
+    "app_name": "Remember the power status of device when power down",
+    "platform": "select",
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "NO, YES",
+    "app_value": "YES",
+    "confidence": "observed",
+    "description": "Whether the heat pump returns to its previous on/off state after a power cut.",
+    "guidance": "YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off."
   },
   {
     "key": "H03",
-    "name": "Heating source [H03]",
+    "name": "H03 Heating source",
+    "app_name": "Heating source",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Air source"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "Air source",
+    "app_value": "Air source",
+    "confidence": "observed",
+    "description": "Type of heat source. The app only offers Air source."
   },
   {
     "key": "H07",
-    "name": "Temperature unit [H07]",
+    "name": "H07 Temperature unit",
+    "app_name": "Temperature unit",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Celsius degree",
+      "1": "Fahrenheit degree"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "Celsius degree, Fahrenheit degree",
+    "app_value": "Celsius degree",
+    "confidence": "observed",
+    "description": "Unit the heat pump reports temperatures in.",
+    "guidance": "The Temperature Unit select in Home Assistant must match it. If you change H07 in the app, change the select as well."
   },
   {
     "key": "H30",
-    "name": "Device address [H30]",
+    "name": "H30 Device address",
+    "app_name": "Device address",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "1 to 255, steps of 1",
+    "app_value": "1",
+    "confidence": "observed",
+    "description": "Address of the controller on its communication bus.",
+    "guidance": "Read-only: a wrong address can cut the controller off from the Wi-Fi module."
   },
   {
     "key": "H31",
-    "name": "Intelligent control mode [H31]",
+    "name": "H31 Control mode",
+    "app_name": "Intelligent control mode",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Centralized control",
+      "1": "DTU&WIFI"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "Centralized control, DTU&WIFI",
+    "app_value": "DTU&WIFI",
+    "confidence": "observed",
+    "description": "Whether a central controller or the DTU/Wi-Fi module controls the heat pump.",
+    "guidance": "Must stay on DTU&WIFI for the app and Home Assistant to work, so it is read-only."
   },
   {
     "key": "H32",
-    "name": "Circle of submitting data to Cloud [H32]",
-    "platform": "sensor",
+    "name": "H32 Cloud upload interval",
+    "app_name": "Circle of submitting data to Cloud",
+    "platform": "number",
     "device_class": "duration",
-    "unit_of_measurement": "min"
+    "unit_of_measurement": "min",
+    "native_min_value": 1,
+    "native_max_value": 255,
+    "native_step": 1,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "1Min to 255Min, steps of 1Min",
+    "app_value": "1Min",
+    "confidence": "observed",
+    "description": "Minutes between the heat pump's own uploads to the cloud.",
+    "guidance": "Your heat pump uses 1 minute. Home Assistant reads the cloud every 5 minutes, so a larger value only makes the readings older. Keep 1."
   },
   {
     "key": "H98",
-    "name": "Model selection [H98]",
+    "name": "H98 Model selection",
+    "app_name": "Model selection",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "2": "0X08",
+      "3": "0X18"
+    },
+    "entity_category": "diagnostic",
+    "level": "002 (user)",
+    "app_range": "0X08, 0X18",
+    "app_value": "0X08",
+    "confidence": "uncertain",
+    "description": "Hardware model the controller is configured for.",
+    "guidance": "Never change it: it tells the controller which hardware it drives. Your heat pump reports 2, which the app shows as 0X08. 3 = 0X18 follows from the original 2-3 range and isn't confirmed."
   },
   {
     "key": "H99",
-    "name": "Compensate to the shown temp [H99]",
-    "platform": "number",
-    "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1,
+    "name": "H99 Display temperature compensation",
+    "app_name": "Compensate to the shown temp",
+    "platform": "select",
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
     "entity_category": "config",
-    "enabled_by_default": false
+    "enabled_by_default": false,
+    "level": "002 (user)",
+    "app_range": "NO, YES",
+    "app_value": "NO",
+    "confidence": "uncertain",
+    "description": "App description: 'Compensate to the shown temp'.",
+    "guidance": "Not documented; it possibly corrects the displayed temperature. Keep NO."
   },
   {
     "key": "N01",
-    "name": "The sensor to control solar water pump [N01]",
+    "name": "N01 Solar pump control sensor",
+    "app_name": "The sensor to control solar water pump",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Bottom",
+      "1": "Top"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "Bottom, Top",
+    "app_value": "Bottom",
+    "confidence": "uncertain",
+    "description": "App name: 'The sensor to control solar water pump'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N02",
-    "name": "Longest running time of solar water pump [N02]",
+    "name": "N02 Solar pump maximum run time",
+    "app_name": "Longest running time of solar water pump",
     "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "min"
+    "unit_of_measurement": "min",
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "1Min to 30Min, steps of 1Min",
+    "app_value": "10Min",
+    "confidence": "uncertain",
+    "description": "App name: 'Longest running time of solar water pump'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N03",
-    "name": "Temp hysteresis of solar water pump [N03]",
+    "name": "N03 Solar pump hysteresis",
+    "app_name": "Temp hysteresis of solar water pump",
     "platform": "sensor",
     "device_class": "temperature_delta",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0.0C to 20.0C, steps of 0.5C",
+    "app_value": "10.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Temp hysteresis of solar water pump'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N04",
-    "name": "Activate the nighttime temp decreases mode [N04]",
+    "name": "N04 Night temperature reduction",
+    "app_name": "Activate the nighttime temp decreases mode",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "NO, YES",
+    "app_value": "YES",
+    "confidence": "uncertain",
+    "description": "App name: 'Activate the nighttime temp decreases mode'.",
+    "guidance": "It may lower the target between N05 and N06 o'clock; your heat pump has it set to YES for 02:00-03:00. Whether it applies without a solar circuit isn't known. Read-only."
   },
   {
     "key": "N05",
-    "name": "Startup point of the nighttime temp decreases mode [N05]",
+    "name": "N05 Night reduction start hour",
+    "app_name": "Startup point of the nighttime temp decreases mode",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "unit_of_measurement": "h",
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0H to 23H, steps of 1H",
+    "app_value": "2H",
+    "confidence": "uncertain",
+    "description": "App name: 'Startup point of the nighttime temp decreases mode'.",
+    "guidance": "It may lower the target between N05 and N06 o'clock; your heat pump has it set to YES for 02:00-03:00. Whether it applies without a solar circuit isn't known. Read-only."
   },
   {
     "key": "N06",
-    "name": "Shutdown point of the nighttime temp decreases mode [N06]",
+    "name": "N06 Night reduction end hour",
+    "app_name": "Shutdown point of the nighttime temp decreases mode",
     "platform": "sensor",
-    "device_class": "duration",
-    "unit_of_measurement": "h"
+    "unit_of_measurement": "h",
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0H to 23H, steps of 1H",
+    "app_value": "3H",
+    "confidence": "uncertain",
+    "description": "App name: 'Shutdown point of the nighttime temp decreases mode'.",
+    "guidance": "It may lower the target between N05 and N06 o'clock; your heat pump has it set to YES for 02:00-03:00. Whether it applies without a solar circuit isn't known. Read-only."
   },
   {
     "key": "N07",
-    "name": "Startup temp of decreasing solar water temp [N07]",
+    "name": "N07 Solar water cooling start temperature",
+    "app_name": "Startup temp of decreasing solar water temp",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "40.0C to 90.0C, steps of 0.5C",
+    "app_value": "-25.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Startup temp of decreasing solar water temp'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N08",
-    "name": "Temp hysteresis of stopping decreasing solar water temp [N08]",
+    "name": "N08 Solar water cooling stop hysteresis",
+    "app_name": "Temp hysteresis of stopping decreasing solar water temp",
     "platform": "sensor",
     "device_class": "temperature_delta",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "1.0C to 40.0C, steps of 0.5C",
+    "app_value": "-30.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Temp hysteresis of stopping decreasing solar water temp'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N09",
-    "name": "Solar water releasing temp [N09]",
+    "name": "N09 Solar water release temperature",
+    "app_name": "Solar water releasing temp",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "50.0C to 90.0C, steps of 0.5C",
+    "app_value": "-30.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Solar water releasing temp'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N10",
-    "name": "Shutdown temp of solar water pump [N10]",
+    "name": "N10 Solar pump stop temperature",
+    "app_name": "Shutdown temp of solar water pump",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "50.0C to 90.0C, steps of 0.5C",
+    "app_value": "-30.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Shutdown temp of solar water pump'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "N11",
-    "name": "Working mode of solar water pump [N11]",
+    "name": "N11 Solar pump working mode",
+    "app_name": "Working mode of solar water pump",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Dependent",
+      "1": "Independent"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "Dependent, Independent",
+    "app_value": "Dependent",
+    "confidence": "uncertain",
+    "description": "App name: 'Working mode of solar water pump'.",
+    "guidance": "Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only."
   },
   {
     "key": "R01",
-    "name": "Target temp [R01]",
+    "name": "R01 Target water temperature",
+    "app_name": "Target temp",
     "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
+    "unit_of_measurement": "°C",
     "native_min_value": 38,
     "native_max_value": 60,
-    "native_step": 1
+    "native_step": 0.5,
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "38.0C to 60.0C, steps of 0.5C",
+    "app_value": "Set by you",
+    "confidence": "documented",
+    "description": "Target water temperature, the main control. The climate entity sets the same value.",
+    "guidance": "Heating starts when the controlling sensor (T02 bottom, or T03 top with R17 = YES) drops R03 below R01, and stops at R01. Each change is probably stored in the controller's memory, which allows a limited number of writes (see T12), so avoid automations that change R01 every few minutes."
   },
   {
     "key": "R03",
-    "name": "Hysteresis of heat pump startup(bottom sensor) [R03]",
+    "name": "R03 Start hysteresis (bottom sensor)",
+    "app_name": "Hysteresis of heat pump startup(bottom sensor)",
     "platform": "number",
     "device_class": "temperature_delta",
-    "unit_of_measurement": "\u00b0C",
+    "unit_of_measurement": "°C",
     "native_min_value": 1,
     "native_max_value": 20,
-    "native_step": 1
+    "native_step": 0.5,
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "1.0C to 20.0C, steps of 0.5C",
+    "app_value": "5.0C",
+    "confidence": "documented",
+    "description": "How far below R01 the bottom sensor (T02) must drop before heating restarts.",
+    "guidance": "A small value keeps the water closer to R01 but starts the compressor more often; very small values cause short cycling. Your heat pump uses 5.0 °C."
   },
   {
     "key": "R04",
-    "name": "Enable R05 as setpoint of booster? [R04]",
-    "platform": "number",
-    "device_class": null,
-    "unit_of_measurement": null,
-    "native_min_value": 0,
-    "native_max_value": 1,
-    "native_step": 1
+    "name": "R04 Use R05 as booster setpoint",
+    "app_name": "Enable R05 as setpoint of booster?",
+    "platform": "select",
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "NO, YES",
+    "app_value": "NO",
+    "confidence": "observed",
+    "description": "Whether the booster heats to its own setpoint R05 instead of R01.",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected."
   },
   {
     "key": "R05",
-    "name": "Setpoint of booster [R05]",
+    "name": "R05 Booster setpoint",
+    "app_name": "Setpoint of booster",
     "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C",
+    "unit_of_measurement": "°C",
     "native_min_value": 30,
     "native_max_value": 90,
-    "native_step": 1
+    "native_step": 0.5,
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "30.0C to 90.0C, steps of 0.5C",
+    "app_value": "55.0C",
+    "confidence": "observed",
+    "description": "Water temperature the booster heats to when R04 = YES.",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected."
   },
   {
     "key": "R06",
-    "name": "Booster startup delay [R06]",
+    "name": "R06 Booster start delay",
+    "app_name": "Booster startup delay",
     "platform": "number",
     "device_class": "duration",
     "unit_of_measurement": "min",
     "native_min_value": 0,
     "native_max_value": 450,
-    "native_step": 1
+    "native_step": 1,
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "0Min to 450Min, steps of 1Min",
+    "app_value": "200Min",
+    "confidence": "documented",
+    "description": "How long the heat pump runs before the booster may help.",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected."
   },
   {
     "key": "R07",
-    "name": "Booster replaces heat pump? [R07]",
-    "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "name": "R07 Booster replaces heat pump",
+    "app_name": "Booster replaces heat pump?",
+    "platform": "select",
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "NO, YES",
+    "app_value": "YES",
+    "confidence": "documented",
+    "description": "Whether the booster takes over from the heat pump below the R08 ambient temperature.",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected. With YES and no booster fitted, the heat pump presumably stops heating below R08 (-5.0 °C on your unit)."
   },
   {
     "key": "R08",
-    "name": "Setpoint of ambient temp to activate booster to replace heat pump [R08]",
-    "platform": "sensor",
+    "name": "R08 Booster-only below ambient",
+    "app_name": "Setpoint of ambient temp to activate booster to replace heatpump",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": -20,
+    "native_max_value": 10,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "-20.0C to 10.0C, steps of 0.5C",
+    "app_value": "-5.0C",
+    "confidence": "documented",
+    "description": "Ambient temperature (T01) below which the booster replaces the heat pump (R07 = YES).",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected."
   },
   {
     "key": "R09",
-    "name": "Setpoint of ambient temp to activate booster without delay [R09]",
-    "platform": "sensor",
+    "name": "R09 Booster without delay below ambient",
+    "app_name": "Setpoint of ambient temp to activate booster without delay",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": 0,
+    "native_max_value": 30,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "0.0C to 30.0C, steps of 0.5C",
+    "app_value": "5.0C",
+    "confidence": "documented",
+    "description": "Ambient temperature (T01) below which the booster starts together with the heat pump.",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected."
   },
   {
     "key": "R10",
-    "name": "Setpoint of ambient temp to activate booster with delay [R10]",
-    "platform": "sensor",
+    "name": "R10 Booster with delay below ambient",
+    "app_name": "Setpoint of ambient temp to activate booster with delay",
+    "platform": "number",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "native_min_value": 10,
+    "native_max_value": 40,
+    "native_step": 0.5,
+    "entity_category": "config",
+    "enabled_by_default": false,
+    "level": "066 (installer)",
+    "app_range": "10.0C to 40.0C, steps of 0.5C",
+    "app_value": "25.0C",
+    "confidence": "documented",
+    "description": "Ambient temperature (T01) below which the booster starts after the R06 delay.",
+    "guidance": "Booster logic (PHNIX manuals): with R07 = YES the booster replaces the heat pump below R08 ambient; below R09 it starts together with the heat pump; below R10 it starts after the heat pump has run R06 minutes; above R10 only the heat pump heats. The booster output (O02) is meant for an electric water heater. Only relevant with a booster connected."
   },
   {
     "key": "R12",
-    "name": "Ambient temp of shutting down compressor compulsively [R12]",
+    "name": "R12 Compressor cut-off ambient temperature",
+    "app_name": "Ambient temp of shutting down compressor compulsively",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "-30.0C to -5.0C, steps of 0.5C",
+    "app_value": "-15.0C",
+    "confidence": "observed",
+    "description": "Ambient temperature (T01) below which the compressor is forced off."
   },
   {
     "key": "R14",
-    "name": "The target temp of second heating source [R14]",
+    "name": "R14 Second heat source target temperature",
+    "app_name": "The target temp of second heating source",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "10.0C to 60.0C, steps of 0.5C",
+    "app_value": "-10.0C",
+    "confidence": "uncertain",
+    "description": "Target temperature of the second heating source (see S06).",
+    "guidance": "Your heat pump holds -10.0, outside the app's own range, which suggests it isn't used."
   },
   {
     "key": "R15",
-    "name": "Maximal ambient temp of working compressor [R15]",
+    "name": "R15 Maximum ambient for compressor",
+    "app_name": "Maximal ambient temp of working compressor",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "55.0C to 80.0C, steps of 0.5C",
+    "app_value": "78.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Maximal ambient temp of working compressor'.",
+    "guidance": "A 55-80 °C range fits a water or refrigerant limit better than an air temperature."
   },
   {
     "key": "R17",
-    "name": "Enable top sensor to control compressor? [R17]",
+    "name": "R17 Top sensor controls compressor",
+    "app_name": "Enable top sensor to control compressor?",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "NO, YES",
+    "app_value": "NO",
+    "confidence": "observed",
+    "description": "Whether the top sensor (T03) controls the compressor instead of the bottom sensor (T02)."
   },
   {
     "key": "R18",
-    "name": "Hysteresis of heat pump startup(top sensor) [R18]",
+    "name": "R18 Start hysteresis (top sensor)",
+    "app_name": "Hysteresis of heat pump startup(top sensor)",
     "platform": "sensor",
     "device_class": "temperature_delta",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "1.0C to 20.0C, steps of 0.5C",
+    "app_value": "5.0C",
+    "confidence": "observed",
+    "description": "Restart hysteresis of the top sensor, used instead of R03 when R17 = YES."
   },
   {
     "key": "R19",
-    "name": "Setpoint 1 of ambient temp to stop compressor [R19]",
+    "name": "R19 Compressor stop setpoint 1",
+    "app_name": "Setpoint 1 of ambient temp to stop compressor",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "30.0C to 90.0C, steps of 0.5C",
+    "app_value": "65.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Setpoint 1 of ambient temp to stop compressor'.",
+    "guidance": "Not documented. A 30-90 °C range fits a water temperature better than an air temperature."
   },
   {
     "key": "R20",
-    "name": "Setpoint 2 of ambient temp to stop compressor [R20]",
+    "name": "R20 Compressor stop setpoint 2",
+    "app_name": "Setpoint 2 of ambient temp to stop compressor",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "30.0C to 90.0C, steps of 0.5C",
+    "app_value": "55.0C",
+    "confidence": "uncertain",
+    "description": "App name: 'Setpoint 2 of ambient temp to stop compressor'.",
+    "guidance": "Not documented. A 30-90 °C range fits a water temperature better than an air temperature."
   },
   {
     "key": "O01",
-    "name": "Compressor [O01]",
+    "name": "O01 Compressor",
+    "app_name": "Compressor",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "ON, OFF",
+    "app_value": "ON",
+    "confidence": "uncertain",
+    "description": "Compressor output.",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
   },
   {
     "key": "O02",
-    "name": "Electrical heater [O02]",
+    "name": "O02 Electric heater (booster)",
+    "app_name": "Electrical heater",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "ON, OFF",
+    "app_value": "OFF",
+    "confidence": "uncertain",
+    "description": "Electric heater (booster) output.",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
   },
   {
     "key": "O03",
-    "name": "4-way valve [O03]",
+    "name": "O03 4-way valve",
+    "app_name": "4-way valve",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "ON, OFF",
+    "app_value": "ON",
+    "confidence": "uncertain",
+    "description": "Four-way valve output, which reverses the refrigerant flow, for example to defrost.",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
   },
   {
     "key": "O04",
-    "name": "Fan high speed [O04]",
+    "name": "O04 Fan high speed",
+    "app_name": "Fan high speed",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "ON, OFF",
+    "app_value": "OFF",
+    "confidence": "uncertain",
+    "description": "Fan high speed output.",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
   },
   {
     "key": "O05",
-    "name": "Fan low speed [O05]",
+    "name": "O05 Fan low speed (OUT05)",
+    "app_name": "Fan low speed",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "ON, OFF",
+    "app_value": "OFF",
+    "confidence": "uncertain",
+    "description": "Fan low speed output (OUT05, see /01).",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
   },
   {
     "key": "O06",
-    "name": "Reserve/solar pump/solar valve pump [O06]",
+    "name": "O06 Solar pump/valve (OUT06)",
+    "app_name": "Reserve/solar pump/solar valve pump",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "ON, OFF",
+    "app_value": "OFF",
+    "confidence": "uncertain",
+    "description": "Reserve, solar pump or solar valve output (OUT06, see /02).",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
   },
   {
     "key": "O07",
-    "name": "EEV current position [O07]",
+    "name": "O07 EEV position",
+    "app_name": "EEV current position",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "unit_of_measurement": "steps",
+    "state_class": "measurement",
+    "display_precision": 0,
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "0N to 500N, steps of 1N",
+    "app_value": "100N",
+    "confidence": "observed",
+    "description": "Current opening of the electronic expansion valve (EEV), 0-500 steps.",
+    "guidance": "On your heat pump it reads 480 (E05) while stopped or defrosting, starts at E03 (240) when heating begins, then works down towards E04 (100) as it regulates the superheat. Plot it with the Superheat sensor and E02."
   },
   {
     "key": "O08",
-    "name": "Accumulative running time of compressor [O08]",
+    "name": "O08 Compressor running hours",
+    "app_name": "Accumulative running time of compressor",
     "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "h"
+    "unit_of_measurement": "h",
+    "state_class": "total_increasing",
+    "display_precision": 0,
+    "entity_category": null,
+    "level": "066 (installer)",
+    "app_value": "211H",
+    "confidence": "observed",
+    "description": "Total compressor running time.",
+    "guidance": "A statistics graph with the 'change' statistic per day shows the daily running hours."
   },
   {
     "key": "O09",
-    "name": "Accumulative running time of booster [O09]",
+    "name": "O09 Booster running hours",
+    "app_name": "Accumulative running time of booster",
     "platform": "sensor",
     "device_class": "duration",
-    "unit_of_measurement": "h"
+    "unit_of_measurement": "h",
+    "state_class": "total_increasing",
+    "display_precision": 0,
+    "entity_category": null,
+    "level": "066 (installer)",
+    "app_value": "0H",
+    "confidence": "observed",
+    "description": "Total booster (electric heater) running time.",
+    "guidance": "A statistics graph with the 'change' statistic per day shows the daily running hours."
   },
   {
     "key": "O10",
-    "name": "3V_DE [O10]",
+    "name": "O10 3V_DE output",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: '3V_DE'.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "O11",
-    "name": "MV_DE [O11]",
+    "name": "O11 MV_DE output",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: 'MV_DE'.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "O12",
-    "name": "shutDown [O12]",
+    "name": "O12 Shutdown output",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Off",
+      "1": "On"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: 'shutDown'.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "O13",
-    "name": "DTU&WIFI\u662f\u5426\u4e0a\u7ebf [O13]",
+    "name": "O13 DTU/Wi-Fi online",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "O14",
-    "name": "\u9664\u971cDefrost [O14]",
+    "name": "O14 Defrost",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: '除霜Defrost', defrost.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "O15",
-    "name": "\u7cfb\u7edf\u662f\u5426\u8fdb\u5165\u9ad8\u6e29\u70ed\u6c34\u9636\u6bb5 [O15]",
+    "name": "O15 High-temperature hot water stage",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "NO",
+      "1": "YES"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "S01",
-    "name": "Remote ON/OFF switch [S01]",
+    "name": "S01 Remote on/off input",
+    "app_name": "Remote ON/OFF switch",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Open",
+      "1": "Closed"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "CL, OP",
+    "app_value": "CL",
+    "confidence": "uncertain",
+    "description": "Remote on/off terminals; on your installation, closing them asks the heat pump to heat.",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
   },
   {
     "key": "S02",
-    "name": "Over heat protection switch [S02]",
+    "name": "S02 Overheat protection switch",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Open",
+      "1": "Closed"
+    },
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: 'Over heat protection switch'.",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
   },
   {
     "key": "S03",
-    "name": "Low pressure switch [S03]",
+    "name": "S03 Low pressure switch",
+    "app_name": "Low pressure switch",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Open",
+      "1": "Closed"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "CL, OP",
+    "app_value": "OP",
+    "confidence": "uncertain",
+    "description": "Low pressure switch of the refrigerant circuit.",
+    "guidance": "The app showed OP while the heat pump ran normally, so Open isn't necessarily a fault. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
   },
   {
     "key": "S04",
-    "name": "High pressure switch [S04]",
+    "name": "S04 High pressure switch",
+    "app_name": "High pressure switch",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Open",
+      "1": "Closed"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "CL, OP",
+    "app_value": "CL",
+    "confidence": "uncertain",
+    "description": "High pressure switch of the refrigerant circuit.",
+    "guidance": "The app showed CL during normal operation. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
   },
   {
     "key": "S05",
-    "name": "Accelerate the running time of heater [S05]",
+    "name": "S05 Heater acceleration input",
+    "app_name": "Accelerate the running time of heater",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Open",
+      "1": "Closed"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "CL, OP",
+    "app_value": "CL",
+    "confidence": "uncertain",
+    "description": "App name: 'Accelerate the running time of heater'.",
+    "guidance": "Probably the input that starts the booster without the R06 delay. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
   },
   {
     "key": "S06",
-    "name": "Second heating source [S06]",
+    "name": "S06 Second heating source input",
+    "app_name": "Second heating source",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "options": {
+      "0": "Open",
+      "1": "Closed"
+    },
+    "entity_category": "diagnostic",
+    "level": "066 (installer)",
+    "app_range": "CL, OP",
+    "app_value": "OP",
+    "confidence": "uncertain",
+    "description": "Second heating source input (see R14).",
+    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
   },
   {
     "key": "T01",
-    "name": "Ambient temperature [T01]",
+    "name": "T01 Ambient temperature",
+    "app_name": "Ambient temperature",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "Steps of 0.5C",
+    "app_value": "18.0C",
+    "confidence": "observed",
+    "description": "Air temperature at the heat pump's air inlet.",
+    "guidance": "The booster settings R08-R10 and the compressor limit R12 compare against it."
   },
   {
     "key": "T02",
-    "name": "Bottom temperature [T02]",
+    "name": "T02 Bottom water temperature (return)",
+    "app_name": "Bottom temperature",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "Steps of 0.5C",
+    "app_value": "33.5C",
+    "confidence": "observed",
+    "description": "Water temperature at the controller's bottom sensor. The controller is made for a tank with bottom and top sensors; on your installation it is on the return pipe.",
+    "guidance": "With R17 = NO this sensor controls heating: it starts when T02 is R03 below R01."
   },
   {
     "key": "T03",
-    "name": "Top temperature [T03]",
+    "name": "T03 Top water temperature (flow)",
+    "app_name": "Top temperature",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "Steps of 0.5C",
+    "app_value": "37.0C",
+    "confidence": "observed",
+    "description": "Water temperature at the controller's top sensor; on your installation the flow pipe.",
+    "guidance": "T03 - T02 is the Water ΔT sensor. T10 showed the same value as T03 throughout your log."
   },
   {
     "key": "T04",
-    "name": "Coil temperature [T04]",
+    "name": "T04 Coil temperature",
+    "app_name": "Coil temperature",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "Steps of 0.5C",
+    "app_value": "0.5C",
+    "confidence": "documented",
+    "description": "Temperature of the evaporator coil, the coil the air passes through.",
+    "guidance": "Defrost starts and ends on this temperature (D01, D02). It is also the reference for the superheat (T05 - T04)."
   },
   {
     "key": "T05",
-    "name": "Suction temperature [T05]",
+    "name": "T05 Suction temperature",
+    "app_name": "Suction temperature",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
-  },
-  {
-    "key": "T06",
-    "name": "Solar temperature [T06]",
-    "platform": "sensor",
-    "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "Steps of 0.5C",
+    "app_value": "-13.0C",
+    "confidence": "documented",
+    "description": "Refrigerant temperature in the suction pipe, the gas going from the coil to the compressor. It is not an air temperature.",
+    "guidance": "With E01 = Automatic the EEV keeps T05 - T04 (superheat) at E02. When T05 stays well below T04, as in your log (about -13 °C against 0 °C), the superheat is negative and the EEV closes to its minimum E04. The data can't tell whether that comes from the sensor placement or the refrigerant circuit; ask an installer rather than changing E02 or E04."
   },
   {
     "key": "T10",
-    "name": "Temperature value shown on APP/display [T10]",
+    "name": "T10 Displayed water temperature",
+    "app_name": "Temperature value shown on APP/display",
     "platform": "sensor",
     "device_class": "temperature",
-    "unit_of_measurement": "\u00b0C"
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "level": "002 (user)",
+    "app_range": "Steps of 0.5C",
+    "app_value": "37.0C",
+    "confidence": "observed",
+    "description": "Water temperature shown on the display and in the app; the climate entity's current temperature.",
+    "guidance": "Equal to T03 throughout your log."
+  },
+  {
+    "key": "T06",
+    "name": "T06 Solar/discharge temperature (unconfirmed)",
+    "platform": "sensor",
+    "device_class": "temperature",
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "entity_category": null,
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. The vendor parameter file calls it the solar temperature.",
+    "guidance": "Your installation has no solar circuit, yet T06 rose from about 63 to 87 °C while the compressor ran and dropped when it stopped. That fits the compressor discharge (hot gas) temperature, but it isn't confirmed."
   },
   {
     "key": "T11",
-    "name": "\u8fdb\u5165\u53c2\u6570\u8d85\u8303\u56f4\u4fdd\u62a4\u6b21\u6570 [T11]",
+    "name": "T11 Out-of-range protection count",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.",
+    "guidance": "The cloud has returned no value for it so far."
   },
   {
     "key": "T12",
-    "name": "\u8bb0\u5fc6\u82af\u7247EEPROM\u5b58\u50a8\u6b21\u6570 [T12]",
+    "name": "T12 EEPROM write count",
     "platform": "sensor",
-    "device_class": null,
-    "unit_of_measurement": null
+    "display_precision": 0,
+    "entity_category": "diagnostic",
+    "enabled_by_default": false,
+    "confidence": "uncertain",
+    "description": "Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.",
+    "guidance": "The cloud has returned no value for it so far."
+  },
+  {
+    "key": "superheat",
+    "name": "Superheat (T05 - T04)",
+    "platform": "sensor",
+    "device_class": "temperature_delta",
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "difference_of": ["T05", "T04"],
+    "entity_category": null,
+    "confidence": "documented",
+    "description": "Suction minus coil temperature (T05 - T04), calculated by Home Assistant.",
+    "guidance": "The value E02 targets. Negative values mean the suction pipe reads colder than the coil, which keeps the EEV at E04."
+  },
+  {
+    "key": "water_delta_t",
+    "name": "Water ΔT (T03 - T02)",
+    "platform": "sensor",
+    "device_class": "temperature_delta",
+    "unit_of_measurement": "°C",
+    "state_class": "measurement",
+    "difference_of": ["T03", "T02"],
+    "entity_category": null,
+    "confidence": "observed",
+    "description": "Top minus bottom water temperature (T03 - T02), calculated by Home Assistant.",
+    "guidance": "On your installation, how much the water warms up through the heat pump. Heat pumps are usually designed for about 5 °C; a much larger value can mean low water flow."
   }
 ]

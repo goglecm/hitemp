@@ -59,14 +59,14 @@ async def test_r01_range(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """R01 accepts 38-60 °C in whole degrees."""
+    """R01 accepts 38-60 °C in steps of 0.5, as in the app."""
     device = await _setup(hass, add_device, make_entry)
 
     state = hass.states.get(entity_id(hass, "number", "R01", device.code))
     assert state.state == "50.0"
     assert state.attributes[ATTR_MIN] == 38
     assert state.attributes[ATTR_MAX] == 60
-    assert state.attributes[ATTR_STEP] == 1
+    assert state.attributes[ATTR_STEP] == 0.5
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
 
@@ -99,7 +99,7 @@ async def test_value_is_rounded_to_step(
     await _set(hass, entity_id(hass, "number", "R01", device.code), 45.6)
 
     assert fake_cloud.control_requests() == [
-        [{"deviceCode": device.code, "protocolCode": "R01", "value": 46.0}]
+        [{"deviceCode": device.code, "protocolCode": "R01", "value": 45.5}]
     ]
 
 
@@ -126,19 +126,27 @@ async def test_installer_parameters_are_disabled_by_default(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """EEV and display compensation parameters are opt-in configuration."""
+    """Installer parameters are opt-in configuration; daily controls are not."""
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("E01", "E02", "E03", "E04", "H99"):
-        entry = registry.async_get(entity_id(hass, "number", key, device.code))
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
-        assert entry.entity_category is EntityCategory.CONFIG, key
+    for platform, keys in (
+        ("number", ("E02", "E03", "E04", "D01", "G02", "R08", "H32")),
+        ("select", ("E01", "H99", "D06", "R07", "H01")),
+    ):
+        for key in keys:
+            entry = registry.async_get(entity_id(hass, platform, key, device.code))
+            assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
+            assert entry.entity_category is EntityCategory.CONFIG, key
 
-    for key in ("R01", "R03", "R04", "R05", "R06"):
-        entry = registry.async_get(entity_id(hass, "number", key, device.code))
-        assert entry.disabled_by is None, key
-        assert entry.entity_category is None, key
+    for platform, keys in (
+        ("number", ("R01", "R03", "R05", "R06")),
+        ("select", ("R04", "M17")),
+    ):
+        for key in keys:
+            entry = registry.async_get(entity_id(hass, platform, key, device.code))
+            assert entry.disabled_by is None, key
+            assert entry.entity_category is None, key
 
 
 @pytest.mark.usefixtures("fake_cloud", "entity_registry_enabled_by_default")
@@ -162,16 +170,19 @@ async def test_unverified_parameters_are_read_only(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Parameters without a confirmed range are sensors, H98 included."""
+    """Parameters that are not well understood are sensors, H98 included."""
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("D01", "G01", "H30", "H98", "N09", "R07", "R15", "/01"):
-        number_id = slugify(f"{DOMAIN}_number_{key}_{device.code}")
-        assert registry.async_get_entity_id("number", DOMAIN, number_id) is None, key
-        assert hass.states.get(entity_id(hass, "sensor", key, device.code)), key
+    for key in ("E05", "H30", "H31", "H98", "N09", "R12", "R15", "/01"):
+        for platform in ("number", "select"):
+            unique_id = slugify(f"{DOMAIN}_{platform}_{key}_{device.code}")
+            assert registry.async_get_entity_id(platform, DOMAIN, unique_id) is None
+        assert registry.async_get(entity_id(hass, "sensor", key, device.code)), key
 
-    assert hass.states.get(entity_id(hass, "sensor", "H98", device.code)).state == "8.0"
+    assert hass.states.get(entity_id(hass, "sensor", "H98", device.code)).state == (
+        "8 (not listed in the app)"
+    )
 
 
 @pytest.mark.usefixtures("fake_cloud")

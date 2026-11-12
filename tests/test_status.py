@@ -172,14 +172,14 @@ async def test_failed_data_request_marks_entities_unavailable(
 async def test_values_missing_from_response_are_cleared(
     hass: HomeAssistant, setup: tuple[FakeDevice, MockConfigEntry]
 ) -> None:
-    """A code the cloud stops returning becomes unknown instead of stale."""
+    """A code the cloud stops returning becomes unavailable instead of stale."""
     device, entry = setup
     sensor = entity_id(hass, "sensor", "T02", device.code)
 
     del device.data["T02"]
     await _refresh(hass, entry)
 
-    assert hass.states.get(sensor).state == STATE_UNKNOWN
+    assert hass.states.get(sensor).state == STATE_UNAVAILABLE
 
 
 async def test_expired_token_is_renewed_without_losing_state(

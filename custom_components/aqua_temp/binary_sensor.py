@@ -55,12 +55,13 @@ class AquaTempBinarySensorEntity(BaseEntity, BinarySensorEntity):
         else:
             is_on = normalize_state(state) == normalize_state(self._entity_on_value)
 
-        attributes = {}
+        attributes = dict(self.entity_description.parameter_info or {})
         if self._entity_attributes is not None:
             for attribute_key in self._entity_attributes:
                 value = device_data.get(attribute_key)
 
                 attributes[attribute_key] = value
 
+        self._has_value = is_on is not None
         self._attr_is_on = is_on
         self._attr_extra_state_attributes = attributes

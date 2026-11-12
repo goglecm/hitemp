@@ -10,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
+from ..managers.aqua_temp_config_manager import PARAMETER_INFO_ATTRIBUTES
 from ..managers.aqua_temp_coordinator import AquaTempCoordinator
 from .consts import ADD_COMPONENT_SIGNALS, DOMAIN
 from .entity_descriptions import AquaTempEntityDescription
@@ -71,6 +72,11 @@ class BaseEntity(CoordinatorEntity):
     _entity_description: AquaTempEntityDescription
     _translations: dict
 
+    # The explanation of a parameter never changes, so it is not recorded
+    _unrecorded_attributes = frozenset(
+        {"code", "calculated_from", *PARAMETER_INFO_ATTRIBUTES.values()}
+    )
+
     def __init__(
         self,
         entity_description: AquaTempEntityDescription,
@@ -100,9 +106,13 @@ class BaseEntity(CoordinatorEntity):
         self._attr_device_info = device_info
         self._attr_name = entity_name
         self._attr_unique_id = unique_id
+        self._attr_extra_state_attributes = dict(
+            entity_description.parameter_info or {}
+        )
 
         self._data = {}
         self._device_code = device_code
+        self._has_value = False
 
     @property
     def device_code(self):
@@ -125,10 +135,26 @@ class BaseEntity(CoordinatorEntity):
         if not super().available:
             return False
 
+        if self._entity_description.requires_value and not self._has_value:
+            return False
+
         if self._entity_description.available_when_offline:
             return True
 
         return self.local_coordinator.is_device_online(self.device_code)
+
+    def _get_raw_value(self, key: str | None = None):
+        """Return the value the cloud last reported for a protocol code."""
+        device_data = self.local_coordinator.get_device_data(self.device_code)
+
+        return device_data.get(key or self._entity_description.key)
+
+    def _set_raw_value_attribute(self, value) -> None:
+        """Show the raw cloud value next to a labelled state."""
+        self._attr_extra_state_attributes = {
+            **self._attr_extra_state_attributes,
+            "raw_value": value,
+        }
 
     async def async_added_to_hass(self) -> None:
         """Populate the state from the coordinator before it is first written."""

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -28,6 +29,12 @@ class AquaTempEntityDescription(EntityDescription):
     available_when_offline: bool = False
     # Entities describing the connection itself, needed most when polling fails
     always_available: bool = False
+    # Unavailable instead of unknown while the cloud returns no usable value
+    requires_value: bool = False
+    # Raw cloud value to the label the app shows for it
+    value_labels: dict[str, str] | None = None
+    # Explanation of the parameter, shown as state attributes
+    parameter_info: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,6 +60,8 @@ class AquaTempSensorEntityDescription(
     SensorEntityDescription, AquaTempEntityDescription
 ):
     platform: Platform | None = Platform.SENSOR
+    # Calculated as the first protocol code minus the second
+    difference_of: tuple[str, str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

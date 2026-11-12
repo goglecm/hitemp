@@ -178,13 +178,13 @@ async def test_hitemp_limits_match_r01(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """The climate card is limited to the 38-60 °C range of R01 in whole degrees."""
+    """The climate card is limited to the 38-60 °C range of R01 in steps of 0.5."""
     _, _, climate = await _setup(hass, add_device, make_entry)
 
     attributes = hass.states.get(climate).attributes
     assert attributes["min_temp"] == 38.0
     assert attributes["max_temp"] == 60.0
-    assert attributes["target_temp_step"] == 1
+    assert attributes["target_temp_step"] == 0.5
 
 
 @pytest.mark.parametrize("temperature", [37, 61, 75, 90])
@@ -208,13 +208,13 @@ async def test_hitemp_rejects_unsafe_targets(
     assert not fake_cloud.control_requests()
 
 
-async def test_hitemp_target_is_rounded_to_whole_degrees(
+async def test_hitemp_target_is_rounded_to_half_degrees(
     hass: HomeAssistant,
     fake_cloud: FakeCloud,
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Fractional targets are rounded to the 1 °C step of R01."""
+    """Targets between steps are rounded to the 0.5 °C step of R01."""
     device, _, climate = await _setup(hass, add_device, make_entry)
 
     await _call(
@@ -224,7 +224,7 @@ async def test_hitemp_target_is_rounded_to_whole_degrees(
     )
 
     assert fake_cloud.control_requests() == [
-        [{"deviceCode": device.code, "protocolCode": "R01", "value": 45.0}]
+        [{"deviceCode": device.code, "protocolCode": "R01", "value": 45.5}]
     ]
 
 

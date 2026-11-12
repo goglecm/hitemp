@@ -8,7 +8,12 @@ from . import AquaTempConfigEntry
 from .common.base_entity import BaseEntity, async_setup_base_entry
 from .common.consts import LAST_ERROR
 from .common.entity_descriptions import AquaTempSensorEntityDescription
-from .common.utils import TEMPERATURE_DEVICE_CLASSES, safe_float
+from .common.utils import (
+    TEMPERATURE_DEVICE_CLASSES,
+    label_value,
+    labelled_options,
+    safe_float,
+)
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +34,8 @@ async def async_setup_entry(
 class AquaTempSensorEntity(BaseEntity, SensorEntity):
     """Representation of a sensor."""
 
+    entity_description: AquaTempSensorEntityDescription
+
     def __init__(
         self,
         entity_description: AquaTempSensorEntityDescription,
@@ -42,25 +49,56 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
             entity_description.native_unit_of_measurement
         )
 
+        if entity_description.value_labels is not None:
+            self._attr_options = labelled_options(entity_description.value_labels)
+
         if entity_description.device_class in TEMPERATURE_DEVICE_CLASSES:
             self._attr_native_unit_of_measurement = coordinator.get_temperature_unit(
                 device_code
             )
 
     def _update_attributes(self) -> None:
-        if self.entity_description.device_class in TEMPERATURE_DEVICE_CLASSES:
+        description = self.entity_description
+
+        if description.device_class in TEMPERATURE_DEVICE_CLASSES:
             self._attr_native_unit_of_measurement = (
                 self.local_coordinator.get_temperature_unit(self.device_code)
             )
 
-        if self.entity_description.key == LAST_ERROR:
-            self._attr_native_value = self.local_coordinator.last_error
+        if description.key == LAST_ERROR:
+            state = self.local_coordinator.last_error
+        elif description.difference_of is not None:
+            state = self._get_difference(*description.difference_of)
+        elif description.value_labels is not None:
+            state = self._get_label(description.value_labels)
         else:
-            device_data = self.local_coordinator.get_device_data(self.device_code)
-
-            state = device_data.get(self.entity_description.key)
+            state = self._get_raw_value()
 
             if isinstance(state, str):
                 state = safe_float(state)
 
-            self._attr_native_value = state
+        self._has_value = state is not None
+        self._attr_native_value = state
+
+    def _get_difference(self, minuend_key: str, subtrahend_key: str) -> float | None:
+        minuend = safe_float(self._get_raw_value(minuend_key))
+        subtrahend = safe_float(self._get_raw_value(subtrahend_key))
+
+        if minuend is None or subtrahend is None:
+            return None
+
+        return round(minuend - subtrahend, 2)
+
+    def _get_label(self, labels: dict[str, str]) -> str | None:
+        """Return the app's label of the value, keeping unlisted values as options."""
+        raw_value = self._get_raw_value()
+        state = label_value(raw_value, labels)
+        options = labelled_options(labels)
+
+        if state is not None and state not in options:
+            options.append(state)
+
+        self._attr_options = options
+        self._set_raw_value_attribute(raw_value)
+
+        return state
