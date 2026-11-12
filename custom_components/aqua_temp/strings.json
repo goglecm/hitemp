@@ -83,6 +83,12 @@
       },
       "1245226668902080512_power": {
         "name": "Power"
+      },
+      "1245226668902080512_compressor_running": {
+        "name": "Compressor running (2050 bit 8)"
+      },
+      "1245226668902080512_electric_heater_on": {
+        "name": "Electric heater on (2050 bit 9)"
       }
     },
     "climate": {
@@ -95,7 +101,7 @@
         "name": "Temperature Unit"
       },
       "1245226668902080512_m17": {
-        "name": "M17 Fan speed"
+        "name": "M17 Fan after heating"
       },
       "1245226668902080512_d06": {
         "name": "D06 Defrost method"
@@ -1138,6 +1144,9 @@
       "1442284873216843776_t28": {
         "name": "Target frequency [T28]"
       },
+      "1245226668902080512_mode_real": {
+        "name": "mode_real Operating mode"
+      },
       "1245226668902080512_01": {
         "name": "/01 Use of OUT05"
       },
@@ -1305,6 +1314,21 @@
       },
       "1245226668902080512_t12": {
         "name": "T12 EEPROM write count"
+      },
+      "1245226668902080512_2050": {
+        "name": "2050 Operating status bits"
+      },
+      "1245226668902080512_m06": {
+        "name": "M06 Electric heating"
+      },
+      "1245226668902080512_o29": {
+        "name": "O29 Fan speed"
+      },
+      "1245226668902080512_t07": {
+        "name": "T07 Discharge temperature (unconfirmed)"
+      },
+      "1245226668902080512_t09": {
+        "name": "T09 Compressor temperature (unconfirmed)"
       },
       "1245226668902080512_superheat": {
         "name": "Superheat (T05 - T04)"

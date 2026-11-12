@@ -142,7 +142,7 @@ HiTemp (1245226668902080512):
 | Parameters                     | Entities | Enabled by default |
 | ------------------------------ | -------- | ------------------ |
 | R01, R03, R05, R06             | number   | Yes (Controls)     |
-| R04, M17 (fan speed)           | select   | Yes (Controls)     |
+| R04, M17 (fan after heating)   | select   | Yes (Controls)     |
 | E02-E04, D01-D05, D07, G01-G04 | number   | No (Configuration) |
 | R08-R10, H32                   | number   | No (Configuration) |
 | E01, H99, D06, R07, H01        | select   | No (Configuration) |
@@ -167,8 +167,9 @@ Assistant too.
 ### What to change and what to leave
 
 - **Daily use:** `R01` (target water temperature, also set by the climate
-  entity) and `M17` (fan speed). Heating is started with the remote on/off
-  input `S01` on the board.
+  entity). Heating is started with the remote on/off input `S01` on the board
+  (`DI05` in the Trianco S300 manual). `M17` only sets what the fan does once
+  the target is reached: low, high or off.
 - **Booster, if one is fitted:** `R04`-`R06` in Controls, `R07`-`R10` in
   Configuration.
 - **Installer settings** (expansion valve, defrost, disinfection): disabled by
@@ -199,12 +200,18 @@ those in the card editors instead.
 
 The cloud only keeps some values while the heat pump uploads live data, which
 the app requests while it is open. With **Request live data** on (the
-default), the integration sends the same request before each poll and also
-asks for the fault, version and switch codes related boards provide. On
-HiTemp the switch inputs `S01`-`S06` and outputs `O01`-`O06` have so far stayed
-empty, so they show as unavailable. Download the diagnostics of the heat pump
-and attach them to an [issue](https://github.com/goglecm/hitemp/issues) to
-help find out what it reports; the guide explains the details.
+default), the integration sends the same request before each poll and reads
+further codes in a separate request. On HiTemp the switch inputs `S01`-`S06`
+and outputs `O01`-`O06` stay empty, so they show as unavailable.
+
+A full scan of another heat pump with the same product ID found the
+operating state in packed status words instead. The integration reads
+register `2050` and shows its compressor and electric heater bits as
+**Compressor running** and **Electric heater on**, plus the operating mode,
+fan speed and a discharge temperature. These are not yet confirmed on every
+model: compare them with the app, and attach the diagnostics of the heat pump
+to an [issue](https://github.com/goglecm/hitemp/issues) to help confirm
+them. The guide explains the details.
 
 ## Troubleshooting
 

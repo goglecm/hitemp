@@ -51,11 +51,18 @@ from ..common.consts import (
     LIVE_PROBE_CODES,
     POWER_MODE_OFF,
     POWER_MODE_ON,
+    PRODUCT_PROBE_CODES,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
     TO_REDACT,
 )
 from ..common.endpoints import Endpoints
-from ..common.utils import normalize_state, safe_float
+from ..common.utils import (
+    BINARY_WORD,
+    describe_bitword,
+    normalize_state,
+    parse_bitword,
+    safe_float,
+)
 from .aqua_temp_config_manager import AquaTempConfigManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,14 +82,12 @@ def describe_cloud_message(message) -> str:
 
 def _describe_bitword(value) -> dict:
     """Show a packed switch or output word in the forms needed to decode it."""
-    number = safe_float(value)
+    word = parse_bitword(value)
 
-    if number is None or not number.is_integer() or number < 0:
+    if word is None:
         return {"value": value}
 
-    number = int(number)
-
-    return {"value": value, "hex": f"0x{number:04X}", "bits": f"{number:016b}"}
+    return {"value": value, **describe_bitword(word)}
 
 
 class AquaTempAPI:
@@ -164,9 +169,10 @@ class AquaTempAPI:
             "codes_with_value": report.get("with_value", []),
             "codes_without_value": report.get("without_value", []),
             "bitwords": {
-                code: _describe_bitword(device_data[code])
-                for code in BITWORD_CODES
-                if device_data.get(code) is not None
+                code: _describe_bitword(value)
+                for code, value in device_data.items()
+                if value is not None
+                and (code in BITWORD_CODES or BINARY_WORD.fullmatch(str(value)))
             },
         }
 
@@ -461,7 +467,12 @@ class AquaTempAPI:
                 self._control_param(device_code, set_temp_pc_key, target_temperature)
             )
 
-        if str(device_data.get(mode_pc_key)) != str(action_pc_key):
+        device_mode = device_data.get(mode_pc_key)
+        current_hvac_mode = self._config_manager.get_hvac_reverse_mapping(
+            device_code, None if device_mode is None else str(device_mode)
+        )
+
+        if current_hvac_mode != hvac_mode:
             control_params.append(
                 self._control_param(device_code, mode_pc_key, action_pc_key)
             )
@@ -630,7 +641,11 @@ class AquaTempAPI:
 
     async def _fetch_probe_codes(self, device_code: str):
         """Read the live codes of the board family the device may support."""
-        codes = self._probe_codes.setdefault(device_code, list(LIVE_PROBE_CODES))
+        product_id = self._get_device_product_id(self._devices[device_code])
+        codes = self._probe_codes.setdefault(
+            device_code,
+            [*LIVE_PROBE_CODES, *PRODUCT_PROBE_CODES.get(product_id, [])],
+        )
 
         if not codes:
             return

@@ -12,11 +12,12 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.aqua_temp.common.consts import (
     CONF_LIVE_DATA,
+    HITEMP_DISCOVERY_CODES,
     LIVE_DATA_SETTLE_SECONDS,
     LIVE_PROBE_CODES,
 )
 
-from .conftest import HITEMP_FIXTURE, setup_entry
+from .conftest import AQUATEMP_FIXTURE, HITEMP_FIXTURE, setup_entry
 from .fake_cloud import FakeCloud, FakeDevice
 
 
@@ -156,7 +157,21 @@ async def test_probe_codes_are_read_separately(
     assert len(requests) == 2
     assert "R01" in requests[0]
     assert not set(LIVE_PROBE_CODES) & set(requests[0])
-    assert requests[1] == LIVE_PROBE_CODES
+    assert not set(HITEMP_DISCOVERY_CODES) & set(requests[0])
+    assert requests[1] == [*LIVE_PROBE_CODES, *HITEMP_DISCOVERY_CODES]
+
+
+async def test_other_products_only_read_the_live_codes(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """The HiTemp discovery codes are only read from HiTemp heat pumps."""
+    add_device(AQUATEMP_FIXTURE)
+    await setup_entry(hass, make_entry(api_type="aqua_temp"))
+
+    assert fake_cloud.data_requests()[1] == LIVE_PROBE_CODES
 
 
 async def test_rejected_probe_codes_are_narrowed_down(

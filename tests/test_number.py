@@ -109,15 +109,45 @@ async def test_r06_accepts_factory_default(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """The booster delay covers the app's 0-450 min range, including 200."""
+    """The booster delay covers the app's 0-450 min range in 5-minute steps."""
     device = await _setup(hass, add_device, make_entry)
     r06 = entity_id(hass, "number", "R06", device.code)
 
     assert hass.states.get(r06).attributes[ATTR_MAX] == 450
+    assert hass.states.get(r06).attributes[ATTR_STEP] == 5
 
     await _set(hass, r06, 450)
+    await _set(hass, r06, 203)
 
-    assert device.data["R06"] == "450.0"
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "R06", "value": "450"}],
+        [{"deviceCode": device.code, "protocolCode": "R06", "value": "205"}],
+    ]
+    assert device.data["R06"] == "205"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("key", "value", "sent"),
+    [("H32", 2, "2"), ("E03", 250, "250"), ("R03", 6.5, 6.5), ("D04", 9, 9.0)],
+)
+async def test_values_are_written_in_the_form_the_heat_pump_reports(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    key: str,
+    value: float,
+    sent: str | float,
+) -> None:
+    """Whole-number codes are sent as '2', not 2.0; decimal codes stay decimal."""
+    device = await _setup(hass, add_device, make_entry)
+
+    await _set(hass, entity_id(hass, "number", key, device.code), value)
+
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": key, "value": sent}]
+    ]
 
 
 @pytest.mark.usefixtures("fake_cloud")
@@ -161,7 +191,7 @@ async def test_enabled_installer_parameter_can_be_written(
 
     await _set(hass, entity_id(hass, "number", "E04", device.code), 120)
 
-    assert device.data["E04"] == "120.0"
+    assert device.data["E04"] == "120"
 
 
 @pytest.mark.usefixtures("fake_cloud")

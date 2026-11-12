@@ -75,6 +75,9 @@ class AquaTempNumberEntity(BaseEntity, NumberEntity):
         value = round_to_step(value, self.native_step, minimum)
         value = float(min(max(value, minimum), maximum))
 
+        if self.entity_description.send_as_integer:
+            value = str(round(value))
+
         await self.local_coordinator.set_protocol_code_value(
             self.device_code, self.entity_description.key, value
         )

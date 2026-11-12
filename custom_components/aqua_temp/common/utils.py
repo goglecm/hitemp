@@ -1,4 +1,5 @@
 import math
+import re
 
 from homeassistant.const import UnitOfTemperature
 from homeassistant.util import slugify
@@ -16,8 +17,33 @@ TEMPERATURE_DEVICE_CLASSES = (DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_TEMPERATURE
 UNLISTED_VALUE = "not listed in the app"
 
 
+BINARY_WORD = re.compile(r"[01]{16}")
+
+
 def entity_unique_id(platform: str, key: str, device_code: str) -> str:
     return slugify("_".join([DOMAIN, platform, key, device_code]))
+
+
+def parse_bitword(value) -> int | None:
+    """Return a packed status word, sent as '0000000100100100' or as a number."""
+    if isinstance(value, str) and BINARY_WORD.fullmatch(value.strip()):
+        return int(value.strip(), 2)
+
+    number = safe_float(value)
+
+    if number is None or not number.is_integer() or number < 0:
+        return None
+
+    return int(number)
+
+
+def describe_bitword(word: int) -> dict:
+    """Show a status word in the forms needed to decode it, bit 0 being the last."""
+    return {
+        "bits": f"{word:016b}",
+        "hex": f"0x{word:04X}",
+        "bits_set": [bit for bit in range(word.bit_length()) if word >> bit & 1],
+    }
 
 
 def raw_value_key(value) -> str | None:

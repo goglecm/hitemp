@@ -15,7 +15,7 @@ from homeassistant.const import Platform
 import pytest
 
 from custom_components.aqua_temp.common.api_types import API_TYPES, APIParam
-from custom_components.aqua_temp.common.consts import PRODUCT_IDS
+from custom_components.aqua_temp.common.consts import INTEGER_CLOUD_TYPES, PRODUCT_IDS
 
 PARAMETERS = (
     Path(__file__).parent.parent / "custom_components" / "aqua_temp" / "parameters"
@@ -133,7 +133,7 @@ HITEMP_NUMBERS = {
     "R01": (38, 60, 0.5),
     "R03": (1, 20, 0.5),
     "R05": (30, 90, 0.5),
-    "R06": (0, 450, 1),
+    "R06": (0, 450, 5),
     "E02": (-20, 20, 0.5),
     "E03": (0, 500, 1),
     "E04": (0, 500, 1),
@@ -238,7 +238,21 @@ def test_hitemp_every_app_code_is_described() -> None:
             item = items[code]
             assert item["level"] == level, code
             assert item["app_name"], code
-            assert item["app_value"], code
+            if level != "App settings":
+                assert item["app_value"], code
+
+
+def test_hitemp_writes_use_the_cloud_data_type() -> None:
+    """Writable codes carry the cloud's data type; whole-number types use whole steps."""
+    for key, item in _hitemp_items().items():
+        if item["platform"] not in ("number", "select"):
+            continue
+
+        assert item["cloud_type"], key
+
+        if item["cloud_type"] in INTEGER_CLOUD_TYPES:
+            assert float(item["native_step"]).is_integer(), key
+            assert float(item["native_min_value"]).is_integer(), key
 
 
 def test_hitemp_entities_are_explained() -> None:
@@ -254,6 +268,9 @@ def test_hitemp_entities_are_explained() -> None:
         if "difference_of" in item:
             first, second = item["difference_of"]
             assert item["name"].endswith(f"({first} - {second})"), key
+        elif "bit_of" in item:
+            code, bit = item["bit_of"]
+            assert item["name"].endswith(f"({code} bit {bit})"), key
         elif key != "Power":
             assert item["name"].startswith(f"{key} "), key
 
@@ -286,7 +303,7 @@ def test_hitemp_options_use_raw_cloud_values() -> None:
 def test_hitemp_live_values_are_recorded_for_graphs() -> None:
     """Live readings keep long-term statistics; settings do not."""
     items = _hitemp_items()
-    live = {"T01", "T02", "T03", "T04", "T05", "T06", "T10", "O07"}
+    live = {"T01", "T02", "T03", "T04", "T05", "T06", "T07", "T09", "T10", "O07", "O29"}
 
     for key in live | {"superheat", "water_delta_t"}:
         assert items[key]["state_class"] == "measurement", key
@@ -360,6 +377,12 @@ def test_mapping_modes_are_consistent(product_id: str) -> None:
         if name != HVACMode.OFF:
             assert mode["set"] is not None
             assert mode["target"] is not None
+
+    other_values = [
+        value for mode in hvac_modes.values() for value in mode.get("other_values", [])
+    ]
+    assert len(other_values) == len(set(other_values))
+    assert not set(other_values) & set(set_values)
 
     fan_values = list(mapping["fan_modes"].values())
     assert fan_values

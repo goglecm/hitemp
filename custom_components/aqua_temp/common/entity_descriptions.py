@@ -55,6 +55,8 @@ class AquaTempBinarySensorEntityDescription(
     platform: Platform | None = Platform.BINARY_SENSOR
     on_value: str | bool | None = None
     attributes: list[str] | None = None
+    # On while this bit (0 = least significant) of a status word code is set
+    bit_of: tuple[str, int] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,6 +66,8 @@ class AquaTempSensorEntityDescription(
     platform: Platform | None = Platform.SENSOR
     # Calculated as the first protocol code minus the second
     difference_of: tuple[str, str] | None = None
+    # A packed status word, shown as its bits
+    bitword: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,6 +75,7 @@ class AquaTempNumberEntityDescription(
     NumberEntityDescription, AquaTempEntityDescription
 ):
     platform: Platform | None = Platform.NUMBER
+    send_as_integer: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)

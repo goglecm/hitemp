@@ -307,5 +307,10 @@ async def test_bitwords_are_shown_raw_in_diagnostics(
 
     assert diagnostics["device"]["live_data"]["bitwords"] == {
         "O01~015": {"value": "on"},
-        "S01~S06": {"value": "13", "hex": "0x000D", "bits": "0000000000001101"},
+        "S01~S06": {
+            "value": "13",
+            "hex": "0x000D",
+            "bits": "0000000000001101",
+            "bits_set": [0, 2, 3],
+        },
     }

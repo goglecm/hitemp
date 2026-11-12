@@ -1,5 +1,48 @@
 # Changelog
 
+## 4.1.1
+
+_Minimum HA Version: 2026.11.0_
+
+### Safety fixes
+
+- Whole-number parameters (cloud types `DIGI1`, `DIGI2`, `DIGI4`, for example
+  `H32`, `E03`, `G04`) are written as `"2"`, the form the heat pump reports,
+  instead of `2.0`
+- `R06` is written in steps of 5 minutes: the cloud declares it as 0-90 for
+  the app's 0-450 minutes
+- HiTemp: the climate entity shows the Intelligent, Standard and High demand
+  modes as heat, and choosing heat no longer switches them to Eco
+
+### Corrections from the Trianco S300 manual
+
+- `M17` sets what the fan does once the target temperature is reached (low,
+  high or off), not the fan speed while heating; it is now called "M17 Fan
+  after heating"
+- The operating modes, the Intelligent mode bands (`R08`-`R10`), the remote
+  on/off terminals and the defrost behaviour are explained from the manual,
+  and the guide lists the S300's fault codes
+
+### New readings (unconfirmed on the S300)
+
+- From a full scan of another heat pump with the same product ID: the status
+  word `2050` with **Compressor running** (bit 8) and **Electric heater on**
+  (bit 9), the operating mode `mode_real`, `M06` electric heating, `O29` fan
+  speed and `T07`/`T09` temperatures
+- About 80 further codes from that scan are read for the diagnostics, and
+  packed status words sent as 16 binary digits are decoded there
+
+### Other changes
+
+- The parameter guide shows each code's cloud data type and declared range,
+  and what a second log showed about the live data request
+
+### Upgrading
+
+- If Home Assistant reports that the unit of `O07` can't be converted from
+  the previously compiled statistics, open **Developer tools → Statistics** and
+  choose to update the unit of the old statistics
+
 ## 4.1.0
 
 _Minimum HA Version: 2026.11.0_

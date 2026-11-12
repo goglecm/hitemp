@@ -28,11 +28,13 @@ from ..common.api_types import APIParam
 from ..common.consts import (
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
+    CONFIG_HVAC_OTHER_VALUES,
     CONFIG_HVAC_SET,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
     DEFAULT_NAME,
     DOMAIN,
+    INTEGER_CLOUD_TYPES,
     PRODUCT_ID_DEFAULT,
     PRODUCT_IDS,
     STORAGE_VERSION,
@@ -103,6 +105,10 @@ def _parameter_info(data_item: dict) -> dict[str, Any] | None:
 
     if (difference_of := data_item.get("difference_of")) is not None:
         return {"calculated_from": " - ".join(difference_of), **info}
+
+    if (bit_of := data_item.get("bit_of")) is not None:
+        code, bit = bit_of
+        return {"calculated_from": f"{code} bit {bit}", **info}
 
     return {"code": data_item["key"], **info}
 
@@ -517,18 +523,23 @@ class AquaTempConfigManager:
                     difference_of=(
                         None if difference_of is None else tuple(difference_of)
                     ),
+                    bitword=data_item.get("bitword", False),
                     is_protocol_code=difference_of is None,
                 )
 
                 entities.append(sensor_entity)
 
             elif platform == Platform.BINARY_SENSOR:
+                bit_of = data_item.get("bit_of")
+
                 binary_sensor_entity = AquaTempBinarySensorEntityDescription(
                     **_common_fields(
                         data_item, translation_key, EntityCategory.DIAGNOSTIC
                     ),
                     device_class=_device_class(BinarySensorDeviceClass, data_item),
                     on_value=data_item.get("on_value"),
+                    bit_of=None if bit_of is None else tuple(bit_of),
+                    is_protocol_code=bit_of is None,
                 )
 
                 entities.append(binary_sensor_entity)
@@ -541,6 +552,7 @@ class AquaTempConfigManager:
                     native_min_value=data_item.get("native_min_value"),
                     native_max_value=data_item.get("native_max_value"),
                     native_step=data_item.get("native_step"),
+                    send_as_integer=data_item.get("cloud_type") in INTEGER_CLOUD_TYPES,
                 )
 
                 entities.append(number_entity)
@@ -587,6 +599,10 @@ class AquaTempConfigManager:
 
             hvac_mode_mapping[hvac_mode_ha_key] = hvac_mode_api
             hvac_mode_reverse_mapping[hvac_mode_api] = hvac_mode_ha_key
+
+            # Device modes shown as this mode but never written by it
+            for other_value in hvac_mode.get(CONFIG_HVAC_OTHER_VALUES, []):
+                hvac_mode_reverse_mapping[other_value] = hvac_mode_ha_key
 
         fan_modes = json_data.get(CONFIG_FAN_MODES)
 

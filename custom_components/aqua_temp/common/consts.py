@@ -50,10 +50,32 @@ LIVE_PROBE_CODES = [
     *BITWORD_CODES,
 ]
 
+# Cloud data types whose values the heat pump reports as whole numbers ("2",
+# not "2.0"), so they are written in the same form
+INTEGER_CLOUD_TYPES = {"DIGI1", "DIGI2", "DIGI4"}
+
 # Messages the cloud sends in Chinese, with their meaning
 CLOUD_MESSAGES = {"请重新登录": "session expired, please log in again"}
 
 PRODUCT_ID_HITEMP = "1245226668902080512"
+
+# Further codes a full scan of an Indol PV300 with the HiTemp product ID found
+# (github.com/victor987/hitemp), read for diagnostics until their meaning on
+# other models is known
+HITEMP_DISCOVERY_CODES = [
+    *("2051", "2085", "1129", "1133", "1142", "1151", "T08", "F03", "L28"),
+    *("2011", "2012", "2013", "2014", "2026", "2027", "2057", "2058", "2059"),
+    *("2068", "2069", "2070", "2071", "T20", "T21"),
+    *(f"O{index}" for index in (18, 19, 21, 22, 23, 24, 25, 26, 27, 28)),
+    *("M07", "M12", "M13", "M14", "M15", "M16"),
+    *("R02", "R11", "R13", "R16", "H09", "H16", "E06"),
+    *(f"C0{index}" for index in (1, 2, 3, 5, 6, 7, 8, 9)),
+    *("D10", "D11", "D12", "D13"),
+    *(f"F{index:02}" for index in (1, 2, 4, 5, 6, 7, 9, 10, 11, 12, 13)),
+    *("L02", "L03", "L04", *(f"L{index:02}" for index in range(6, 14))),
+    *("L29", "L30", "L31", "L32"),
+]
+PRODUCT_PROBE_CODES = {PRODUCT_ID_HITEMP: HITEMP_DISCOVERY_CODES}
 
 PRODUCT_IDS = [
     PRODUCT_ID_HITEMP,
@@ -115,6 +137,7 @@ CONFIG_HVAC_HEAT = str(HVACMode.HEAT)
 CONFIG_HVAC_COOL = str(HVACMode.COOL)
 CONFIG_HVAC_AUTO = str(HVACMode.AUTO)
 CONFIG_HVAC_SET = "set"
+CONFIG_HVAC_OTHER_VALUES = "other_values"
 CONFIG_HVAC_TARGET = "target"
 CONFIG_HVAC_MINIMUM = "minimum"
 CONFIG_HVAC_MAXIMUM = "maximum"

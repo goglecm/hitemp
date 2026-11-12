@@ -10,8 +10,10 @@ from .common.consts import CLOUD_STATUS, DEVICE_FAULT
 from .common.entity_descriptions import AquaTempSensorEntityDescription
 from .common.utils import (
     TEMPERATURE_DEVICE_CLASSES,
+    describe_bitword,
     label_value,
     labelled_options,
+    parse_bitword,
     safe_float,
 )
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
@@ -73,6 +75,8 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
             state = self._get_difference(*description.difference_of)
         elif description.value_labels is not None:
             state = self._get_label(description.value_labels)
+        elif description.bitword:
+            state = self._get_bitword()
         else:
             state = self._get_raw_value()
 
@@ -98,6 +102,21 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
         self._attr_extra_state_attributes = fault_words
 
         return state
+
+    def _get_bitword(self) -> str | None:
+        word = parse_bitword(self._get_raw_value())
+
+        if word is None:
+            return None
+
+        described = describe_bitword(word)
+        self._attr_extra_state_attributes = {
+            **self._attr_extra_state_attributes,
+            "hex": described["hex"],
+            "bits_set": described["bits_set"],
+        }
+
+        return described["bits"]
 
     def _get_difference(self, minuend_key: str, subtrahend_key: str) -> float | None:
         minuend = safe_float(self._get_raw_value(minuend_key))

@@ -483,3 +483,46 @@ async def test_invalid_fan_mode_is_rejected(
         await _call(
             hass, SERVICE_SET_FAN_MODE, {ATTR_ENTITY_ID: climate, ATTR_FAN_MODE: "high"}
         )
+
+
+@pytest.mark.parametrize("mode", ["0", "3", "4"])
+async def test_hitemp_other_heating_modes_are_kept(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    mode: str,
+) -> None:
+    """Intelligent, Standard and High demand show as heat and are not switched to Eco."""
+    device, _, climate = await _setup(hass, add_device, make_entry, mode_real=mode)
+
+    assert hass.states.get(climate).state == HVACMode.HEAT
+
+    await _call(
+        hass,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate, ATTR_HVAC_MODE: HVACMode.HEAT},
+    )
+
+    assert fake_cloud.control_requests() == []
+    assert device.data["mode_real"] == mode
+
+
+async def test_hitemp_unknown_mode_is_switched_to_heat(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """A mode value outside the mapping is still replaced when heat is chosen."""
+    device, _, climate = await _setup(hass, add_device, make_entry, mode_real="7")
+
+    await _call(
+        hass,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate, ATTR_HVAC_MODE: HVACMode.HEAT},
+    )
+
+    assert fake_cloud.control_requests() == [
+        [{"deviceCode": device.code, "protocolCode": "mode_real", "value": "2"}]
+    ]

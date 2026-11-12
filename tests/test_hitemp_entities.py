@@ -20,6 +20,8 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     UnitOfTime,
 )
@@ -29,6 +31,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.aqua_temp.common.consts import CONF_LIVE_DATA
+from custom_components.aqua_temp.common.utils import parse_bitword
 from custom_components.aqua_temp.number import AquaTempNumberEntity
 from custom_components.aqua_temp.select import AquaTempParameterSelectEntity
 from custom_components.aqua_temp.sensor import AquaTempSensorEntity
@@ -349,3 +352,99 @@ async def test_each_code_is_requested_once(
     assert codes.count("Mode") == 1
     assert len(codes) == len(set(codes))
     assert "superheat" not in codes
+
+
+@pytest.mark.parametrize(
+    ("value", "word"),
+    [
+        ("0000000100100100", 0b100100100),
+        ("292", 292),
+        (292, 292),
+        ("", None),
+        (None, None),
+        ("-1", None),
+        ("on", None),
+        ("0101", 101),
+    ],
+)
+def test_status_words_are_parsed(value: object, word: int | None) -> None:
+    """Status words arrive as 16 binary digits or as a number."""
+    assert parse_bitword(value) == word
+
+
+@pytest.mark.usefixtures("fake_cloud", "entity_registry_enabled_by_default")
+async def test_operating_status_bits(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """2050 is shown as its bits, and bits 8 and 9 drive the running sensors."""
+    device = await _setup(hass, add_device, make_entry, **{"2050": "0000000100100100"})
+
+    status = hass.states.get(entity_id(hass, "sensor", "2050", device.code))
+    assert status.state == "0000000100100100"
+    assert status.attributes["hex"] == "0x0124"
+    assert status.attributes["bits_set"] == [2, 5, 8]
+
+    compressor = hass.states.get(
+        entity_id(hass, "binary_sensor", "compressor_running", device.code)
+    )
+    assert compressor.state == STATE_ON
+    assert compressor.attributes["calculated_from"] == "2050 bit 8"
+    assert hass.states.get(
+        entity_id(hass, "binary_sensor", "electric_heater_on", device.code)
+    ).state == (STATE_OFF)
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_operating_status_bits_without_a_value(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Without the status word, the bit sensors are unavailable."""
+    device = await _setup(hass, add_device, make_entry, **{"2050": ""})
+
+    assert hass.states.get(entity_id(hass, "sensor", "2050", device.code)).state == (
+        STATE_UNAVAILABLE
+    )
+    assert hass.states.get(
+        entity_id(hass, "binary_sensor", "compressor_running", device.code)
+    ).state == (STATE_UNAVAILABLE)
+
+
+async def test_status_word_is_not_requested_twice(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """The bit sensors read 2050 from the main request instead of their own code."""
+    await _setup(hass, add_device, make_entry)
+
+    codes = fake_cloud.data_requests()[0]
+
+    assert codes.count("2050") == 1
+    assert "compressor_running" not in codes
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_operating_mode_and_related_readings(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """The operating mode, electric heating switch and fan speed are labelled."""
+    device = await _setup(
+        hass, add_device, make_entry, mode_real="3", M06="1", O29="830"
+    )
+
+    assert hass.states.get(
+        entity_id(hass, "sensor", "mode_real", device.code)
+    ).state == ("Standard (3)")
+    assert hass.states.get(entity_id(hass, "sensor", "M06", device.code)).state == (
+        "On (1)"
+    )
+    fan = hass.states.get(entity_id(hass, "sensor", "O29", device.code))
+    assert float(fan.state) == 830
+    assert fan.attributes[ATTR_UNIT_OF_MEASUREMENT] == "rpm"

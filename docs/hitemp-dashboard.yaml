@@ -4,8 +4,8 @@
 # Replace every "heat_pump" in the entity IDs with the start of your heat
 # pump's entity IDs, which comes from its device name. Installs from before
 # 4.1.0 keep their old entity IDs; pick those entities in the card editors
-# instead. E02 is disabled by default: enable it on its entity page to see it
-# in the superheat graph, or remove it from the card.
+# instead. E02 and T06 are disabled by default: enable them on their entity
+# pages to see them in the graphs, or remove them from the cards.
 title: Heat pump
 views:
   - title: Heat pump
@@ -23,7 +23,8 @@ views:
             entities:
               - number.heat_pump_r01_target_water_temperature
               - number.heat_pump_r03_start_hysteresis_bottom_sensor
-              - select.heat_pump_m17_fan_speed
+              - select.heat_pump_m17_fan_after_heating
+              - sensor.heat_pump_mode_real_operating_mode
               - sensor.heat_pump_s01_remote_on_off_input
           - type: heading
             heading: Status
@@ -34,9 +35,9 @@ views:
               - sensor.heat_pump_cloud_status
               - binary_sensor.heat_pump_fault
               - sensor.heat_pump_fault_details
-              - sensor.heat_pump_o01_compressor
-              - sensor.heat_pump_o02_electric_heater_booster
-              - sensor.heat_pump_o03_4_way_valve
+              - binary_sensor.heat_pump_compressor_running_2050_bit_8
+              - binary_sensor.heat_pump_electric_heater_on_2050_bit_9
+              - sensor.heat_pump_o29_fan_speed
 
       - type: grid
         cards:
@@ -83,6 +84,16 @@ views:
                 name: Coil (T04)
               - entity: sensor.heat_pump_t05_suction_temperature
                 name: Suction (T05)
+          - type: history-graph
+            title: Compressor and discharge
+            hours_to_show: 24
+            entities:
+              - entity: binary_sensor.heat_pump_compressor_running_2050_bit_8
+                name: Compressor
+              - entity: sensor.heat_pump_t06_solar_discharge_temperature_unconfirmed
+                name: T06
+              - entity: sensor.heat_pump_t07_discharge_temperature_unconfirmed
+                name: T07
           - type: history-graph
             title: Superheat against its target
             hours_to_show: 24
