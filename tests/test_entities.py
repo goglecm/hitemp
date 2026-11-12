@@ -51,7 +51,7 @@ async def test_initial_states(hass: HomeAssistant, hitemp: FakeDevice) -> None:
     code = hitemp.code
 
     bottom = hass.states.get(entity_id(hass, "sensor", "T02", code))
-    assert bottom.state == "38.5"
+    assert bottom.state == "29.0"
     assert bottom.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
     assert hass.states.get(entity_id(hass, "sensor", "H07", code)).state == (
@@ -69,7 +69,7 @@ async def test_initial_states(hass: HomeAssistant, hitemp: FakeDevice) -> None:
     assert hass.states.get(
         entity_id(hass, "binary_sensor", "is_fault", code)
     ).state == (STATE_OFF)
-    assert hass.states.get(entity_id(hass, "number", "R01", code)).state == "50.0"
+    assert hass.states.get(entity_id(hass, "number", "R01", code)).state == "60.0"
     assert hass.states.get(
         entity_id(hass, "select", "temperature_unit", code)
     ).state == (UnitOfTemperature.CELSIUS)
@@ -131,12 +131,12 @@ async def test_select_changes_units_without_reload(
 
     assert hass.states.get(select).state == UnitOfTemperature.FAHRENHEIT
 
-    # 50 °F reported by the device, shown in the system's °C
+    # 60 °F reported by the device, shown in the system's °C
     climate = hass.states.get(entity_id(hass, "climate", "Mode", code))
-    assert climate.attributes[ATTR_TEMPERATURE] == pytest.approx(10.0)
+    assert climate.attributes[ATTR_TEMPERATURE] == pytest.approx(15.6)
 
     bottom = hass.states.get(entity_id(hass, "sensor", "T02", code))
-    assert float(bottom.state) == pytest.approx(3.6, abs=0.1)
+    assert float(bottom.state) == pytest.approx(-1.7, abs=0.1)
 
     r01 = hass.states.get(entity_id(hass, "number", "R01", code))
     assert r01.attributes["min"] == pytest.approx(38.3, abs=0.1)

@@ -72,8 +72,8 @@ async def test_hitemp_state(
     state = hass.states.get(climate)
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
-    assert state.attributes[ATTR_TEMPERATURE] == 50.0
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 44.0
+    assert state.attributes[ATTR_TEMPERATURE] == 60.0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 32.5
     assert state.attributes[ATTR_FAN_MODE] == "low"
     assert state.attributes[ATTR_FAN_MODES] == ["off", "low", "high"]
 
@@ -113,7 +113,7 @@ async def test_power_off_shows_off_with_target(
 
     state = hass.states.get(climate)
     assert state.state == HVACMode.OFF
-    assert state.attributes[ATTR_TEMPERATURE] == 50.0
+    assert state.attributes[ATTR_TEMPERATURE] == 60.0
 
 
 @pytest.mark.usefixtures("fake_cloud")

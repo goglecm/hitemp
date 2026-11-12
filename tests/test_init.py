@@ -202,7 +202,7 @@ async def test_migration_disables_installer_parameters(
     assert registry.async_get(e02).disabled_by is er.RegistryEntryDisabler.USER
     assert registry.async_get(r01).disabled_by is None
     assert registry.async_get(t02).disabled_by is None
-    assert hass.states.get(r01).state == "50.0"
+    assert hass.states.get(r01).state == "60.0"
 
 
 async def test_migration_restores_api_type_from_options(

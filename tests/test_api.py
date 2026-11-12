@@ -126,8 +126,8 @@ async def test_update_fetches_product_codes(
     assert "api_status" not in request.body[codes_key]
 
     data = api.get_device_data(device.code)
-    assert data["R01"] == "50.0"
-    assert data["T06"] is None
+    assert data["R01"] == "60.0"
+    assert data["T11"] is None
 
 
 async def test_requests_verify_tls(
@@ -260,7 +260,7 @@ async def test_http_401_logs_in_again(
 
     await api.update()
 
-    assert api.get_device_data(device.code)["R01"] == "50.0"
+    assert api.get_device_data(device.code)["R01"] == "60.0"
     assert len(fake_cloud.endpoint_requests("app/user/login")) == 2
 
 

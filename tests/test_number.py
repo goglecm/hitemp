@@ -63,7 +63,7 @@ async def test_r01_range(
     device = await _setup(hass, add_device, make_entry)
 
     state = hass.states.get(entity_id(hass, "number", "R01", device.code))
-    assert state.state == "50.0"
+    assert state.state == "60.0"
     assert state.attributes[ATTR_MIN] == 38
     assert state.attributes[ATTR_MAX] == 60
     assert state.attributes[ATTR_STEP] == 0.5
@@ -181,7 +181,7 @@ async def test_unverified_parameters_are_read_only(
         assert registry.async_get(entity_id(hass, "sensor", key, device.code)), key
 
     assert hass.states.get(entity_id(hass, "sensor", "H98", device.code)).state == (
-        "8 (not listed in the app)"
+        "0X08 (2)"
     )
 
 

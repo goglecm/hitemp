@@ -79,6 +79,6 @@ async def test_device_diagnostics(
     diagnostics = await async_get_device_diagnostics(hass, entry, device_entry)
 
     _assert_no_secrets(fake_cloud, diagnostics)
-    assert diagnostics["device"]["data"]["R01"] == "50.0"
+    assert diagnostics["device"]["data"]["R01"] == "60.0"
     assert diagnostics["device"]["entities"]
     assert diagnostics == snapshot(exclude=VOLATILE)

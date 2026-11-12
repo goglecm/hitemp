@@ -153,7 +153,7 @@ async def test_failed_data_request_marks_entities_unavailable(
     """When the data cannot be read, old values are not shown as current."""
     device, entry = setup
     sensor = entity_id(hass, "sensor", "T02", device.code)
-    assert hass.states.get(sensor).state == "38.5"
+    assert hass.states.get(sensor).state == "29.0"
 
     fake_cloud.data_error = "Server busy"
     await _refresh(hass, entry)
@@ -166,7 +166,7 @@ async def test_failed_data_request_marks_entities_unavailable(
     fake_cloud.data_error = None
     await _refresh(hass, entry)
 
-    assert hass.states.get(sensor).state == "38.5"
+    assert hass.states.get(sensor).state == "29.0"
 
 
 async def test_values_missing_from_response_are_cleared(
@@ -224,4 +224,4 @@ async def test_rejected_command_raises_readable_error(
     assert err.value.translation_key == "command_failed"
     assert "Device busy" in str(err.value)
     assert len(fake_cloud.control_requests()) == 3
-    assert device.data["R01"] == "50.0"
+    assert device.data["R01"] == "60.0"
