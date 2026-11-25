@@ -36,8 +36,8 @@ views:
               - sensor.heat_pump_cloud_status
               - binary_sensor.heat_pump_fault
               - sensor.heat_pump_fault_details
-              - binary_sensor.heat_pump_o01_compressor_running_2050_8
-              - binary_sensor.heat_pump_o02_heater_running_2050_9
+              - binary_sensor.heat_pump_compressor_running_2050_8
+              - binary_sensor.heat_pump_heater_running_2050_9
               - sensor.heat_pump_code_changes
               - sensor.heat_pump_t21_settings_write_count_2027
 
@@ -90,9 +90,9 @@ views:
             title: Compressor and discharge
             hours_to_show: 24
             entities:
-              - entity: binary_sensor.heat_pump_o01_compressor_running_2050_8
+              - entity: binary_sensor.heat_pump_compressor_running_2050_8
                 name: Compressor
-              - entity: binary_sensor.heat_pump_o14_defrost_running_2051_2
+              - entity: binary_sensor.heat_pump_defrost_running_2051_2
                 name: Defrost
               - entity: sensor.heat_pump_t06_discharge_temperature_2024
                 name: Discharge (T06)

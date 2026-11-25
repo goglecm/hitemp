@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import patch
 
 from cryptography.fernet import Fernet, InvalidToken
 from homeassistant.const import CONF_PASSWORD
@@ -87,6 +88,57 @@ async def test_decrypt_with_wrong_key_raises(hass: HomeAssistant) -> None:
 
     with pytest.raises(InvalidToken):
         await PasswordManager.decrypt(hass, data, "entry")
+
+
+async def test_initialize_logs_a_bad_token(hass: HomeAssistant) -> None:
+    """A corrupt stored key is logged and does not raise."""
+    manager = PasswordManager(hass)
+
+    with patch.object(manager, "_load_encryption_key", side_effect=InvalidToken):
+        await manager.initialize()
+
+
+async def test_initialize_logs_an_unexpected_error(hass: HomeAssistant) -> None:
+    """Any other load failure is logged and does not raise."""
+    manager = PasswordManager(hass)
+
+    with patch.object(
+        manager, "_load_encryption_key", side_effect=RuntimeError("boom")
+    ):
+        await manager.initialize()
+
+
+async def test_manager_without_home_assistant_does_not_store() -> None:
+    """A manager with no Home Assistant has no store and cannot encrypt yet."""
+    bare = PasswordManager(None)
+
+    await bare._save()
+
+    with pytest.raises(InvalidToken):
+        bare._encrypt("secret")
+
+    with pytest.raises(InvalidToken):
+        bare._decrypt("cipher")
+
+    assert bare._encrypt(None) is None
+    assert bare._decrypt("") == ""
+
+
+async def test_entry_record_without_a_key_gets_a_new_one(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An old entry record that has no key is given one."""
+    hass_storage[CONFIGURATION_FILE] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": CONFIGURATION_FILE,
+        "data": {"entry": {"other": 1}},
+    }
+    data = {CONF_PASSWORD: "secret"}
+
+    await PasswordManager.encrypt(hass, data, "entry")
+
+    assert data[CONF_PASSWORD] != "secret"
 
 
 @pytest.mark.usefixtures("encryption_key")

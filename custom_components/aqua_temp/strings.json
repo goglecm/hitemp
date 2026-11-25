@@ -128,7 +128,7 @@
         "name": "S01 Remote switch open (2050.0)"
       },
       "1245226668902080512_s02": {
-        "name": "S02 Overheat switch closed (2050.1)"
+        "name": "S02 Overheat input (2050.1)"
       },
       "1245226668902080512_s03": {
         "name": "S03 Low pressure switch open (2050.2)"
@@ -143,13 +143,13 @@
         "name": "S06 External heat switch active (2050.5)"
       },
       "1245226668902080512_compressor_running": {
-        "name": "O01 Compressor running (2050.8)"
+        "name": "Compressor running (2050.8)"
       },
       "1245226668902080512_electric_heater_on": {
-        "name": "O02 Heater running (2050.9)"
+        "name": "Heater running (2050.9)"
       },
       "1245226668902080512_defrost": {
-        "name": "O14 Defrost running (2051.2)"
+        "name": "Defrost running (2051.2)"
       },
       "1245226668902080512_vacation_mode": {
         "name": "L01 Vacation enabled (1129.0)"
@@ -158,7 +158,7 @@
         "name": "Reg 2050 bit 0 (S01 remote switch open)"
       },
       "1245226668902080512_2050_bit_01": {
-        "name": "Reg 2050 bit 1 (S02 overheat switch closed)"
+        "name": "Reg 2050 bit 1 (S02 overheat input)"
       },
       "1245226668902080512_2050_bit_02": {
         "name": "Reg 2050 bit 2 (S03 low pressure switch open)"

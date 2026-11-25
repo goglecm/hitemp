@@ -101,6 +101,24 @@ HITEMP_DISCOVERY_CODES = [
 ]
 PRODUCT_PROBE_CODES = {PRODUCT_ID_HITEMP: HITEMP_DISCOVERY_CODES}
 
+
+def probe_codes_for_product(product_id: str | None) -> list[str]:
+    """Return the codes read separately from the main poll.
+
+    HiTemp uses register 2050 for outputs and switches. The FoxAir packed
+    codes (O01~023 and the like) belong to a different board, where 2019 is
+    a packed output word rather than ambient temperature, so they are not
+    requested for this product.
+    """
+    codes = [*LIVE_PROBE_CODES, *PRODUCT_PROBE_CODES.get(product_id or "", [])]
+
+    if product_id == PRODUCT_ID_HITEMP:
+        packed = set(BITWORD_CODES)
+        codes = [code for code in codes if code not in packed]
+
+    return codes
+
+
 PRODUCT_IDS = [
     PRODUCT_ID_HITEMP,
     "1132174963097280512",  # Aqua Temp

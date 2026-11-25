@@ -1545,12 +1545,12 @@
   },
   {
     "key": "S02",
-    "name": "S02 Overheat switch closed (2050.1)",
+    "name": "S02 Overheat input (2050.1)",
     "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Bit 1 of register 2050. The dtu_wifi sheet leaves this bit blank. The other sheet calls it overheat protection and uses 1 for closed. Polarity is uncertain.",
+    "description": "Bit 1 of register 2050. The dtu_wifi sheet that applies to this heat pump leaves the bit blank, so on and off are not translated into open or closed.",
     "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
     "register": "2050.1",
     "source": ["workbook-hw211", "darksplat"],
@@ -1795,7 +1795,7 @@
   },
   {
     "key": "compressor_running",
-    "name": "O01 Compressor running (2050.8)",
+    "name": "Compressor running (2050.8)",
     "platform": "binary_sensor",
     "device_class": "running",
     "bit_of": ["2050", 8],
@@ -1804,12 +1804,11 @@
     "description": "Bit 8 of register 2050. 1 means the compressor is running.",
     "guidance": "Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID.",
     "source": ["workbook", "s300", "ha-230400", "darksplat"],
-    "register": "2050.8",
-    "named_code": "O01"
+    "register": "2050.8"
   },
   {
     "key": "electric_heater_on",
-    "name": "O02 Heater running (2050.9)",
+    "name": "Heater running (2050.9)",
     "platform": "binary_sensor",
     "device_class": "running",
     "bit_of": ["2050", 9],
@@ -1818,12 +1817,11 @@
     "description": "Bit 9 of register 2050. 1 means the electric heater is running.",
     "guidance": "Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.",
     "source": ["workbook", "s300", "darksplat"],
-    "register": "2050.9",
-    "named_code": "O02"
+    "register": "2050.9"
   },
   {
     "key": "defrost",
-    "name": "O14 Defrost running (2051.2)",
+    "name": "Defrost running (2051.2)",
     "platform": "binary_sensor",
     "bit_of": ["2051", 2],
     "entity_category": null,
@@ -1831,8 +1829,7 @@
     "description": "Bit 2 of register 2051. 1 means a defrost is running. The workbook calls this bit O16; the app code is O14.",
     "guidance": "On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.",
     "source": ["workbook", "s300", "darksplat"],
-    "register": "2051.2",
-    "named_code": "O14"
+    "register": "2051.2"
   },
   {
     "key": "M06",
@@ -2301,12 +2298,12 @@
     "key": "2050_bit_01",
     "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "name": "Reg 2050 bit 1 (S02 overheat switch closed)",
+    "name": "Reg 2050 bit 1 (S02 overheat input)",
     "enabled_by_default": true,
     "bit_of": ["2050", 1],
     "confidence": "uncertain",
     "source": ["workbook-hw211", "darksplat"],
-    "description": "Bit 1 of 2050. S02 overheat switch closed",
+    "description": "Bit 1 of 2050. S02 overheat input. Polarity is not known on this board.",
     "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
     "register": "2050.1"
   },

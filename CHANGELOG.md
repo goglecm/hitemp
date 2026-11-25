@@ -1,5 +1,25 @@
 # Changelog
 
+## 4.4.1
+
+_Minimum HA Version: 2026.11.0_
+
+### Fixes
+
+- The parameter guide now matches the switch sensors: `S01` and `S03`-`S05`
+  are open when the bit is 1, and they show that state instead of staying
+  unavailable. `S06` has no documented polarity
+- `S02` is named `S02 Overheat input (2050.1)`. The sheet for this heat pump
+  does not say whether 1 means open or closed
+- Compressor, heater and defrost no longer share a name with `O01`, `O02` and
+  `O14`. On a new install the dashboard follows Compressor running (2050.8),
+  Heater running (2050.9) and Defrost running (2051.2). Existing installs keep
+  their entity ids
+- This heat pump is no longer asked for the FoxAir packed codes `O01~023` and
+  `S01~S10`. Those codes belong to a board where register 2019 is a packed
+  output word. Here 2019 is the ambient temperature. The individual `O` and
+  `S` letters are still read
+
 ## 4.4.0
 
 _Minimum HA Version: 2026.11.0_

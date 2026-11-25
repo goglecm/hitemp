@@ -265,7 +265,10 @@ words `Fault1`-`Fault10`, `ModeState`, and the PCB software code
 The integration does the same before each poll (every 5 minutes), waits 2
 seconds, then reads the codes. It also asks for those live codes separately,
 so a code the heat pump doesn't know can't break the poll; codes the cloud
-rejects are not asked for again until the next restart.
+rejects are not asked for again until the next restart. The FoxAir packed
+codes (`O01~023`, `S01~S10` and the shorter forms) are not requested for this
+heat pump: on this board register `2019` is the ambient temperature, not a
+packed output word. The individual `O` and `S` letters are still requested.
 
 What we know for HiTemp:
 
@@ -604,21 +607,21 @@ Several values are outside the app's own range, which the app shows as they are.
 
 The app shows `CL` (closed) or `OP` (open).
 
-| Code  | App name                              | App range | App value | Raw cloud value | Cloud type and range | Home Assistant     | Confidence |
-| ----- | ------------------------------------- | --------- | --------- | --------------- | -------------------- | ------------------ | ---------- |
-| `S01` | Remote ON/OFF switch                  | CL, OP    | CL        | empty           |                      | sensor, Diagnostic | uncertain  |
-| `S03` | Low pressure switch                   | CL, OP    | OP        | empty           |                      | sensor, Diagnostic | uncertain  |
-| `S04` | High pressure switch                  | CL, OP    | CL        | empty           |                      | sensor, Diagnostic | uncertain  |
-| `S05` | Accelerate the running time of heater | CL, OP    | CL        | empty           |                      | sensor, Diagnostic | uncertain  |
-| `S06` | Second heating source                 | CL, OP    | OP        | empty           |                      | sensor, Diagnostic | uncertain  |
+| Code  | App name                              | App range | App value | Raw cloud value | Cloud type and range | Home Assistant | Confidence |
+| ----- | ------------------------------------- | --------- | --------- | --------------- | -------------------- | -------------- | ---------- |
+| `S01` | Remote ON/OFF switch                  | CL, OP    | CL        | bit of 2050     |                      | binary_sensor  | observed   |
+| `S03` | Low pressure switch                   | CL, OP    | OP        | bit of 2050     |                      | binary_sensor  | documented |
+| `S04` | High pressure switch                  | CL, OP    | CL        | bit of 2050     |                      | binary_sensor  | documented |
+| `S05` | Accelerate the running time of heater | CL, OP    | CL        | bit of 2050     |                      | binary_sensor  | documented |
+| `S06` | Second heating source                 | CL, OP    | OP        | bit of 2050     |                      | binary_sensor  | uncertain  |
 
-- **S01 Remote switch open (2050.0)**: Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off. Values: Open (0), Closed (1). The cloud never reports S01 itself, but its effect shows in Power and in bit 0 of 2050. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The app shows CL (closed) or OP (open); 1 = Closed is assumed for this entity, which stays unavailable.
-- **S03 Low pressure switch open (2050.2)**: Low pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed OP while the heat pump ran normally, so Open isn't necessarily a fault. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **S04 High pressure switch open (2050.3)**: High pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed CL during normal operation. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **S05 Heater boost switch open (2050.4)**: App name: 'Accelerate the running time of heater'. Values: Open (0), Closed (1). Probably the input that starts the booster without the R06 delay. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **S06 External heat switch active (2050.5)**: Second heating source input (see R14). Values: Open (0), Closed (1).
+- **S01 Remote switch open (2050.0)**: Remote on/off terminals, DI05 and GND in the manual. The named cloud code stays empty. This sensor reads bit 0 of register 2050. The workbook says 1 = OP (open) and 0 = CL (closed). On a Trianco S300, opening those contacts set Power to 0 and set this bit; closing them set Power to 1 and cleared the bit.
+- **S03 Low pressure switch open (2050.2)**: Low pressure switch of the refrigerant circuit, bit 2 of register 2050. The workbook says 1 = OP (open) and 0 = CL (closed). Open is not necessarily a fault; the app showed OP while the heat pump ran normally.
+- **S04 High pressure switch open (2050.3)**: High pressure switch of the refrigerant circuit, bit 3 of register 2050. The workbook says 1 = OP (open) and 0 = CL (closed). The app showed CL during normal operation.
+- **S05 Heater boost switch open (2050.4)**: App name: 'Accelerate the running time of heater'. Bit 4 of register 2050. The workbook says 1 = OP (open) and 0 = CL (closed). Probably the input that starts the booster without the R06 delay.
+- **S06 External heat switch active (2050.5)**: Second heating source input (see R14), bit 5 of register 2050. The workbook does not state whether 1 means open or closed. On this S300 the bit is often set, and why is unknown.
 
-**S06:** In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
+**S01, S03, S04, S05, S06:** The named letter codes are still empty in the cloud. These sensors are the bits, so they show on or off from register 2050. They do not stay unavailable while that word is reported.
 
 ### Outputs and running hours
 
@@ -644,7 +647,7 @@ The app shows `ON` or `OFF` for the outputs.
 - **O08 Compressor hours (2061)**: Total compressor running time.
 - **O09 Heater hours (2062)**: Total booster (electric heater) running time.
 
-**O01, O02, O03, O04, O05, O06:** Named codes stay empty on this product (the app paints them from `2050` bits 8–13). These entities stay Unavailable; use the compressor / heater / defrost binary sensors and the `2050` word instead. 1 = On is assumed if a value ever appears.
+**O01, O02, O03, O04, O05, O06:** The named letter codes stay empty. These binary sensors read bits 8–13 of register 2050, so they show on when the output is on. 1 means on.
 
 **O08, O09:** A statistics graph with the 'change' statistic per day shows the daily running hours.
 
@@ -673,7 +676,7 @@ Their names come from the vendor's parameter file, translated where it is Chines
 | `T06` | T06 Discharge temperature            | `40.5` to `87.0` | TEMP1                | sensor, Sensors              | observed   |
 | `T11` | T11 Out-of-range protection count    | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
 | `T12` | T12 EEPROM write count               | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `S02` | S02 Overheat protection switch       | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
+| `S02` | S02 Overheat input (2050.1)          | bit of 2050      |                      | binary_sensor, Diagnostic    | uncertain  |
 | `O10` | O10 3V_DE output                     | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
 | `O11` | O11 MV_DE output                     | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
 | `O12` | O12 Shutdown output                  | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
@@ -684,13 +687,13 @@ Their names come from the vendor's parameter file, translated where it is Chines
 - **T06 Discharge temperature (2024)**: Not shown in the app. The vendor parameter file calls it the solar temperature. On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while T07 reads -30.0, the value of a missing sensor. That fits the compressor discharge (hot gas) temperature, which the manual's P81/E04 protections watch.
 - **T11 Out-of-range count empty**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
 - **T12 EEPROM write count empty**: Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.
-- **S02 Overheat switch closed (2050.1)**: Not shown in the app. Vendor name: 'Over heat protection switch'. Values: Open (0), Closed (1). In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **O10 Anode 3V on (2050.14)**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label **O12 Heating stopped (2051.0)** on that bit; this entity keeps legacy/app **O10 Anode 3V on (2050.14)**).
-- **O11 Anode MV on (2050.15)**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook **O13 Wi-Fi link up (2051.1)**).
-- **O12 Heating stopped (2051.0)**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1). Packed as `2051` bit 0 (workbook **O14 Defrost running (2051.2)**).
-- **O13 Wi-Fi link up (2051.1)**: Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online. Values: NO (0), YES (1). Packed as `2051` bit 1 (workbook **O15 Hot water stage active (2051.3)**).
-- **O14 Defrost running (2051.2)**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1). Packed as `2051` bit 2 (workbook **O16**; also exposed as the **Defrost** binary sensor).
-- **O15 Hot water stage active (2051.3)**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1). Packed as `2051` bit 3 (workbook **O17**).
+- **S02 Overheat input (2050.1)**: Bit 1 of register 2050. The `dtu_wifi` sheet that applies to this heat pump leaves the bit blank. Another sheet calls a different status word's bit 1 overheat protection, with the opposite polarity, so this sensor does not claim open or closed. It shows on when the bit is 1.
+- **O10 Anode 3V on (2050.14)**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label O12, electric anode 3V; this entity keeps the legacy code O10).
+- **O11 Anode MV on (2050.15)**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook label O13, anode MV).
+- **O12 Heating stopped (2051.0)**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1). Packed as `2051` bit 0 (workbook label O14).
+- **O13 Wi-Fi link up (2051.1)**: Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online. Values: NO (0), YES (1). Packed as `2051` bit 1 (workbook label O15).
+- **O14 Defrost running (2051.2)**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1). Packed as `2051` bit 2 (workbook label O16; also exposed as **Defrost running (2051.2)**).
+- **O15 Hot water stage active (2051.3)**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1). Packed as `2051` bit 3 (workbook label O17).
 
 **T11, T12, O10–O15:** Named cloud codes stay empty on this product; live values are in `2050`/`2051` (same as O01–O06 / S*). See [Live data](#live-data-the-app-heartbeat).
 
@@ -747,18 +750,18 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 | Code                 | Name in Home Assistant                   | Raw cloud value    | Cloud type and range | Home Assistant               | Confidence |
 | -------------------- | ---------------------------------------- | ------------------ | -------------------- | ---------------------------- | ---------- |
 | `2050`               | 2050 Operating status bits               | `0001100100100000` |                      | sensor, Diagnostic           | uncertain  |
-| `compressor_running` | Compressor running (2050 bit 8)          |                    |                      | binary_sensor, Sensors       | observed   |
-| `electric_heater_on` | Electric heater on (2050 bit 9)          |                    |                      | binary_sensor, Sensors       | observed   |
-| `defrost`            | Defrost (2051 bit 2)                     |                    |                      | binary_sensor, Sensors       | observed   |
+| `compressor_running` | Compressor running (2050.8)              |                    |                      | binary_sensor, Sensors       | observed   |
+| `electric_heater_on` | Heater running (2050.9)                  |                    |                      | binary_sensor, Sensors       | observed   |
+| `defrost`            | Defrost running (2051.2)                 |                    |                      | binary_sensor, Sensors       | observed   |
 | `M06`                | M06 Electric heating                     | `0`                |                      | sensor, Diagnostic, disabled | uncertain  |
 | `O29`                | O29 Fan speed                            | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
 | `T07`                | T07 Discharge temperature (unconfirmed)  | `-30.0`            |                      | sensor, Sensors, disabled    | uncertain  |
 | `T09`                | T09 Compressor temperature (unconfirmed) | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
 
 - **State0 Operating status (2050)**: Packed operating status word (State0), shown as its 16 bits (bit 0 is the last). Official bit meanings and the S300 observations are listed under [Live data](#live-data-the-app-heartbeat); prefer the workbook for bit 2 (low pressure) and bit 5 (external heat source) over earlier coil/always-on guesses.
-- **Compressor running (2050 bit 8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID.
-- **Electric heater on (2050 bit 9)**: Bit 9 of the operating status word 2050. Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.
-- **Defrost (2051 bit 2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.
+- **Compressor running (2050.8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID. The protocol entity `O01` reads the same bit.
+- **Heater running (2050.9)**: Bit 9 of the operating status word 2050. Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.
+- **Defrost running (2051.2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.
 - **M06 Booster mode (1014)**: Electric heater request register. Values: Off (0), On (1). On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here.
 - **O29 Fan speed**: Fan speed in revolutions per minute. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default.
 - **T07 Discharge temperature unconfirmed**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature.
@@ -847,7 +850,7 @@ meaning is known:
 | Code          | Name                                             | Confidence |
 | ------------- | ------------------------------------------------ | ---------- |
 | `2050_bit_00` | Reg 2050 bit 0 (S01 remote switch open)          | observed   |
-| `2050_bit_01` | Reg 2050 bit 1 (S02 overheat switch closed)      | uncertain  |
+| `2050_bit_01` | Reg 2050 bit 1 (S02 overheat input)              | uncertain  |
 | `2050_bit_02` | Reg 2050 bit 2 (S03 low pressure switch open)    | documented |
 | `2050_bit_03` | Reg 2050 bit 3 (S04 high pressure switch open)   | documented |
 | `2050_bit_04` | Reg 2050 bit 4 (S05 heater boost switch open)    | documented |

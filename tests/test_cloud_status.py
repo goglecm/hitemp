@@ -309,7 +309,7 @@ async def test_bitwords_are_shown_raw_in_diagnostics(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Packed switch words are listed as value, hex and bits for decoding."""
+    """A binary word is decoded, and FoxAir packed codes are not read here."""
     device = add_device(HITEMP_FIXTURE)
     device.live_data.update({"S01~S06": "13", "O01~015": "on"})
     entry = make_entry()
@@ -321,12 +321,7 @@ async def test_bitwords_are_shown_raw_in_diagnostics(
 
     bitwords = diagnostics["device"]["live_data"]["bitwords"]
     assert bitwords["1129"]["bits_set"] == []
-    assert {code: bitwords[code] for code in ("O01~015", "S01~S06")} == {
-        "O01~015": {"value": "on"},
-        "S01~S06": {
-            "value": "13",
-            "hex": "0x000D",
-            "bits": "0000000000001101",
-            "bits_set": [0, 2, 3],
-        },
-    }
+    assert "O01~015" not in bitwords
+    assert "S01~S06" not in bitwords
+    assert "O01" in diagnostics["device"]["data"]
+    assert "S01" in diagnostics["device"]["data"]

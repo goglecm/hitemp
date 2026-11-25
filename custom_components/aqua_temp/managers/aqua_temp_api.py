@@ -48,12 +48,11 @@ from ..common.consts import (
     HEADERS,
     HTTP_HEADER_X_TOKEN,
     LIVE_DATA_SETTLE_SECONDS,
-    LIVE_PROBE_CODES,
     POWER_MODE_OFF,
     POWER_MODE_ON,
-    PRODUCT_PROBE_CODES,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
     TO_REDACT,
+    probe_codes_for_product,
 )
 from ..common.endpoints import Endpoints
 from ..common.utils import (
@@ -648,7 +647,7 @@ class AquaTempAPI:
         product_id = self._get_device_product_id(self._devices[device_code])
         codes = self._probe_codes.setdefault(
             device_code,
-            [*LIVE_PROBE_CODES, *PRODUCT_PROBE_CODES.get(product_id, [])],
+            probe_codes_for_product(product_id),
         )
 
         if not codes:

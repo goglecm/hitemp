@@ -11,10 +11,13 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.aqua_temp.common.consts import (
+    BITWORD_CODES,
     CONF_LIVE_DATA,
     HITEMP_DISCOVERY_CODES,
     LIVE_DATA_SETTLE_SECONDS,
     LIVE_PROBE_CODES,
+    PRODUCT_ID_HITEMP,
+    probe_codes_for_product,
 )
 
 from .conftest import AQUATEMP_FIXTURE, HITEMP_FIXTURE, setup_entry
@@ -87,7 +90,9 @@ async def test_live_values_arrive_after_heartbeat(
     assert "S01" in report["codes_with_value"]
     assert "code_version" in report["codes_with_value"]
     assert "T11" in report["codes_without_value"]
-    assert "S01~S10" in report["codes_without_value"]
+    assert "S01" in report["codes_with_value"]
+    assert "O01~023" not in report["codes_with_value"]
+    assert "S01~S10" not in report["codes_without_value"]
 
 
 async def test_live_data_can_be_turned_off(
@@ -158,7 +163,10 @@ async def test_probe_codes_are_read_separately(
     assert "R01" in requests[0]
     assert not set(LIVE_PROBE_CODES) & set(requests[0])
     assert not set(HITEMP_DISCOVERY_CODES) & set(requests[0])
-    assert requests[1] == [*LIVE_PROBE_CODES, *HITEMP_DISCOVERY_CODES]
+    assert requests[1] == probe_codes_for_product(PRODUCT_ID_HITEMP)
+    assert not set(BITWORD_CODES) & set(requests[1])
+    assert "O01" in requests[1]
+    assert "S01" in requests[1]
 
 
 async def test_other_products_only_read_the_live_codes(
@@ -181,7 +189,7 @@ async def test_rejected_probe_codes_are_narrowed_down(
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
     """Codes the cloud rejects are dropped while the others are still read."""
-    fake_cloud.rejected_codes = {"O01~023", "Fault7"}
+    fake_cloud.rejected_codes = {"S01", "Fault7"}
     device, entry = await _setup(hass, add_device, make_entry)
 
     assert entry.runtime_data.last_update_success
@@ -191,6 +199,7 @@ async def test_rejected_probe_codes_are_narrowed_down(
     await entry.runtime_data.async_refresh()
 
     probe_request = fake_cloud.data_requests()[1]
+    assert "S01" not in probe_request
     assert "O01~023" not in probe_request
     assert "Fault7" not in probe_request
     assert "Fault1" in probe_request

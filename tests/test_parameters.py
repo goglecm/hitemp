@@ -208,7 +208,10 @@ def _assert_register_name(key: str, item: dict[str, Any]) -> None:
     register = item.get("register")
 
     if register and f"({register})" in name:
-        assert name.startswith(f"{code} "), key
+        if item.get("named_code"):
+            assert name.startswith(f"{code} "), key
+        else:
+            assert name.endswith(f"({register})"), key
     elif register and "." in str(register):
         address, bit = str(register).split(".", 1)
         assert name.startswith(f"Reg {address} bit {int(bit)}"), key
@@ -280,6 +283,46 @@ def test_main_temperatures_name_their_register() -> None:
     assert items["T21"]["register"] == "2027"
     assert items["T11"]["enabled_by_default"] is True
     assert items["T07"]["register"] if False else "register" not in items["T07"]
+
+
+def test_registers_match_the_workbook_extract() -> None:
+    """A numeric register is a real dtu_wifi address, and bits name that word."""
+    workbook = (
+        Path(__file__).parents[1] / "docs" / "HW211_REGISTER_MAP_FULL.md"
+    ).read_text(encoding="utf-8")
+
+    for key, item in _hitemp_items().items():
+        register = item.get("register")
+        if not register:
+            continue
+        address = str(register).split("-", 1)[0].split(".", 1)[0]
+        if not address.isdigit():
+            continue
+        # 1142 is an observed flag word with no dtu_wifi row. 1159 was
+        # requested by the original integration and is not in the sheet.
+        if f"| {address} |" not in workbook:
+            assert address in {"1142", "1159"}, key
+        bit_of = item.get("bit_of")
+        if bit_of is not None:
+            assert str(bit_of[0]) == address, key
+            assert int(str(register).split(".")[1]) == bit_of[1], key
+
+
+def test_open_switch_guide_matches_the_sensors() -> None:
+    """The guide no longer claims the open switches stay unavailable or that 1 is closed."""
+    guide = (Path(__file__).parents[1] / "docs" / "HITEMP_PARAMETERS.md").read_text(
+        encoding="utf-8"
+    )
+    for heading in (
+        "S01 Remote switch open (2050.0)",
+        "S03 Low pressure switch open (2050.2)",
+        "S04 High pressure switch open (2050.3)",
+        "S05 Heater boost switch open (2050.4)",
+    ):
+        paragraph = guide.split(f"- **{heading}**:", 1)[1].split("\n", 1)[0]
+        assert "1 = Closed" not in paragraph, heading
+        assert "stays unavailable" not in paragraph.lower(), heading
+        assert "1 = OP" in paragraph, heading
 
 
 def test_every_exposed_entity_cites_its_source() -> None:

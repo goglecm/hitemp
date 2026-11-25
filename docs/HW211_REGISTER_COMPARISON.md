@@ -1,6 +1,6 @@
 # HW211 register comparison (Trianco S300 / HiTemp)
 
-As of integration 4.4.0, the HiTemp entities follow this `dtu_wifi` map.
+As of integration 4.4.1, the HiTemp entities follow this `dtu_wifi` map.
 Sensor names end with the register, named outputs and switches read the
 `2050`/`2051` bits, and every bit of those words is a diagnostic entity.
 Writable controls were not added. Findings below cite the workbook, Darksplat,
@@ -385,24 +385,24 @@ and probes in `common/consts.py` (`LIVE_PROBE_CODES`, `HITEMP_DISCOVERY_CODES`,
 
 ### Status / fault bits
 
-| Code / bit                        | HA exposure           | Confidence            | Match                    | Notes                                                 |
-| --------------------------------- | --------------------- | --------------------- | ------------------------ | ----------------------------------------------------- |
-| `2050` word                       | sensor Diagnostic     | uncertain (word)      | **match** (role)         | App polls this (#130)                                 |
-| `2050` bit 0                      | via Power / guide     | observed              | **match**                | S01 OP when off — **expose binary**                   |
-| `2050` bit 2                      | none                  | uncertain vs workbook | **conflict**             | Prefer S03 LP — candidate binary                      |
-| `2050` bit 5                      | none                  | observed “always set” | **conflict / uncertain** | Workbook S06                                          |
-| `2050` bit 8                      | `compressor_running`  | observed              | **match**                |                                                       |
-| `2050` bit 9                      | `electric_heater_on`  | observed              | **match**                |                                                       |
-| `2050` bit 10                     | none as entity        | observed              | **match**                | **Add** 4-way binary                                  |
-| `2050` bits 11–12                 | none                  | uncertain speeds      | **match** (role)         | **Add** fan high/low binaries                         |
-| `2050` bits 14–15                 | none                  | Darksplat/workbook    | **only-in-repo**         | Anodes (legacy O10/O11)                               |
-| `2051` bit 0                      | none                  | Darksplat/workbook    | **only-in-repo**         | shutDown / satisfied — **add**                        |
-| `2051` bit 1                      | none                  | observed always set   | **likely match**         | DTU online                                            |
-| `2051` bit 2                      | `defrost`             | observed              | **match**                |                                                       |
-| `2051` bit 3                      | none                  | workbook + Darksplat  | **only-in-repo**         | Hot water function — **add**                          |
-| `2085`                            | sensor (often 0)      | uncertain             | **match** (role)         | Full P/E bit table in §3.4; decode bits when non-zero |
-| `Fault1`–`Fault10`                | live probe            | —                     | **empty-in-cloud**       | FoxAir-style                                          |
-| `O01~015` / `O01~023` / `S01~S10` | `BITWORD_CODES` probe | —                     | **empty-in-cloud**       | Wrong family packing                                  |
+| Code / bit                        | HA exposure          | Confidence            | Match                    | Notes                                                 |
+| --------------------------------- | -------------------- | --------------------- | ------------------------ | ----------------------------------------------------- |
+| `2050` word                       | sensor Diagnostic    | uncertain (word)      | **match** (role)         | App polls this (#130)                                 |
+| `2050` bit 0                      | via Power / guide    | observed              | **match**                | S01 OP when off — **expose binary**                   |
+| `2050` bit 2                      | none                 | uncertain vs workbook | **conflict**             | Prefer S03 LP — candidate binary                      |
+| `2050` bit 5                      | none                 | observed “always set” | **conflict / uncertain** | Workbook S06                                          |
+| `2050` bit 8                      | `compressor_running` | observed              | **match**                |                                                       |
+| `2050` bit 9                      | `electric_heater_on` | observed              | **match**                |                                                       |
+| `2050` bit 10                     | none as entity       | observed              | **match**                | **Add** 4-way binary                                  |
+| `2050` bits 11–12                 | none                 | uncertain speeds      | **match** (role)         | **Add** fan high/low binaries                         |
+| `2050` bits 14–15                 | none                 | Darksplat/workbook    | **only-in-repo**         | Anodes (legacy O10/O11)                               |
+| `2051` bit 0                      | none                 | Darksplat/workbook    | **only-in-repo**         | shutDown / satisfied — **add**                        |
+| `2051` bit 1                      | none                 | observed always set   | **likely match**         | DTU online                                            |
+| `2051` bit 2                      | `defrost`            | observed              | **match**                |                                                       |
+| `2051` bit 3                      | none                 | workbook + Darksplat  | **only-in-repo**         | Hot water function — **add**                          |
+| `2085`                            | sensor (often 0)     | uncertain             | **match** (role)         | Full P/E bit table in §3.4; decode bits when non-zero |
+| `Fault1`–`Fault10`                | live probe           | —                     | **empty-in-cloud**       | FoxAir-style                                          |
+| `O01~015` / `O01~023` / `S01~S10` | not probed on HiTemp | —                     | **empty-in-cloud**       | Wrong family; `2019` is ambient temperature           |
 
 ### Named O / S vs packed alternatives
 
