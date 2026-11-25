@@ -123,10 +123,10 @@
         "name": "E01 EEV control mode"
       },
       "1245226668902080512_h01": {
-        "name": "H01 Remember power state"
+        "name": "H01 Remember power state (1067)"
       },
       "1245226668902080512_h99": {
-        "name": "H99 Display temperature compensation"
+        "name": "H99 Display temperature compensation (1075)"
       },
       "1245226668902080512_r04": {
         "name": "R04 Use R05 as booster setpoint (1107)"
@@ -1164,10 +1164,10 @@
         "name": "Mode Requested mode (1012)"
       },
       "1245226668902080512_01": {
-        "name": "/01 Use of OUT05"
+        "name": "/01 OUT05 use (1020)"
       },
       "1245226668902080512_02": {
-        "name": "/02 Use of OUT06"
+        "name": "/02 OUT06 use (1021)"
       },
       "1245226668902080512_e05": {
         "name": "E05 EEV defrost position"
@@ -1182,10 +1182,10 @@
         "name": "H30 Panel address (1076)"
       },
       "1245226668902080512_h31": {
-        "name": "H31 Control mode"
+        "name": "H31 Control mode (1077)"
       },
       "1245226668902080512_h98": {
-        "name": "H98 Model selection"
+        "name": "H98 Model selection (1074)"
       },
       "1245226668902080512_n01": {
         "name": "N01 Solar pump control sensor"
@@ -1442,7 +1442,7 @@
         "name": "G04 Disinfection interval"
       },
       "1245226668902080512_h32": {
-        "name": "H32 Cloud upload interval"
+        "name": "H32 Cloud upload interval (1066)"
       },
       "1245226668902080512_r01": {
         "name": "R01 Target water temperature (1104)"

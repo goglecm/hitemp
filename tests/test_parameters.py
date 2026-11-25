@@ -287,7 +287,7 @@ def test_hitemp_model_selection_is_read_only() -> None:
     h98 = _hitemp_items()["H98"]
 
     assert h98["platform"] == Platform.SENSOR
-    assert h98["name"] == "H98 Model selection"
+    assert h98["name"] == "H98 Model selection (1074)"
     assert h98["options"] == {"2": "0X08", "3": "0X18"}
 
 

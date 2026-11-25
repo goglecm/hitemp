@@ -427,8 +427,8 @@ session expired, and the integration logs in again by itself.
 | `H98` | Model selection              | 0X08, 0X18 | 0X08      | `2`             | ENUM, 2 to 3         | sensor, Diagnostic              | uncertain  |
 | `H99` | Compensate to the shown temp | NO, YES    | NO        | `0`             | ENUM, 0 to 1         | select, Configuration, disabled | uncertain  |
 
-- **H98 Model selection**: Hardware model the controller is configured for. Values: 0X08 (2), 0X18 (3). Never change it: it tells the controller which hardware it drives. Your heat pump reports 2, which the app shows as 0X08. The cloud declares a range of 2-3, which supports 3 = 0X18, but that isn't confirmed.
-- **H99 Display temperature compensation**: App description: 'Compensate to the shown temp'. Values: NO (0), YES (1). Not documented; it possibly corrects the displayed temperature. Keep NO.
+- **H98 Model selection (1074)**: Hardware model the controller is configured for. Values: 0X08 (2), 0X18 (3). Never change it: it tells the controller which hardware it drives. Your heat pump reports 2, which the app shows as 0X08. The cloud declares a range of 2-3, which supports 3 = 0X18, but that isn't confirmed.
+- **H99 Display temperature compensation (1075)**: App description: 'Compensate to the shown temp'. Values: NO (0), YES (1). Not documented; it possibly corrects the displayed temperature. Keep NO.
 
 ### Temperatures and EEV position
 
@@ -465,8 +465,8 @@ The app shows the raw value 1 instead of one of its options for both codes.
 | `/01` | Usage of OUT 05 | Low speed, Solar water pump                            | 1         | `1`             | ENUM, 0 to 2         | sensor, Diagnostic | uncertain  |
 | `/02` | Usage of OUT 06 | No output, Solar water pump, Solar water release valve | 1         | `1`             | ENUM, 0 to 3         | sensor, Diagnostic | uncertain  |
 
-- **/01 Use of OUT05**: Function of output OUT05 (O05): fan low speed or solar water pump. EvoHeat OEM manuals label hardware **OUT1–OUT5** as compressor, electric heater, 4-way valve, fan high, fan low — the same roles as app codes **O01–O05** (bits of `2050`); see [HW211 register comparison](HW211_REGISTER_COMPARISON.md) §8.
-- **/02 Use of OUT06**: Function of output OUT06 (O06): no output, solar water pump or solar water release valve.
+- **/01 OUT05 use (1020)**: Function of output OUT05 (O05): fan low speed or solar water pump. EvoHeat OEM manuals label hardware **OUT1–OUT5** as compressor, electric heater, 4-way valve, fan high, fan low — the same roles as app codes **O01–O05** (bits of `2050`); see [HW211 register comparison](HW211_REGISTER_COMPARISON.md) §8.
+- **/02 OUT06 use (1021)**: Function of output OUT06 (O06): no output, solar water pump or solar water release valve.
 
 The heat pump reports 1, which the app can't name either, so the active function isn't known. The cloud declares one more value than the app lists (0-2 for /01, 0-3 for /02), so the app's list may be incomplete. Read-only.
 
@@ -527,12 +527,12 @@ Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'cl
 | `H31` | Intelligent control mode                            | Centralized control, DTU&WIFI     | DTU&WIFI       | `1`             | ENUM, 0 to 1         | sensor, Diagnostic              | observed   |
 | `H32` | Circle of submitting data to Cloud                  | 1Min to 255Min, steps of 1Min     | 1Min           | `1`             | DIGI1, 1 to 255      | number, Configuration, disabled | observed   |
 
-- **H01 Remember power state**: Whether the heat pump returns to its previous on/off state after a power cut. Values: NO (0), YES (1). YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.
+- **H01 Remember power state (1067)**: Whether the heat pump returns to its previous on/off state after a power cut. Values: NO (0), YES (1). YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.
 - **H03 Heating source (1069)**: Type of heat source. The app only offers Air source. Values: Air source (0).
 - **H07 Temperature unit (1073)**: Unit the heat pump reports temperatures in. Values: Celsius degree (0), Fahrenheit degree (1). The Temperature Unit select in Home Assistant must match it. If you change H07 in the app, change the select as well.
 - **H30 Panel address (1076)**: Address of the controller on its communication bus. Read-only: a wrong address can cut the controller off from the Wi-Fi module.
-- **H31 Control mode**: Whether a central controller or the DTU/Wi-Fi module controls the heat pump. Values: Centralized control (0), DTU&WIFI (1). Must stay on DTU&WIFI for the app and Home Assistant to work, so it is read-only.
-- **H32 Cloud upload interval**: Minutes between the heat pump's own uploads to the cloud. Your heat pump uses 1 minute. Home Assistant reads the cloud every 5 minutes, so a larger value only makes the readings older. Keep 1.
+- **H31 Control mode (1077)**: Whether a central controller or the DTU/Wi-Fi module controls the heat pump. Values: Centralized control (0), DTU&WIFI (1). Must stay on DTU&WIFI for the app and Home Assistant to work, so it is read-only.
+- **H32 Cloud upload interval (1066)**: Minutes between the heat pump's own uploads to the cloud. Your heat pump uses 1 minute. Home Assistant reads the cloud every 5 minutes, so a larger value only makes the readings older. Keep 1.
 
 ### Solar circuit
 

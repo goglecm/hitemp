@@ -147,7 +147,7 @@
   },
   {
     "key": "/01",
-    "name": "/01 Use of OUT05",
+    "name": "/01 OUT05 use (1020)",
     "app_name": "Usage of OUT 05",
     "platform": "sensor",
     "options": {},
@@ -157,13 +157,15 @@
     "app_range": "Low speed, Solar water pump",
     "app_value": "1",
     "confidence": "uncertain",
-    "description": "Function of output OUT05 (O05): fan low speed or solar water pump.",
+    "description": "What output O05 is used for: fan low speed or a solar pump. Workbook register 1020.",
     "guidance": "The heat pump reports 1, which the app can't name either, so the active function isn't known. The cloud declares one more value than the app lists (0-2 for /01, 0-3 for /02), so the app's list may be incomplete. Read-only.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook", "evoheat-manual"],
+    "register": "1020"
   },
   {
     "key": "/02",
-    "name": "/02 Use of OUT06",
+    "name": "/02 OUT06 use (1021)",
     "app_name": "Usage of OUT 06",
     "platform": "sensor",
     "options": {},
@@ -177,9 +179,11 @@
     "app_range": "No output, Solar water pump, Solar water release valve",
     "app_value": "1",
     "confidence": "uncertain",
-    "description": "Function of output OUT06 (O06): no output, solar water pump or solar water release valve.",
+    "description": "What output O06 is used for. Workbook register 1021. The value 1 is outside the names the app lists.",
     "guidance": "The heat pump reports 1, which the app can't name either, so the active function isn't known. The cloud declares one more value than the app lists (0-2 for /01, 0-3 for /02), so the app's list may be incomplete. Read-only.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook", "evoheat-manual"],
+    "register": "1021"
   },
   {
     "key": "D01",
@@ -495,7 +499,7 @@
   },
   {
     "key": "H01",
-    "name": "H01 Remember power state",
+    "name": "H01 Remember power state (1067)",
     "app_name": "Remember the power status of device when power down",
     "platform": "select",
     "options": {
@@ -507,10 +511,12 @@
     "level": "066 (installer)",
     "app_range": "NO, YES",
     "app_value": "YES",
-    "confidence": "observed",
-    "description": "Whether the heat pump returns to its previous on/off state after a power cut.",
+    "confidence": "documented",
+    "description": "Whether the controller stores the on/off state through a power cut. Workbook register 1067. On this S300, YES explains the T21 writes when Power changes.",
     "guidance": "YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook", "s300"],
+    "register": "1067"
   },
   {
     "key": "H03",
@@ -569,7 +575,7 @@
   },
   {
     "key": "H31",
-    "name": "H31 Control mode",
+    "name": "H31 Control mode (1077)",
     "app_name": "Intelligent control mode",
     "platform": "sensor",
     "options": {
@@ -580,14 +586,16 @@
     "level": "066 (installer)",
     "app_range": "Centralized control, DTU&WIFI",
     "app_value": "DTU&WIFI",
-    "confidence": "observed",
-    "description": "Whether a central controller or the DTU/Wi-Fi module controls the heat pump.",
+    "confidence": "documented",
+    "description": "Whether control is centralised or by the DTU/Wi-Fi module. Workbook register 1077.",
     "guidance": "Must stay on DTU&WIFI for the app and Home Assistant to work, so it is read-only.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1077"
   },
   {
     "key": "H32",
-    "name": "H32 Cloud upload interval",
+    "name": "H32 Cloud upload interval (1066)",
     "app_name": "Circle of submitting data to Cloud",
     "platform": "number",
     "device_class": "duration",
@@ -600,14 +608,16 @@
     "level": "066 (installer)",
     "app_range": "1Min to 255Min, steps of 1Min",
     "app_value": "1Min",
-    "confidence": "observed",
-    "description": "Minutes between the heat pump's own uploads to the cloud.",
+    "confidence": "documented",
+    "description": "Minutes between the heat pump's own uploads to the cloud. Workbook register 1066. Stays a disabled control.",
     "guidance": "Your heat pump uses 1 minute. Home Assistant reads the cloud every 5 minutes, so a larger value only makes the readings older. Keep 1.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook"],
+    "register": "1066"
   },
   {
     "key": "H98",
-    "name": "H98 Model selection",
+    "name": "H98 Model selection (1074)",
     "app_name": "Model selection",
     "platform": "sensor",
     "options": {
@@ -618,14 +628,16 @@
     "level": "002 (user)",
     "app_range": "0X08, 0X18",
     "app_value": "0X08",
-    "confidence": "uncertain",
-    "description": "Hardware model the controller is configured for.",
+    "confidence": "documented",
+    "description": "Selects the unit model. Workbook register 1074. Home Assistant does not write it.",
     "guidance": "Never change it: it tells the controller which hardware it drives. Your heat pump reports 2, which the app shows as 0X08. The cloud declares a range of 2-3, which supports 3 = 0X18, but that isn't confirmed.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1074"
   },
   {
     "key": "H99",
-    "name": "H99 Display temperature compensation",
+    "name": "H99 Display temperature compensation (1075)",
     "app_name": "Compensate to the shown temp",
     "platform": "select",
     "options": {
@@ -638,9 +650,11 @@
     "app_range": "NO, YES",
     "app_value": "NO",
     "confidence": "uncertain",
-    "description": "App description: 'Compensate to the shown temp'.",
+    "description": "Whether the shown temperature is compensated. Workbook register 1075. Stays a disabled control because the effect is not confirmed.",
     "guidance": "Not documented; it possibly corrects the displayed temperature. Keep NO.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1075"
   },
   {
     "key": "N01",
