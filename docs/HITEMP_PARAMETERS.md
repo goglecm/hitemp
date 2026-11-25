@@ -106,13 +106,13 @@ See also:
 - **Sections** on the device page:
   - **Controls**: the climate entity, `mode_real`, `R01`, `R03`, `R04`,
     `R05`, `R06` and `M17`, the settings meant for daily use.
-  - **Sensors**: live temperatures (including the unconfirmed `T07` and
-    `T09`), the EEV position, `O29`, running hours, whether the compressor,
-    heater and defrost are running, vacation mode, and the calculated
-    superheat and water temperature rise.
+  - **Sensors**: live temperatures, the EEV position, running hours,
+    whether the compressor, heater and defrost are running, vacation mode,
+    and the calculated superheat and water temperature rise.
   - **Configuration**: installer settings you can write, disabled by default.
   - **Diagnostic**: settings you can only read, switch inputs, outputs,
-    status and faults.
+    status and faults, the unconfirmed `T07`, `T09` and `O29`, and the codes
+    whose meaning is unknown.
 - **Values with labels** read `label (raw)`, for example `Standard (0)`, so
   both the app's text and the raw number are visible. A raw value the app has
   no label for reads like `1 (not listed in the app)`.
@@ -320,8 +320,8 @@ The scan of an Indol PV300 with the same product ID by
 S codes never return data and that operating state lives in packed words such
 as `2050` (bit 8 compressor, bit 9 heater). The integration therefore reads
 `2050` and `2051` and shows each named O and S code, and every other bit of
-those words, as a binary sensor. It also reads the other codes that scan
-found (listed at the end of this guide) for diagnostics.
+those words, as a binary sensor. The other codes that scan found are
+diagnostic sensors (see [Read from the probe request](#read-from-the-probe-request)).
 
 The bits decoded so far on a Trianco S300. Official meanings come from the
 EVO270 `dtu_wifi` workbook (see [HW211 register comparison](HW211_REGISTER_COMPARISON.md)).
@@ -782,9 +782,9 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 | `electric_heater_on` | Heater running (2050.9)                | bit of 2050        |                      | binary_sensor, Sensors | observed   |
 | `defrost`            | Defrost running (2051.2)               | bit of 2051        |                      | binary_sensor, Sensors | observed   |
 | `M06`                | M06 Booster mode (1014)                | `0`                |                      | sensor, Diagnostic     | uncertain  |
-| `O29`                | O29 Fan speed                          | `0`                |                      | sensor, Sensors        | uncertain  |
-| `T07`                | T07 Discharge temperature unconfirmed  | `-30.0`            |                      | sensor, Sensors        | uncertain  |
-| `T09`                | T09 Compressor temperature unconfirmed | `0`                |                      | sensor, Sensors        | uncertain  |
+| `O29`                | O29 Fan speed                          | `0`                |                      | sensor, Diagnostic     | uncertain  |
+| `T07`                | T07 Discharge temperature unconfirmed  | `-30.0`            |                      | sensor, Diagnostic     | uncertain  |
+| `T09`                | T09 Compressor temperature unconfirmed | `0`                |                      | sensor, Diagnostic     | uncertain  |
 
 - **State0 Operating status (2050)**: Packed operating status word (State0), shown as its 16 bits (bit 0 is the last). Official bit meanings and the S300 observations are listed under [Live data](#live-data-the-app-heartbeat); prefer the workbook for bit 2 (low pressure) and bit 5 (external heat source) over earlier coil/always-on guesses.
 - **Compressor running (2050.8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID. The protocol entity `O01` reads the same bit.
@@ -812,7 +812,7 @@ The climate entity and the Power sensor use some of these. The others were reque
 | Code            | Name in Home Assistant          | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
 | --------------- | ------------------------------- | --------------- | -------------------- | ------------------------- | ---------- |
 | `Power`         | Power Heat pump on (1011)       | `1`             | ENUM, 0 to 1         | binary_sensor, Diagnostic | observed   |
-| `Mode`          | Mode Requested mode (1012)      | `2`             | ENUM, 0 to 7         | sensor, Diagnostic        | observed   |
+| `Mode`          | Mode Requested mode (1012)      | `2`             | ENUM, 0 to 7         | sensor, Diagnostic        | uncertain  |
 | `T20`           | T20 Out-of-range count (2026)   | `1`             |                      | sensor, Diagnostic        | documented |
 | `L02`           | L02 Vacation year (1130)        | `10`            |                      | sensor, Diagnostic        | documented |
 | `L03`           | L03 Vacation month (1131)       | `5`             |                      | sensor, Diagnostic        | documented |
@@ -829,8 +829,8 @@ The climate entity and the Power sensor use some of these. The others were reque
 | `Set_Temp`      | Set_Temp Setpoint empty         | empty           |                      | sensor, Diagnostic        | uncertain  |
 | `MO6`           | MO6 Power empty                 | empty           |                      | sensor, Diagnostic        | uncertain  |
 | `2074`          | Reg 2074 Unknown                | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
-| `2075`          | L31 Unknown (2075)              | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
-| `2076`          | L32 Unknown (2076)              | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
+| `2075`          | Reg 2075 Unknown                | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
+| `2076`          | Reg 2076 Unknown                | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
 | `2077`          | Reg 2077 Unknown                | empty           |                      | sensor, Diagnostic        | uncertain  |
 | `1158`          | Reg 1158 Heartbeat echo         | `0` to `23205`  | DIGI1                | sensor, Diagnostic        | observed   |
 | `1159`          | Reg 1159 Unknown                | empty           |                      | sensor, Diagnostic        | uncertain  |
@@ -856,8 +856,8 @@ The climate entity and the Power sensor use some of these. The others were reque
 - **Set_Temp Setpoint empty**: Setpoint code of other models, requested for compatibility. Empty on HiTemp.
 - **MO6 Power empty**: Requested by the original integration. Empty on HiTemp, meaning unknown.
 - **Reg 2074 Unknown**: Register requested by the original integration, meaning unknown.
-- **L31 Unknown (2075)**: Register requested by the original integration, meaning unknown.
-- **L32 Unknown (2076)**: Register requested by the original integration, meaning unknown.
+- **Reg 2075 Unknown**: Register requested by the original integration, meaning unknown.
+- **Reg 2076 Unknown**: Register requested by the original integration, meaning unknown.
 - **Reg 2077 Unknown**: Register requested by the original integration, meaning unknown.
 - **Reg 1158 Heartbeat echo**: Read 23205, the value of the app's live data request (app_heartbeat), for hours in one log, probably while the app was open, and 0 otherwise. The integration's own request has not changed it.
 - **Reg 1159 Unknown**: Register requested by the original integration, meaning unknown.
@@ -881,15 +881,146 @@ The About page of the app shows these as the PCB and display software. They are 
 - **Reg 2013 Panel version**: Version of the wired panel's program, in the same form as 2011.
 - **Reg 2014 Panel software code**: Software code of the wired panel.
 
-### Read for diagnostics only
+### Read from the probe request
 
-These codes were found by the same scan. They are read in the separate live
-data request and appear in the diagnostics, and in the Code changes sensor
-when they change, without entities, until their meaning is known. The same
-request also asks for the named letter codes `O01`-`O06`, `O10`-`O15` and
-`S01`-`S06`, so a value would show up if the cloud ever filled them:
+These codes were found by Victor's scan or are named in the workbook but not
+requested in the main read. They are read in the separate probe request, so a
+code the cloud rejects can't break the main read; a rejected code stays
+unavailable until a restart. Each is a diagnostic sensor so its history is
+recorded, and changes also show in the Code changes sensor. Except for `M07`
+and `M12`-`M16`, which the workbook names, no meaning is known on this heat
+pump, so the names don't claim one. Victor's numeric aliases are given in the
+descriptions only.
 
-`2026`, `2027`, `2057`, `2058`, `2059`, `2068`, `2069`, `2070`, `2071`, `O18`, `O19`, `O21`, `O22`, `O23`, `O24`, `O25`, `O26`, `O27`, `O28`, `M07`, `M12`, `M13`, `M14`, `M15`, `M16`, `R02`, `R11`, `R13`, `R16`, `H09`, `H16`, `E06`, `C01`, `C02`, `C03`, `C05`, `C06`, `C07`, `C08`, `C09`, `D10`, `D11`, `D12`, `D13`, `F01`, `F02`, `F04`, `F05`, `F06`, `F07`, `F09`, `F10`, `F11`, `F12`, `F13`, `L29`, `L30`, `L31`, `L32`
+| Code        | Name in Home Assistant    | Raw cloud value | Cloud type and range | Home Assistant     | Confidence |
+| ----------- | ------------------------- | --------------- | -------------------- | ------------------ | ---------- |
+| `2057`      | Reg 2057 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `2058`      | Reg 2058 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `2059`      | Reg 2059 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `2068`      | Reg 2068 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `2069`      | Reg 2069 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `2070`      | Reg 2070 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `2071`      | Reg 2071 Unknown          | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O18`       | O18 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O19`       | O19 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O21`       | O21 Unknown               | `-55`           |                      | sensor, Diagnostic | uncertain  |
+| `O22`       | O22 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O23`       | O23 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O24`       | O24 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O25`       | O25 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O26`       | O26 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O27`       | O27 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `O28`       | O28 Unknown               | `0.0`           |                      | sensor, Diagnostic | uncertain  |
+| `M07`       | M07 Forced defrost (1015) | `0`             |                      | sensor, Diagnostic | documented |
+| `M12`       | M12 Clock minute (1152)   | `0`             |                      | sensor, Diagnostic | documented |
+| `M13`       | M13 Clock hour (1153)     | `0`             |                      | sensor, Diagnostic | documented |
+| `M14`       | M14 Clock day (1154)      | `0`             |                      | sensor, Diagnostic | documented |
+| `M15`       | M15 Clock month (1155)    | `0`             |                      | sensor, Diagnostic | documented |
+| `M16`       | M16 Clock year (1156)     | `0`             |                      | sensor, Diagnostic | documented |
+| `R02`       | R02 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `R11`       | R11 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `R13`       | R13 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `R16`       | R16 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `H09`       | H09 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `H16`       | H16 Unknown               | `1`             |                      | sensor, Diagnostic | uncertain  |
+| `E06`       | E06 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C01`       | C01 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C02`       | C02 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C03`       | C03 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C05`       | C05 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C06`       | C06 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C07`       | C07 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C08`       | C08 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `C09`       | C09 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `D10`       | D10 Unknown               | `-30.0`         |                      | sensor, Diagnostic | uncertain  |
+| `D11`       | D11 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `D12`       | D12 Unknown               | `-30.0`         |                      | sensor, Diagnostic | uncertain  |
+| `D13`       | D13 Unknown               | `-30.0`         |                      | sensor, Diagnostic | uncertain  |
+| `F01`       | F01 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F02`       | F02 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F04`       | F04 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F05`       | F05 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F06`       | F06 Unknown               | `-30.0`         |                      | sensor, Diagnostic | uncertain  |
+| `F07`       | F07 Unknown               | `-30.0`         |                      | sensor, Diagnostic | uncertain  |
+| `F09`       | F09 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F10`       | F10 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F11`       | F11 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F12`       | F12 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `F13`       | F13 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `L29`       | L29 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `L30`       | L30 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `L31`       | L31 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `L32`       | L32 Unknown               | `0`             |                      | sensor, Diagnostic | uncertain  |
+| `ModeState` | ModeState Mode state      | `2`             |                      | sensor, Diagnostic | uncertain  |
+
+- **Reg 2057 Unknown**: Register 2057 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **Reg 2058 Unknown**: Register 2058 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **Reg 2059 Unknown**: Register 2059 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **Reg 2068 Unknown**: Register 2068 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **Reg 2069 Unknown**: Register 2069 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **Reg 2070 Unknown**: Register 2070 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **Reg 2071 Unknown**: Register 2071 has no name in the workbook. Victor's scan read it; it read 0 on a Trianco S300.
+- **O18 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 2062, which the workbook gives to O09 heater hours, so that address is not used.
+- **O19 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 2063, which the workbook leaves blank.
+- **O21 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 2065, which the workbook leaves blank. Victor took it for a temperature sensor. It read -55 on a Trianco S300.
+- **O22 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **O23 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **O24 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **O25 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **O26 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **O27 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **O28 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 2066, which the workbook leaves blank.
+- **M07 Forced defrost (1015)**: Workbook register 1015, compulsive defrosting (0 off, 1 on). It is a command that starts a defrost.
+- **M12 Clock minute (1152)**: Workbook register 1152, system clock minute (0-59).
+- **M13 Clock hour (1153)**: Workbook register 1153, system clock hour (0-23).
+- **M14 Clock day (1154)**: Workbook register 1154, system clock day (1-31).
+- **M15 Clock month (1155)**: Workbook register 1155, system clock month (1-12).
+- **M16 Clock year (1156)**: Workbook register 1156, system clock year (0-99).
+- **R02 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1105, which the workbook leaves blank. The app doesn't show it.
+- **R11 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1114, which the workbook leaves blank. The app doesn't show it.
+- **R13 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1116, which the workbook leaves blank. The app doesn't show it.
+- **R16 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1119, which the workbook leaves blank. The app doesn't show it.
+- **H09 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **H16 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1068, which the workbook leaves blank. It read 1 on a Trianco S300.
+- **E06 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1060, which the workbook leaves blank.
+- **C01 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **C02 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1023, which the workbook leaves blank.
+- **C03 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1024, which the workbook leaves blank.
+- **C05 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1033, which the workbook leaves blank.
+- **C06 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1026, which the workbook leaves blank.
+- **C07 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1029, which the workbook leaves blank.
+- **C08 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1030, which the workbook leaves blank.
+- **C09 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1031, which the workbook leaves blank.
+- **D10 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1042, which the workbook leaves blank. It read -30.0 on a Trianco S300.
+- **D11 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1043, which the workbook leaves blank. It read 0 on a Trianco S300.
+- **D12 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1041, which the workbook leaves blank. It read -30.0 on a Trianco S300.
+- **D13 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1051, which the workbook leaves blank. It read -30.0 on a Trianco S300.
+- **F01 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1160, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F02 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1161, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F04 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1163, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F05 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1164, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F06 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1165, which is not on the dtu_wifi sheet. It read -30.0 on a Trianco S300.
+- **F07 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1166, which is not on the dtu_wifi sheet. It read -30.0 on a Trianco S300.
+- **F09 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1168, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F10 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1169, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F11 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1170, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F12 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1171, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **F13 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1172, which is not on the dtu_wifi sheet. It read 0 on a Trianco S300.
+- **L29 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 1143, which is not on the dtu_wifi sheet.
+- **L30 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. No address is known.
+- **L31 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 2075, which the workbook leaves blank. Register 2075 is recorded separately.
+- **L32 Unknown**: Code found by Victor's scan of an Indol PV300 with the same product ID. Victor matched it to 2076, which the workbook leaves blank. Register 2076 is recorded separately.
+- **ModeState Mode state**: Live-data code of the FoxAir boards. On a Trianco S300 it read 2, the same as Mode.
+
+The same request also reads codes that have no entity of their own:
+
+- the named letter codes `O01`-`O06`, `O10`-`O15` and `S01`-`S06`, so a value
+  would show up in the diagnostics if the cloud ever filled them; their
+  entities read the bits of `2050` and `2051`;
+- `2026` and `2027`, which equal `T20` and `T21`;
+- the fault words `Fault1`-`Fault10`, shown as attributes of Fault details;
+- `MainBoard Version` and `code_version`, shown in the device's software
+  version.
 
 ## Added register bits
 
@@ -1016,5 +1147,5 @@ are recorded so their pattern can be compared with what the heat pump does.
 | `1133_bit_01` | Reg 1133 bit 1 (L05 timer 1 stop enabled)        | documented |
 | `1133_bit_02` | Reg 1133 bit 2 (L05 timer 2 start enabled)       | documented |
 | `1133_bit_03` | Reg 1133 bit 3 (L05 timer 2 stop enabled)        | documented |
-| `1129_bit_00` | Reg 1129 bit 0 (L01 vacation enabled)            | documented |
+| `1129_bit_00` | Reg 1129 bit 0 (L01 vacation enabled)            | observed   |
 | `1151_bit_00` | Reg 1151 bit 0 (M11 clock apply requested)       | documented |

@@ -232,6 +232,11 @@ diagnostics of the heat pump to an
 [issue](https://github.com/goglecm/hitemp/issues) to help confirm them. The
 guide explains the details.
 
+The codes a scan of another heat pump with the same product ID found, whose
+meaning on HiTemp is unknown, are read in the separate request too and
+recorded as diagnostic sensors, for example `O21 Unknown`, so their history
+can be compared with what the heat pump does.
+
 ### Finding out what a setting changes
 
 The **Code changes** sensor lists, after each read, the codes whose values

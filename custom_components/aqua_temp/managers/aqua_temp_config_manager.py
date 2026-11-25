@@ -545,9 +545,12 @@ class AquaTempConfigManager:
                     bitword=data_item.get("bitword", False),
                     time_of=None if time_of is None else tuple(time_of),
                     date_of=None if date_of is None else tuple(date_of),
+                    # Probe codes come from the separate probe request, where a
+                    # code the cloud rejects can't break the main read
                     is_protocol_code=difference_of is None
                     and time_of is None
-                    and date_of is None,
+                    and date_of is None
+                    and not data_item.get("probe", False),
                 )
 
                 entities.append(sensor_entity)

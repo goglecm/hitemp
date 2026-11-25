@@ -1,5 +1,42 @@
 # Changelog
 
+## 4.4.3
+
+_Minimum HA Version: 2026.11.0_
+
+### New
+
+- The 58 codes that were only read for diagnostics are diagnostic sensors, so
+  their history is recorded: the clock mailbox `M12`-`M16`, forced defrost
+  `M07`, `ModeState`, and the codes from Victor's scan (`C`, `D10`-`D13`,
+  `F`, `H09`, `H16`, `E06`, `O18`-`O28`, `R02`, `R11`, `R13`, `R16`,
+  `L29`-`L32`, `2057`-`2059`, `2068`-`2071`). They are still read in the
+  separate request,
+  so a code the cloud rejects can't break the main read. Except for `M07`
+  and `M12`-`M16`, their names don't claim a meaning
+
+### Fixes
+
+- `2075` and `2076` are named `Reg 2075 Unknown` and `Reg 2076 Unknown`;
+  Victor's `L31`/`L32` aliases are in the description only, as for the other
+  aliases
+- `Defrost running (2051.2)` has the running device class, like `O14`
+- `T07`, `T09` and `O29` moved to the Diagnostic section. They read -30 °C,
+  0 and 0 on a Trianco S300
+- `Mode` (1012) is marked uncertain: on a Trianco S300 it read 7 during
+  vacation while `mode_real` kept the mode to return to, which doesn't fit
+  the workbook's requested-mode label
+- The vacation bit `1129` bit 0 has the same confidence on both of its
+  entities
+
+### Tests
+
+- Tests cover the 118 raw bits and their workbook labels, the device
+  classes, every sensor being enabled, the codes of other boards having no
+  entity, the probe sensors, the `Mode` labels, the version sensors, the
+  `register` and `source` attributes, the move of the O and S codes to
+  binary sensors, and unique entity names
+
 ## 4.4.2
 
 _Minimum HA Version: 2026.11.0_

@@ -69,7 +69,8 @@ PRODUCT_ID_HITEMP = "1245226668902080512"
 
 # Further codes a full scan of an Indol PV300 with the HiTemp product ID found
 # (github.com/victor987/hitemp), read for diagnostics until their meaning on
-# other models is known
+# other models is known. HiTemp sensors marked "probe" read their values from
+# this request.
 HITEMP_DISCOVERY_CODES = [
     "O15",
     "O14",

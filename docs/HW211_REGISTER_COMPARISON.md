@@ -1,6 +1,6 @@
 # HW211 register comparison (Trianco S300 / HiTemp)
 
-As of integration 4.4.2, the HiTemp entities follow this `dtu_wifi` map.
+As of integration 4.4.3, the HiTemp entities follow this `dtu_wifi` map.
 Sensor names end with the register, named outputs and switches read the
 `2050`/`2051` bits, and every bit of those words is a diagnostic entity.
 Writable controls were not added. Findings below cite the workbook, Darksplat,
@@ -416,15 +416,15 @@ The named cloud codes stay empty on this product, by design. The entities
 with those codes read the bits above instead. The named codes are still
 probed, so diagnostics would show a value if the cloud ever filled them.
 
-| Code              | HA                                          | Match                                           | Packed / numeric                   |
-| ----------------- | ------------------------------------------- | ----------------------------------------------- | ---------------------------------- |
-| `O01`–`O06`       | binary sensors, Diagnostic                  | **empty-in-cloud** + **alias-of** bits          | `2050` bits 8–13                   |
-| `O03`             | binary sensor                               | empty named; app still polls `O03` alone (#130) | bit 10 — unexplained lone poll     |
-| `O07`/`O08`/`O09` | sensors                                     | **alias-of**                                    | 2060 / 2061 / 2062                 |
-| `O10`–`O15`       | binary sensors, Diagnostic                  | empty + alias-of (legacy ≡ workbook O12–O17)    | `2050` bits 14–15, `2051` bits 0–3 |
-| `O29`             | `O29 Fan speed` sensor, no register in name | victor alias 2067 (blank in workbook)           | 0 on S300 while heating            |
-| `S01`–`S06`       | binary sensors, Diagnostic                  | **empty-in-cloud** + **alias-of** bits          | `2050` bits 0–5                    |
-| `2055`            | unused                                      | **only-in-repo** (heating frost T)              | Not O03                            |
+| Code              | HA                                 | Match                                           | Packed / numeric                   |
+| ----------------- | ---------------------------------- | ----------------------------------------------- | ---------------------------------- |
+| `O01`–`O06`       | binary sensors, Diagnostic         | **empty-in-cloud** + **alias-of** bits          | `2050` bits 8–13                   |
+| `O03`             | binary sensor                      | empty named; app still polls `O03` alone (#130) | bit 10 — unexplained lone poll     |
+| `O07`/`O08`/`O09` | sensors                            | **alias-of**                                    | 2060 / 2061 / 2062                 |
+| `O10`–`O15`       | binary sensors, Diagnostic         | empty + alias-of (legacy ≡ workbook O12–O17)    | `2050` bits 14–15, `2051` bits 0–3 |
+| `O29`             | `O29 Fan speed` sensor, Diagnostic | victor alias 2067 (blank in workbook)           | 0 on S300 while heating            |
+| `S01`–`S06`       | binary sensors, Diagnostic         | **empty-in-cloud** + **alias-of** bits          | `2050` bits 0–5                    |
+| `2055`            | unused                             | **only-in-repo** (heating frost T)              | Not O03                            |
 
 ### Integration decisions
 
@@ -451,15 +451,15 @@ probed, so diagnostics would show a value if the cloud ever filled them.
 | M06                 | 1014               | `M06 Booster mode (1014)` sensor      | **conflict** (Indol writable vs S300 stuck 0), uncertain        |
 | H01 / H07 / H31     | 1067 / 1073 / 1077 | config / sensors                      | **alias-of**                                                    |
 | L02–L13, 1129, 1133 | timers/vacation    | sensors and bits, Diagnostic          | **match**                                                       |
-| M12–M16             | 1152–1156          | probe only, no entity                 | **match**                                                       |
+| M07, M12–M16        | 1015, 1152–1156    | probe sensors, Diagnostic             | **match**                                                       |
 | 1158                | heartbeat echo     | `Reg 1158 Heartbeat echo` sensor      | **match** (role)                                                |
 | 2011–2014           | versions           | `Reg 2011` … `Reg 2014` sensors       | **match**                                                       |
 | T20 / T21           | 2026 / 2027        | sensors                               | **match**                                                       |
 
 ### Discovery / probes only-in-integration or only-in-repo
 
-- **only-in-integration:** `superheat`, `water_delta_t`, climate entity, `LIVE_PROBE_CODES` / `HITEMP_DISCOVERY_CODES` (C/F/O18–28/L29–32/…).
-- **only-in-repo:** M07 forced defrost as an entity (probed, never written), `hw211` manual word `1149`, ESPHome derived Operating state.
+- **only-in-integration:** `superheat`, `water_delta_t`, climate entity, `LIVE_PROBE_CODES` / `HITEMP_DISCOVERY_CODES`. Since 4.4.3 the probed codes from Victor's scan (C/D10–13/F/H09/H16/E06/O18–28/R02/R11/R13/R16/L29–32/2057–2059/2068–2071, ModeState) are diagnostic sensors named `{Code} Unknown` or `Reg {address} Unknown`; Victor's aliases are in their descriptions only.
+- **only-in-repo:** M07 forced defrost as a control (it is read, never written), `hw211` manual word `1149`, ESPHome derived Operating state.
 
 ### Other integrations footnote (aquatemp upstream)
 

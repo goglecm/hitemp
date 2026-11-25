@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate import ATTR_FAN_MODE
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -28,10 +29,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import slugify
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from custom_components.aqua_temp.common.consts import CONF_LIVE_DATA
+from custom_components.aqua_temp.common.consts import CONF_LIVE_DATA, DOMAIN
 from custom_components.aqua_temp.common.utils import parse_bitword
 from custom_components.aqua_temp.number import AquaTempNumberEntity
 from custom_components.aqua_temp.select import AquaTempParameterSelectEntity
@@ -288,12 +290,12 @@ async def test_eev_position_and_running_hours_can_be_graphed(
 
 
 @pytest.mark.usefixtures("fake_cloud")
-async def test_live_switches_are_labelled(
+async def test_switch_and_output_codes_read_2050(
     hass: HomeAssistant,
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Switch inputs and outputs read like the app's CL/OP and ON/OFF."""
+    """The named S and O entities follow the bits of 2050, not the empty codes."""
     device = await _setup(hass, add_device, make_entry)
 
     assert (
@@ -311,12 +313,12 @@ async def test_live_switches_are_labelled(
 
 
 @pytest.mark.usefixtures("fake_cloud")
-async def test_empty_live_switches_are_unavailable(
+async def test_switch_and_output_bits_do_not_need_live_data(
     hass: HomeAssistant,
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Without live data the cloud returns nothing, which is not shown as unknown."""
+    """2050 is in the main read, so the bits show without the live data request."""
     device = add_device(HITEMP_FIXTURE)
     entry = make_entry()
     hass.config_entries.async_update_entry(
@@ -616,3 +618,123 @@ async def test_defrost_follows_status_word_2051(
     defrost = hass.states.get(entity_id(hass, "binary_sensor", "defrost", device.code))
     assert defrost.state == state
     assert defrost.attributes["calculated_from"] == "2051 bit 2"
+    assert defrost.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.RUNNING
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_raw_bits_follow_their_word(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Each raw bit is on when its bit is set, bit 0 being the right-most digit."""
+    word = "1010000000000101"
+    device = await _setup(hass, add_device, make_entry, **{"2050": word})
+
+    for bit in range(16):
+        state = hass.states.get(
+            entity_id(hass, "binary_sensor", f"2050_bit_{bit:02}", device.code)
+        ).state
+        assert state == (STATE_ON if int(word, 2) >> bit & 1 else STATE_OFF), bit
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_fault_and_flag_bits_decode_numbers_and_reject_other_values(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """A decimal fault word sets its bit; a word that isn't one leaves its bits unavailable."""
+    device = await _setup(
+        hass, add_device, make_entry, **{"2085": "256", "T08": "-30.0"}
+    )
+
+    def state(key: str) -> str:
+        return hass.states.get(entity_id(hass, "binary_sensor", key, device.code)).state
+
+    assert state("2085_bit_08") == STATE_ON
+    assert state("2085_bit_00") == STATE_OFF
+    assert state("T08_bit_00") == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("raw", "shown"), [("7", "Vacation (7)"), ("9", "9 (not listed in the app)")]
+)
+@pytest.mark.usefixtures("fake_cloud")
+async def test_requested_mode_labels(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+    raw: str,
+    shown: str,
+) -> None:
+    """Mode shows the app's label, and an unlisted value as it is."""
+    device = await _setup(hass, add_device, make_entry, Mode=raw)
+
+    mode = hass.states.get(entity_id(hass, "sensor", "Mode", device.code))
+    assert mode.state == shown
+    assert mode.attributes["confidence"] == "uncertain"
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_versions_and_register_attributes(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Version registers are sensors, and entities name their register and sources."""
+    device = await _setup(hass, add_device, make_entry)
+
+    software = hass.states.get(entity_id(hass, "sensor", "2012", device.code))
+    assert float(software.state) == 679
+
+    ambient = hass.states.get(entity_id(hass, "sensor", "T01", device.code))
+    assert ambient.attributes["register"] == "2019"
+    assert "workbook" in ambient.attributes["source"]
+
+
+@pytest.mark.usefixtures("fake_cloud")
+async def test_switch_codes_moved_from_sensor_to_binary_sensor(
+    hass: HomeAssistant,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """An O01 sensor from before 4.4.0 is removed and the binary sensor replaces it."""
+    device = add_device(HITEMP_FIXTURE)
+    entry = make_entry()
+    registry = er.async_get(hass)
+    old = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        slugify(f"{DOMAIN}_sensor_O01_{device.code}"),
+        config_entry=entry,
+    ).entity_id
+
+    await setup_entry(hass, entry)
+
+    assert registry.async_get(old) is None
+    assert hass.states.get(entity_id(hass, "binary_sensor", "O01", device.code))
+
+
+async def test_probe_codes_are_recorded_without_the_main_read(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """Probe sensors read the probe request; a rejected code leaves the rest working."""
+    device = add_device(HITEMP_FIXTURE)
+    fake_cloud.rejected_codes = {"O22"}
+    await setup_entry(hass, make_entry())
+
+    main_read = fake_cloud.data_requests()[0]
+    assert "O21" not in main_read
+    assert "M07" not in main_read
+
+    def state(key: str) -> str:
+        return hass.states.get(entity_id(hass, "sensor", key, device.code)).state
+
+    assert float(state("O21")) == -55
+    assert state("M07") == "Off (0)"
+    assert float(state("M12")) == 0
+    assert state("O22") == STATE_UNAVAILABLE

@@ -12,10 +12,17 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import Platform
+from homeassistant.util import slugify
 import pytest
 
 from custom_components.aqua_temp.common.api_types import API_TYPES, APIParam
-from custom_components.aqua_temp.common.consts import INTEGER_CLOUD_TYPES, PRODUCT_IDS
+from custom_components.aqua_temp.common.consts import (
+    BITWORD_CODES,
+    FAULT_WORD_CODES,
+    INTEGER_CLOUD_TYPES,
+    PRODUCT_IDS,
+    probe_codes_for_product,
+)
 
 PARAMETERS = (
     Path(__file__).parent.parent / "custom_components" / "aqua_temp" / "parameters"
@@ -282,7 +289,136 @@ def test_main_temperatures_name_their_register() -> None:
     assert items["T20"]["register"] == "2026"
     assert items["T21"]["register"] == "2027"
     assert items["T11"]["enabled_by_default"] is True
-    assert items["T07"]["register"] if False else "register" not in items["T07"]
+    assert "register" not in items["T07"]
+
+
+# Codes the workbook (or Darksplat, for the legacy O numbers) gives each bit
+RAW_BIT_CODES = {
+    "2050": {
+        **{bit: f"S0{bit + 1}" for bit in range(6)},
+        **{bit: f"O0{bit - 7}" for bit in range(8, 14)},
+        14: "O10",
+        15: "O11",
+    },
+    "2051": {0: "O12", 1: "O13", 2: "O14", 3: "O15"},
+    "2085": {
+        **{0: "P04", 1: "P01", 2: "P02", 3: "P05", 4: "P07", 5: "P034"},
+        **{8: "E01", 9: "E02", 13: "E09"},
+    },
+    "1133": dict.fromkeys(range(4), "L05"),
+    "1129": {0: "L01"},
+    "1151": {0: "M11"},
+    "1142": {},
+    "T08": {},
+    "F03": {},
+    "L28": {},
+}
+FULL_WORDS = ("2050", "2051", "2085", "1142", "T08", "F03", "L28")
+
+
+def test_raw_bits_cover_the_words_with_the_workbook_labels() -> None:
+    """Every bit of the full words has a raw entity; labels follow the workbook."""
+    items = _hitemp_items()
+    raw = {
+        key: item for key, item in items.items() if re.fullmatch(r".+_bit_\d\d", key)
+    }
+    expected = {
+        *(f"{word}_bit_{bit:02}" for word in FULL_WORDS for bit in range(16)),
+        *(f"1133_bit_{bit:02}" for bit in range(4)),
+        "1129_bit_00",
+        "1151_bit_00",
+    }
+
+    assert set(raw) == expected
+    assert len(raw) == 118
+
+    for key, item in raw.items():
+        word, bit = item["bit_of"]
+        assert key == f"{word}_bit_{bit:02}"
+        prefix = f"Reg {word} bit {bit}" if word.isdigit() else f"{word} bit {bit}"
+        code = RAW_BIT_CODES[word].get(bit)
+        if code is None:
+            assert item["name"] == prefix, key
+            assert item["confidence"] == "uncertain", key
+        else:
+            assert item["name"].startswith(f"{prefix} ({code} "), key
+        assert item.get("device_class") is None, key
+        assert item["entity_category"] == "diagnostic", key
+
+
+def test_named_bits_use_the_planned_device_classes() -> None:
+    """Switches open, motors and defrost run, the Wi-Fi bit connects."""
+    items = _hitemp_items()
+    expected = {
+        **dict.fromkeys(("S01", "S03", "S04", "S05"), "opening"),
+        **dict.fromkeys(("O01", "O02", "O04", "O05", "O14"), "running"),
+        **dict.fromkeys(
+            ("compressor_running", "electric_heater_on", "defrost"), "running"
+        ),
+        "O13": "connectivity",
+        **dict.fromkeys(("S02", "S06", "O03", "O06", "O10", "O11", "O12", "O15")),
+    }
+
+    for key, device_class in expected.items():
+        assert items[key]["platform"] == Platform.BINARY_SENSOR, key
+        assert items[key].get("device_class") == device_class, key
+
+
+def test_every_hitemp_sensor_is_enabled() -> None:
+    """Readings are recorded from the start, unknown ones included."""
+    for key, item in _hitemp_items().items():
+        if item["platform"] in (Platform.SENSOR, Platform.BINARY_SENSOR):
+            assert item.get("enabled_by_default", True) is True, key
+
+
+def test_codes_from_other_boards_have_no_entity() -> None:
+    """Addresses and packed codes of other maps are not modelled."""
+    keys = set(_hitemp_items())
+    excluded = {"2055", "1149", "2030", *BITWORD_CODES, *FAULT_WORD_CODES}
+
+    assert not keys & excluded
+
+
+def test_probe_sensors_read_the_probe_request() -> None:
+    """Probe sensors are probed, not read in the main request, and none is missed."""
+    items = _hitemp_items()
+    probe_keys = {key for key, item in items.items() if item.get("probe")}
+    probe_codes = set(probe_codes_for_product(HITEMP))
+    letters = {
+        *(f"O0{index}" for index in range(1, 7)),
+        *(f"O1{index}" for index in range(6)),
+        *(f"S0{index}" for index in range(1, 7)),
+    }
+    without_entity = {
+        *FAULT_WORD_CODES,
+        "MainBoard Version",
+        "code_version",
+        "2026",
+        "2027",
+        *letters,
+    }
+
+    assert probe_codes - probe_keys == without_entity
+    for key in probe_keys:
+        item = items[key]
+        assert item["platform"] == Platform.SENSOR, key
+        assert item["entity_category"] == "diagnostic", key
+        assert "state_class" not in item, key
+    for key in letters:
+        assert items[key].get("bit_of"), key
+
+
+@pytest.mark.parametrize("product_id", PRODUCTS_WITH_FILES)
+def test_entity_names_are_unique(product_id: str) -> None:
+    """Two entities with one name would get a _2 entity id on a new install."""
+    seen: dict[tuple[str, str], str] = {}
+
+    for item in _descriptions(product_id):
+        if item.get("platform") is None:
+            continue
+        name = (item["platform"], slugify(item["name"]))
+        assert name not in seen, f"{item['key']} and {seen.get(name)}"
+        seen[name] = item["key"]
 
 
 def test_registers_match_the_workbook_extract() -> None:
