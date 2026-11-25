@@ -886,3 +886,11 @@ meaning is known:
 | `2085_bit_05` | Reg 2085 bit 5 (P034 solar sensor fault)         | documented |
 | `2085_bit_06` | Reg 2085 bit 6                                   | uncertain  |
 | `2085_bit_07` | Reg 2085 bit 7                                   | uncertain  |
+| `2085_bit_08` | Reg 2085 bit 8 (E01 high pressure fault)         | documented |
+| `2085_bit_09` | Reg 2085 bit 9 (E02 low pressure fault)          | documented |
+| `2085_bit_10` | Reg 2085 bit 10                                  | uncertain  |
+| `2085_bit_11` | Reg 2085 bit 11                                  | uncertain  |
+| `2085_bit_12` | Reg 2085 bit 12                                  | uncertain  |
+| `2085_bit_13` | Reg 2085 bit 13 (E09 tank frost protection)      | documented |
+| `2085_bit_14` | Reg 2085 bit 14                                  | uncertain  |
+| `2085_bit_15` | Reg 2085 bit 15                                  | uncertain  |
