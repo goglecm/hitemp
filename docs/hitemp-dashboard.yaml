@@ -25,7 +25,7 @@ views:
               - number.heat_pump_r03_start_hysteresis_bottom_1106
               - select.heat_pump_mode_real_operating_mode_1013
               - select.heat_pump_m17_fan_after_heating_1016
-              - binary_sensor.heat_pump_vacation_mode_1129_bit_0
+              - binary_sensor.heat_pump_l01_vacation_enabled_1129_0
               - sensor.heat_pump_s01_remote_on_off_input
           - type: heading
             heading: Status

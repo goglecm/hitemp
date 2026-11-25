@@ -1816,26 +1816,32 @@
   },
   {
     "key": "vacation_mode",
-    "name": "Vacation mode (1129 bit 0)",
+    "name": "L01 Vacation enabled (1129.0)",
     "platform": "binary_sensor",
     "bit_of": ["1129", 0],
     "entity_category": null,
     "level": "App settings",
     "confidence": "observed",
-    "description": "On while vacation mode is set on the app's Timer page.",
-    "guidance": "Turning vacation mode on in the app set this bit, changed Mode to 7 and stored the date in L02-L04; turning it off cleared the bit. Read-only."
+    "description": "Bit 0 of register 1129 (L01). 1 means the vacation date is enabled. This is a schedule arm, not a sign that the heat pump is running.",
+    "guidance": "Turning vacation mode on in the app set this bit, changed Mode to 7 and stored the date in L02-L04; turning it off cleared the bit. Read-only.",
+    "source": ["workbook", "app", "s300"],
+    "register": "1129.0",
+    "named_code": "L01"
   },
   {
     "key": "vacation_date",
-    "name": "Vacation date (L02-L04)",
+    "name": "L02-L04 Vacation date (1130-1132)",
     "platform": "sensor",
     "device_class": "date",
     "date_of": ["L02", "L03", "L04"],
     "entity_category": "diagnostic",
     "level": "App settings",
     "confidence": "observed",
-    "description": "Date set for vacation mode on the app's Timer page.",
-    "guidance": "The app showed 28-05-2010 while L02-L04 read 10, 5 and 28. Read-only."
+    "description": "Vacation return date built from L02 year, L03 month and L04 day, registers 1130-1132.",
+    "guidance": "The app showed 28-05-2010 while L02-L04 read 10, 5 and 28. Read-only.",
+    "source": ["workbook", "app", "s300"],
+    "register": "1130-1132",
+    "named_code": "L02-L04"
   },
   {
     "key": "timer1_on",
@@ -1894,12 +1900,15 @@
   },
   {
     "key": "1129",
-    "name": "1129 Vacation flags",
+    "name": "L01 Vacation flags (1129)",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "confidence": "observed",
-    "description": "Flag word whose bit 0 is vacation mode."
+    "confidence": "documented",
+    "description": "Packed vacation flags. Bit 0 is the vacation date enable.",
+    "source": ["workbook"],
+    "register": "1129",
+    "named_code": "L01"
   },
   {
     "key": "T21",
@@ -1929,21 +1938,36 @@
   },
   {
     "key": "L02",
-    "name": "L02",
-    "platform": null,
-    "description": "Vacation year (20YY), from the app's Timer page."
+    "name": "L02 Vacation year (1130)",
+    "platform": "sensor",
+    "description": "Vacation year, two digits (20YY). Workbook register 1130.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1130",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L03",
-    "name": "L03",
-    "platform": null,
-    "description": "Vacation month, from the app's Timer page."
+    "name": "L03 Vacation month (1131)",
+    "platform": "sensor",
+    "description": "Vacation month, 1-12. Workbook register 1131.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1131",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L04",
-    "name": "L04",
-    "platform": null,
-    "description": "Vacation day, from the app's Timer page."
+    "name": "L04 Vacation day (1132)",
+    "platform": "sensor",
+    "description": "Vacation day, 1-31. Workbook register 1132.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1132",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L06",

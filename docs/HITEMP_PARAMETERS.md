@@ -716,7 +716,7 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 - **Timer 2 on (L10:L11)**: On time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **Timer 2 off (L12:L13)**: Off time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **1133 Timer switches**: The on/off switches of the app's two timers, as bits. Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet.
-- **1129 Vacation flags**: Flag word whose bit 0 is vacation mode.
+- **L01 Vacation flags (1129)**: Flag word whose bit 0 is vacation mode.
 
 ### Status and flag words
 
@@ -810,9 +810,9 @@ The climate entity and the Power sensor use some of these; the rest were request
 - **Power Heat pump on (1011)**: On/off state of the heat pump (1 = on). The climate entity turns it on and off. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The compressor stopped or started about a minute later. Each switch raised T21 by 4: the on/off state is written to the controller's memory, most likely because H01 = YES remembers it. Whether switching on from Home Assistant or the app overrides open contacts isn't known, so avoid switching it from both.
 - **Mode Requested mode (1012)**: Active mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (seen in the app on a Trianco S300). In vacation mode_real keeps the mode to return to.
 - **T20 Out-of-range count (2026)**: Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11).
-- **L02**: Vacation year (20YY), from the app's Timer page.
-- **L03**: Vacation month, from the app's Timer page.
-- **L04**: Vacation day, from the app's Timer page.
+- **L02 Vacation year (1130)**: Vacation year (20YY), from the app's Timer page.
+- **L03 Vacation month (1131)**: Vacation month, from the app's Timer page.
+- **L04 Vacation day (1132)**: Vacation day, from the app's Timer page.
 - **L06**: Timer 1 on hour, from the app's Timer page.
 - **L07**: Timer 1 on minute, from the app's Timer page.
 - **L08**: Timer 1 off hour, from the app's Timer page.

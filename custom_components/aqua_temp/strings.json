@@ -98,7 +98,7 @@
         "name": "Defrost (2051 bit 2)"
       },
       "1245226668902080512_vacation_mode": {
-        "name": "Vacation mode (1129 bit 0)"
+        "name": "L01 Vacation enabled (1129.0)"
       }
     },
     "climate": {
@@ -1347,7 +1347,7 @@
         "name": "T09 Compressor temperature unconfirmed"
       },
       "1245226668902080512_vacation_date": {
-        "name": "Vacation date (L02-L04)"
+        "name": "L02-L04 Vacation date (1130-1132)"
       },
       "1245226668902080512_timer1_on": {
         "name": "Timer 1 on (L06:L07)"
@@ -1365,13 +1365,22 @@
         "name": "1133 Timer switches"
       },
       "1245226668902080512_1129": {
-        "name": "1129 Vacation flags"
+        "name": "L01 Vacation flags (1129)"
       },
       "1245226668902080512_t21": {
         "name": "T21 Settings write count (2027)"
       },
       "1245226668902080512_t20": {
         "name": "T20 Out-of-range count (2026)"
+      },
+      "1245226668902080512_l02": {
+        "name": "L02 Vacation year (1130)"
+      },
+      "1245226668902080512_l03": {
+        "name": "L03 Vacation month (1131)"
+      },
+      "1245226668902080512_l04": {
+        "name": "L04 Vacation day (1132)"
       },
       "1245226668902080512_2051": {
         "name": "2051 Status bits"
