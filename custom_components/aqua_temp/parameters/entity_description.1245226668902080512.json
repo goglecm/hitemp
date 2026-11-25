@@ -187,7 +187,7 @@
   },
   {
     "key": "D01",
-    "name": "D01 Defrost start temperature",
+    "name": "D01 Defrost start temperature (1034)",
     "app_name": "Defrosting startup temp",
     "platform": "number",
     "device_class": "temperature",
@@ -201,13 +201,15 @@
     "app_range": "-30.0C to 0.0C, steps of 0.5C",
     "app_value": "-3.0C",
     "confidence": "documented",
-    "description": "Coil temperature (T04) below which a defrost can start.",
+    "description": "Defrost start temperature. Workbook register 1034. Stays a disabled installer control.",
     "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). A lower D01 means fewer, later defrosts. Change it only if the coil ices up or defrosts too often.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1034"
   },
   {
     "key": "D02",
-    "name": "D02 Defrost end temperature",
+    "name": "D02 Defrost end temperature (1035)",
     "app_name": "Defrosting shutdown temp",
     "platform": "number",
     "device_class": "temperature",
@@ -221,13 +223,15 @@
     "app_range": "0.0C to 30.0C, steps of 0.5C",
     "app_value": "13.0C",
     "confidence": "documented",
-    "description": "Coil temperature (T04) at which a defrost ends.",
+    "description": "Defrost end temperature. Workbook register 1035. Stays a disabled installer control.",
     "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). A higher D02 clears the ice more thoroughly but lasts longer.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1035"
   },
   {
     "key": "D03",
-    "name": "D03 Defrost interval",
+    "name": "D03 Defrost interval (1036)",
     "app_name": "Duration of defrosting",
     "platform": "number",
     "device_class": "duration",
@@ -241,13 +245,15 @@
     "app_range": "30Min to 90Min, steps of 1Min",
     "app_value": "45Min",
     "confidence": "documented",
-    "description": "Minimum time between two defrosts. The app calls it 'Duration of defrosting', but a 30-90 minute range only makes sense as the interval, as in the PHNIX manuals; a Trianco S300 with D03 = 45 defrosted every 45-49 minutes.",
+    "description": "Defrost interval. Workbook register 1036. Stays a disabled installer control.",
     "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). ",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook"],
+    "register": "1036"
   },
   {
     "key": "D04",
-    "name": "D04 Maximum defrost time",
+    "name": "D04 Maximum defrost time (1037)",
     "app_name": "Longest duration of defrosting",
     "platform": "number",
     "device_class": "duration",
@@ -261,13 +267,15 @@
     "app_range": "1Min to 20Min, steps of 1Min",
     "app_value": "8Min",
     "confidence": "documented",
-    "description": "Longest a defrost may last.",
+    "description": "Maximum defrost time. Workbook register 1037. Stays a disabled installer control.",
     "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). ",
-    "cloud_type": "DIGI7"
+    "cloud_type": "DIGI7",
+    "source": ["workbook"],
+    "register": "1037"
   },
   {
     "key": "D05",
-    "name": "D05 Minimum defrost time",
+    "name": "D05 Minimum defrost time (1038)",
     "app_name": "Shortest duration of defrosting",
     "platform": "number",
     "device_class": "duration",
@@ -281,13 +289,15 @@
     "app_range": "1Min to 8Min, steps of 1Min",
     "app_value": "3Min",
     "confidence": "documented",
-    "description": "Shortest a defrost lasts.",
+    "description": "Minimum defrost time. Workbook register 1038. Stays a disabled installer control.",
     "guidance": "Defrost starts when the coil (T04) is below D01 and at least D03 minutes have passed since the last one. It ends when T04 reaches D02 or after D04 minutes, and lasts at least D05 minutes (PHNIX manuals). During a defrost the compressor keeps running and the fan stops (Trianco S300 manual). ",
-    "cloud_type": "DIGI7"
+    "cloud_type": "DIGI7",
+    "source": ["workbook"],
+    "register": "1038"
   },
   {
     "key": "D06",
-    "name": "D06 Defrost method",
+    "name": "D06 Defrost method (1039)",
     "app_name": "Defrosting way",
     "platform": "select",
     "options": {
@@ -301,13 +311,15 @@
     "app_range": "Standard, Economic, Intelligent",
     "app_value": "Standard",
     "confidence": "observed",
-    "description": "How defrosts are started.",
+    "description": "Defrost method. Workbook register 1039. Stays a disabled installer control.",
     "guidance": "Standard uses D01-D05; Intelligent also uses D07. What Economic changes isn't documented. Your heat pump reports 0 = Standard; 1 and 2 follow the app's order.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1039"
   },
   {
     "key": "D07",
-    "name": "D07 Intelligent defrost threshold",
+    "name": "D07 Intelligent defrost threshold (1040)",
     "app_name": "Intelligent defrosting judgement",
     "platform": "number",
     "device_class": "temperature",
@@ -321,9 +333,11 @@
     "app_range": "-10.0C to 20.0C, steps of 0.5C",
     "app_value": "4.0C",
     "confidence": "uncertain",
-    "description": "Threshold used by intelligent defrosting (D06 = Intelligent).",
+    "description": "Intelligent defrost threshold. Workbook register 1040. Stays a disabled installer control.",
     "guidance": "Not documented; it probably compares the ambient and coil temperatures. It only matters with D06 = Intelligent. Leave it unchanged.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1040"
   },
   {
     "key": "E01",

@@ -117,7 +117,7 @@
         "name": "M17 Fan after heating (1016)"
       },
       "1245226668902080512_d06": {
-        "name": "D06 Defrost method"
+        "name": "D06 Defrost method (1039)"
       },
       "1245226668902080512_e01": {
         "name": "E01 EEV control mode"
@@ -1403,22 +1403,22 @@
     },
     "number": {
       "1245226668902080512_d01": {
-        "name": "D01 Defrost start temperature"
+        "name": "D01 Defrost start temperature (1034)"
       },
       "1245226668902080512_d02": {
-        "name": "D02 Defrost end temperature"
+        "name": "D02 Defrost end temperature (1035)"
       },
       "1245226668902080512_d03": {
-        "name": "D03 Defrost interval"
+        "name": "D03 Defrost interval (1036)"
       },
       "1245226668902080512_d04": {
-        "name": "D04 Maximum defrost time"
+        "name": "D04 Maximum defrost time (1037)"
       },
       "1245226668902080512_d05": {
-        "name": "D05 Minimum defrost time"
+        "name": "D05 Minimum defrost time (1038)"
       },
       "1245226668902080512_d07": {
-        "name": "D07 Intelligent defrost threshold"
+        "name": "D07 Intelligent defrost threshold (1040)"
       },
       "1245226668902080512_e02": {
         "name": "E02 Target superheat"
