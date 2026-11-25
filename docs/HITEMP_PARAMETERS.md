@@ -918,3 +918,11 @@ meaning is known:
 | `T08_bit_05`  | T08 bit 5                                        | uncertain  |
 | `T08_bit_06`  | T08 bit 6                                        | uncertain  |
 | `T08_bit_07`  | T08 bit 7                                        | uncertain  |
+| `T08_bit_08`  | T08 bit 8                                        | uncertain  |
+| `T08_bit_09`  | T08 bit 9                                        | uncertain  |
+| `T08_bit_10`  | T08 bit 10                                       | uncertain  |
+| `T08_bit_11`  | T08 bit 11                                       | uncertain  |
+| `T08_bit_12`  | T08 bit 12                                       | uncertain  |
+| `T08_bit_13`  | T08 bit 13                                       | uncertain  |
+| `T08_bit_14`  | T08 bit 14                                       | uncertain  |
+| `T08_bit_15`  | T08 bit 15                                       | uncertain  |
