@@ -942,3 +942,11 @@ meaning is known:
 | `F03_bit_13`  | F03 bit 13                                       | uncertain  |
 | `F03_bit_14`  | F03 bit 14                                       | uncertain  |
 | `F03_bit_15`  | F03 bit 15                                       | uncertain  |
+| `L28_bit_00`  | L28 bit 0                                        | uncertain  |
+| `L28_bit_01`  | L28 bit 1                                        | uncertain  |
+| `L28_bit_02`  | L28 bit 2                                        | uncertain  |
+| `L28_bit_03`  | L28 bit 3                                        | uncertain  |
+| `L28_bit_04`  | L28 bit 4                                        | uncertain  |
+| `L28_bit_05`  | L28 bit 5                                        | uncertain  |
+| `L28_bit_06`  | L28 bit 6                                        | uncertain  |
+| `L28_bit_07`  | L28 bit 7                                        | uncertain  |
