@@ -1356,13 +1356,13 @@
         "name": "L08-L09 Timer 1 stop (1136-1137)"
       },
       "1245226668902080512_timer2_on": {
-        "name": "Timer 2 on (L10:L11)"
+        "name": "L10-L11 Timer 2 start (1138-1139)"
       },
       "1245226668902080512_timer2_off": {
-        "name": "Timer 2 off (L12:L13)"
+        "name": "L12-L13 Timer 2 stop (1140-1141)"
       },
       "1245226668902080512_1133": {
-        "name": "1133 Timer switches"
+        "name": "L05 Timer enables (1133)"
       },
       "1245226668902080512_1129": {
         "name": "L01 Vacation flags (1129)"
@@ -1393,6 +1393,18 @@
       },
       "1245226668902080512_l09": {
         "name": "L09 Timer 1 stop minute (1137)"
+      },
+      "1245226668902080512_l10": {
+        "name": "L10 Timer 2 start hour (1138)"
+      },
+      "1245226668902080512_l11": {
+        "name": "L11 Timer 2 start minute (1139)"
+      },
+      "1245226668902080512_l12": {
+        "name": "L12 Timer 2 stop hour (1140)"
+      },
+      "1245226668902080512_l13": {
+        "name": "L13 Timer 2 stop minute (1141)"
       },
       "1245226668902080512_2051": {
         "name": "2051 Status bits"

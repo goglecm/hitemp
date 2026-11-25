@@ -1873,36 +1873,45 @@
   },
   {
     "key": "timer2_on",
-    "name": "Timer 2 on (L10:L11)",
+    "name": "L10-L11 Timer 2 start (1138-1139)",
     "platform": "sensor",
     "time_of": ["L10", "L11"],
     "entity_category": "diagnostic",
     "level": "App settings",
     "confidence": "observed",
-    "description": "On time of timer 2 on the app's Timer page.",
-    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only."
+    "description": "Clock time when timer 2 turns the heat pump on, from L10 and L11.",
+    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only.",
+    "source": ["workbook", "app", "s300"],
+    "register": "1138-1139",
+    "named_code": "L10-L11"
   },
   {
     "key": "timer2_off",
-    "name": "Timer 2 off (L12:L13)",
+    "name": "L12-L13 Timer 2 stop (1140-1141)",
     "platform": "sensor",
     "time_of": ["L12", "L13"],
     "entity_category": "diagnostic",
     "level": "App settings",
     "confidence": "observed",
-    "description": "Off time of timer 2 on the app's Timer page.",
-    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only."
+    "description": "Clock time when timer 2 turns the heat pump off, from L12 and L13.",
+    "guidance": "Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only.",
+    "source": ["workbook", "app", "s300"],
+    "register": "1140-1141",
+    "named_code": "L12-L13"
   },
   {
     "key": "1133",
-    "name": "1133 Timer switches",
+    "name": "L05 Timer enables (1133)",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
     "level": "App settings",
-    "confidence": "observed",
-    "description": "The on/off switches of the app's two timers, as bits.",
-    "guidance": "Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet."
+    "confidence": "documented",
+    "description": "Packed timer enables. Bits 0-3 arm timer 1 start, timer 1 stop, timer 2 start and timer 2 stop. They do not mean the heat pump is running.",
+    "guidance": "Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet.",
+    "source": ["workbook"],
+    "register": "1133",
+    "named_code": "L05"
   },
   {
     "key": "1129",
@@ -2021,27 +2030,47 @@
   },
   {
     "key": "L10",
-    "name": "L10",
-    "platform": null,
-    "description": "Timer 2 on hour, from the app's Timer page."
+    "name": "L10 Timer 2 start hour (1138)",
+    "platform": "sensor",
+    "description": "Hour timer 2 switches on. Workbook register 1138.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1138",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L11",
-    "name": "L11",
-    "platform": null,
-    "description": "Timer 2 on minute, from the app's Timer page."
+    "name": "L11 Timer 2 start minute (1139)",
+    "platform": "sensor",
+    "description": "Minute timer 2 switches on. Workbook register 1139.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1139",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L12",
-    "name": "L12",
-    "platform": null,
-    "description": "Timer 2 off hour, from the app's Timer page."
+    "name": "L12 Timer 2 stop hour (1140)",
+    "platform": "sensor",
+    "description": "Hour timer 2 switches off. Workbook register 1140.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1140",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L13",
-    "name": "L13",
-    "platform": null,
-    "description": "Timer 2 off minute, from the app's Timer page."
+    "name": "L13 Timer 2 stop minute (1141)",
+    "platform": "sensor",
+    "description": "Minute timer 2 switches off. Workbook register 1141.",
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "register": "1141",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "2051",

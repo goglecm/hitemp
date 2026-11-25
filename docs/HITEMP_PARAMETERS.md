@@ -715,7 +715,7 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 - **Timer 1 off (L08:L09)**: Off time of timer 1 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L09 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **Timer 2 on (L10:L11)**: On time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **Timer 2 off (L12:L13)**: Off time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
-- **1133 Timer switches**: The on/off switches of the app's two timers, as bits. Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet.
+- **L05 Timer enables (1133)**: The on/off switches of the app's two timers, as bits. Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet.
 - **L01 Vacation flags (1129)**: Flag word whose bit 0 is vacation mode.
 
 ### Status and flag words
@@ -817,10 +817,10 @@ The climate entity and the Power sensor use some of these; the rest were request
 - **L07 Timer 1 start minute (1135)**: Timer 1 on minute, from the app's Timer page.
 - **L08 Timer 1 stop hour (1136)**: Timer 1 off hour, from the app's Timer page.
 - **L09 Timer 1 stop minute (1137)**: Timer 1 off minute, from the app's Timer page.
-- **L10**: Timer 2 on hour, from the app's Timer page.
-- **L11**: Timer 2 on minute, from the app's Timer page.
-- **L12**: Timer 2 off hour, from the app's Timer page.
-- **L13**: Timer 2 off minute, from the app's Timer page.
+- **L10 Timer 2 start hour (1138)**: Timer 2 on hour, from the app's Timer page.
+- **L11 Timer 2 start minute (1139)**: Timer 2 on minute, from the app's Timer page.
+- **L12 Timer 2 stop hour (1140)**: Timer 2 off hour, from the app's Timer page.
+- **L13 Timer 2 stop minute (1141)**: Timer 2 off minute, from the app's Timer page.
 - **Manual-mute**: Fan mode code of other models, requested for compatibility. Empty on HiTemp.
 - **Set_Temp**: Setpoint code of other models, requested for compatibility. Empty on HiTemp.
 - **MO6**: Requested by the original integration. Empty on HiTemp, meaning unknown.
