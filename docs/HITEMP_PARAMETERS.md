@@ -862,3 +862,11 @@ meaning is known:
 | `2050_bit_13` | Reg 2050 bit 13 (O06 spare output on)            | documented |
 | `2050_bit_14` | Reg 2050 bit 14 (O10 anode 3V on)                | documented |
 | `2050_bit_15` | Reg 2050 bit 15 (O11 anode MV on)                | documented |
+| `2051_bit_00` | Reg 2051 bit 0 (O12 heating stopped)             | documented |
+| `2051_bit_01` | Reg 2051 bit 1 (O13 Wi-Fi link up)               | observed   |
+| `2051_bit_02` | Reg 2051 bit 2 (O14 defrost running)             | observed   |
+| `2051_bit_03` | Reg 2051 bit 3 (O15 hot water stage active)      | documented |
+| `2051_bit_04` | Reg 2051 bit 4                                   | uncertain  |
+| `2051_bit_05` | Reg 2051 bit 5                                   | uncertain  |
+| `2051_bit_06` | Reg 2051 bit 6                                   | uncertain  |
+| `2051_bit_07` | Reg 2051 bit 7                                   | uncertain  |
