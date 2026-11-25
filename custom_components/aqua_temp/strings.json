@@ -1571,8 +1571,35 @@
       "1245226668902080512_mode": {
         "name": "Mode Requested mode (1012)"
       },
+      "1245226668902080512_manual-mute": {
+        "name": "Manual-mute Fan mode empty"
+      },
+      "1245226668902080512_set_temp": {
+        "name": "Set_Temp Setpoint empty"
+      },
+      "1245226668902080512_mo6": {
+        "name": "MO6 Power empty"
+      },
+      "1245226668902080512_2074": {
+        "name": "Reg 2074 Unknown"
+      },
+      "1245226668902080512_2075": {
+        "name": "L31 Unknown (2075)"
+      },
+      "1245226668902080512_2076": {
+        "name": "L32 Unknown (2076)"
+      },
+      "1245226668902080512_2077": {
+        "name": "Reg 2077 Unknown"
+      },
       "1245226668902080512_1158": {
         "name": "Reg 1158 Heartbeat echo"
+      },
+      "1245226668902080512_1159": {
+        "name": "Reg 1159 Unknown"
+      },
+      "1245226668902080512_2064": {
+        "name": "Reg 2064 Unknown"
       },
       "1245226668902080512_01": {
         "name": "/01 OUT05 use (1020)"

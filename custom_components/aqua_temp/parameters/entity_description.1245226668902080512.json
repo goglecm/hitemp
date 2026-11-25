@@ -33,15 +33,25 @@
   },
   {
     "key": "Manual-mute",
-    "name": "Manual-mute",
-    "platform": null,
-    "description": "Fan mode code of other models, requested for compatibility. Empty on HiTemp."
+    "name": "Manual-mute Fan mode empty",
+    "platform": "sensor",
+    "description": "Fan-mode code of other heat pump models. The cloud leaves it empty on this product.",
+    "confidence": "uncertain",
+    "source": ["s300"],
+    "guidance": "Recorded so a value would be visible if a firmware started reporting it.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true
   },
   {
     "key": "Set_Temp",
-    "name": "Set_Temp",
-    "platform": null,
-    "description": "Setpoint code of other models, requested for compatibility. Empty on HiTemp."
+    "name": "Set_Temp Setpoint empty",
+    "platform": "sensor",
+    "description": "Setpoint code of other models. This product uses R01 instead.",
+    "confidence": "uncertain",
+    "source": ["s300"],
+    "guidance": "Recorded so a value would be visible. Do not write it.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true
   },
   {
     "key": "mode_real",
@@ -67,9 +77,14 @@
   },
   {
     "key": "MO6",
-    "name": "MO6",
-    "platform": null,
-    "description": "Requested by the original integration. Empty on HiTemp, meaning unknown."
+    "name": "MO6 Power empty",
+    "platform": "sensor",
+    "description": "Older integrations used MO6 as power. The HiTemp app writes Power, and this code stays empty.",
+    "confidence": "uncertain",
+    "source": ["s300", "aquatemp-130"],
+    "guidance": "Do not use it to switch the heat pump.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true
   },
   {
     "key": "M17",
@@ -93,27 +108,53 @@
   },
   {
     "key": "2074",
-    "name": "2074",
-    "platform": null,
-    "description": "Register requested by the original integration, meaning unknown."
+    "name": "Reg 2074 Unknown",
+    "platform": "sensor",
+    "description": "Register 2074 has no name in the workbook.",
+    "confidence": "uncertain",
+    "source": ["s300"],
+    "guidance": "Recorded because the original integration requested it.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "2074"
   },
   {
     "key": "2075",
-    "name": "2075",
-    "platform": null,
-    "description": "Register requested by the original integration, meaning unknown."
+    "name": "L31 Unknown (2075)",
+    "platform": "sensor",
+    "description": "Victor matched L31 to 2075. The workbook leaves 2075 blank, so the meaning is unknown.",
+    "confidence": "uncertain",
+    "source": ["victor"],
+    "guidance": "Recorded for comparison. Do not treat L31 as confirmed.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "2075",
+    "named_code": "L31"
   },
   {
     "key": "2076",
-    "name": "2076",
-    "platform": null,
-    "description": "Register requested by the original integration, meaning unknown."
+    "name": "L32 Unknown (2076)",
+    "platform": "sensor",
+    "description": "Victor matched L32 to 2076. The workbook leaves 2076 blank, so the meaning is unknown.",
+    "confidence": "uncertain",
+    "source": ["victor"],
+    "guidance": "Recorded for comparison. Do not treat L32 as confirmed.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "2076",
+    "named_code": "L32"
   },
   {
     "key": "2077",
-    "name": "2077",
-    "platform": null,
-    "description": "Register requested by the original integration, meaning unknown."
+    "name": "Reg 2077 Unknown",
+    "platform": "sensor",
+    "description": "Register 2077 has no name in the workbook.",
+    "confidence": "uncertain",
+    "source": ["s300"],
+    "guidance": "Recorded because the original integration requested it.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "2077"
   },
   {
     "key": "1158",
@@ -129,15 +170,27 @@
   },
   {
     "key": "1159",
-    "name": "1159",
-    "platform": null,
-    "description": "Register requested by the original integration, meaning unknown."
+    "name": "Reg 1159 Unknown",
+    "platform": "sensor",
+    "description": "Register 1159 has no name in the workbook. It sits next to the heartbeat echo.",
+    "confidence": "uncertain",
+    "source": ["s300"],
+    "guidance": "Recorded because the original integration requested it.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "1159"
   },
   {
     "key": "2064",
-    "name": "2064",
-    "platform": null,
-    "description": "Register requested by the original integration, meaning unknown."
+    "name": "Reg 2064 Unknown",
+    "platform": "sensor",
+    "description": "Register 2064 has no name in the workbook.",
+    "confidence": "uncertain",
+    "source": ["s300"],
+    "guidance": "Recorded because the original integration requested it.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "2064"
   },
   {
     "key": "ver",

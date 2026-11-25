@@ -821,16 +821,16 @@ The climate entity and the Power sensor use some of these; the rest were request
 - **L11 Timer 2 start minute (1139)**: Timer 2 on minute, from the app's Timer page.
 - **L12 Timer 2 stop hour (1140)**: Timer 2 off hour, from the app's Timer page.
 - **L13 Timer 2 stop minute (1141)**: Timer 2 off minute, from the app's Timer page.
-- **Manual-mute**: Fan mode code of other models, requested for compatibility. Empty on HiTemp.
-- **Set_Temp**: Setpoint code of other models, requested for compatibility. Empty on HiTemp.
-- **MO6**: Requested by the original integration. Empty on HiTemp, meaning unknown.
-- **2074**: Register requested by the original integration, meaning unknown.
-- **2075**: Register requested by the original integration, meaning unknown.
-- **2076**: Register requested by the original integration, meaning unknown.
-- **2077**: Register requested by the original integration, meaning unknown.
+- **Manual-mute Fan mode empty**: Fan mode code of other models, requested for compatibility. Empty on HiTemp.
+- **Set_Temp Setpoint empty**: Setpoint code of other models, requested for compatibility. Empty on HiTemp.
+- **MO6 Power empty**: Requested by the original integration. Empty on HiTemp, meaning unknown.
+- **Reg 2074 Unknown**: Register requested by the original integration, meaning unknown.
+- **L31 Unknown (2075)**: Register requested by the original integration, meaning unknown.
+- **L32 Unknown (2076)**: Register requested by the original integration, meaning unknown.
+- **Reg 2077 Unknown**: Register requested by the original integration, meaning unknown.
 - **Reg 1158 Heartbeat echo**: Read 23205, the value of the app's live data request (app_heartbeat), for hours in one log, probably while the app was open, and 0 otherwise. The integration's own request has not changed it.
-- **1159**: Register requested by the original integration, meaning unknown.
-- **2064**: Register requested by the original integration, meaning unknown.
+- **Reg 1159 Unknown**: Register requested by the original integration, meaning unknown.
+- **Reg 2064 Unknown**: Register requested by the original integration, meaning unknown.
 - **Version**: Version code of other models. Empty on HiTemp, see code_version and MainBoard Version.
 - **Software Code**: Software code of other models. Empty on HiTemp, see code_version and MainBoard Version.
 
