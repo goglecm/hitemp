@@ -894,3 +894,11 @@ meaning is known:
 | `2085_bit_13` | Reg 2085 bit 13 (E09 tank frost protection)      | documented |
 | `2085_bit_14` | Reg 2085 bit 14                                  | uncertain  |
 | `2085_bit_15` | Reg 2085 bit 15                                  | uncertain  |
+| `1142_bit_00` | Reg 1142 bit 0                                   | uncertain  |
+| `1142_bit_01` | Reg 1142 bit 1                                   | uncertain  |
+| `1142_bit_02` | Reg 1142 bit 2                                   | uncertain  |
+| `1142_bit_03` | Reg 1142 bit 3                                   | uncertain  |
+| `1142_bit_04` | Reg 1142 bit 4                                   | uncertain  |
+| `1142_bit_05` | Reg 1142 bit 5                                   | uncertain  |
+| `1142_bit_06` | Reg 1142 bit 6                                   | uncertain  |
+| `1142_bit_07` | Reg 1142 bit 7                                   | uncertain  |
