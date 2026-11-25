@@ -256,6 +256,27 @@ def test_hitemp_writable_parameters_match_the_app() -> None:
             assert item["entity_category"] == "config", key
 
 
+def test_main_temperatures_name_their_register() -> None:
+    """The tank and air temperatures cite the workbook address."""
+    items = _hitemp_items()
+    expected = {
+        "T01": "2019",
+        "T02": "2020",
+        "T03": "2021",
+        "T04": "2022",
+        "T05": "2023",
+        "T06": "2024",
+        "T10": "2025",
+    }
+
+    for key, register in expected.items():
+        assert items[key]["register"] == register
+        assert items[key]["name"].endswith(f"({register})")
+        assert "workbook" in items[key]["source"]
+
+    assert items["T06"]["confidence"] == "uncertain"
+
+
 def test_hitemp_model_selection_is_read_only() -> None:
     """H98 selects the unit model and must never be written from Home Assistant."""
     h98 = _hitemp_items()["H98"]

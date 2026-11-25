@@ -88,6 +88,9 @@ async def test_names_start_with_the_code(
     assert hass.states.get(entity_id(hass, "sensor", "O07", device.code)).name == (
         "Hot Water O07 EEV position"
     )
+    assert hass.states.get(entity_id(hass, "sensor", "T01", device.code)).name == (
+        "Hot Water T01 Ambient temperature (2019)"
+    )
 
 
 @pytest.mark.usefixtures("fake_cloud")

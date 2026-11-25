@@ -1302,25 +1302,25 @@
         "name": "S06 Second heating source input"
       },
       "1245226668902080512_t01": {
-        "name": "T01 Ambient temperature"
+        "name": "T01 Ambient temperature (2019)"
       },
       "1245226668902080512_t02": {
-        "name": "T02 Bottom water temperature (return)"
+        "name": "T02 Bottom water temperature (2020)"
       },
       "1245226668902080512_t03": {
-        "name": "T03 Top water temperature (flow)"
+        "name": "T03 Top water temperature (2021)"
       },
       "1245226668902080512_t04": {
-        "name": "T04 Coil temperature"
+        "name": "T04 Coil temperature (2022)"
       },
       "1245226668902080512_t05": {
-        "name": "T05 Suction temperature"
+        "name": "T05 Suction temperature (2023)"
       },
       "1245226668902080512_t10": {
-        "name": "T10 Displayed water temperature"
+        "name": "T10 Displayed water temperature (2025)"
       },
       "1245226668902080512_t06": {
-        "name": "T06 Discharge temperature"
+        "name": "T06 Discharge temperature (2024)"
       },
       "1245226668902080512_t11": {
         "name": "T11 Out-of-range protection count"

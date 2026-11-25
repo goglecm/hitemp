@@ -49,9 +49,9 @@ views:
             title: Water temperatures and target
             hours_to_show: 24
             entities:
-              - entity: sensor.heat_pump_t03_top_water_temperature_flow
+              - entity: sensor.heat_pump_t03_top_water_temperature_2021
                 name: Flow (T03)
-              - entity: sensor.heat_pump_t02_bottom_water_temperature_return
+              - entity: sensor.heat_pump_t02_bottom_water_temperature_2020
                 name: Return (T02)
               - entity: number.heat_pump_r01_target_water_temperature
                 name: Target (R01)
@@ -80,11 +80,11 @@ views:
             title: Air, coil and suction
             hours_to_show: 24
             entities:
-              - entity: sensor.heat_pump_t01_ambient_temperature
+              - entity: sensor.heat_pump_t01_ambient_temperature_2019
                 name: Ambient (T01)
-              - entity: sensor.heat_pump_t04_coil_temperature
+              - entity: sensor.heat_pump_t04_coil_temperature_2022
                 name: Coil (T04)
-              - entity: sensor.heat_pump_t05_suction_temperature
+              - entity: sensor.heat_pump_t05_suction_temperature_2023
                 name: Suction (T05)
           - type: history-graph
             title: Compressor and discharge
@@ -94,7 +94,7 @@ views:
                 name: Compressor
               - entity: binary_sensor.heat_pump_defrost_2051_bit_2
                 name: Defrost
-              - entity: sensor.heat_pump_t06_discharge_temperature
+              - entity: sensor.heat_pump_t06_discharge_temperature_2024
                 name: Discharge (T06)
           - type: history-graph
             title: Superheat against its target

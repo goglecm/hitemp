@@ -1433,7 +1433,7 @@
   },
   {
     "key": "T01",
-    "name": "T01 Ambient temperature",
+    "name": "T01 Ambient temperature (2019)",
     "app_name": "Ambient temperature",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1444,13 +1444,15 @@
     "app_range": "Steps of 0.5C",
     "app_value": "18.0C",
     "confidence": "observed",
-    "description": "Air temperature at the heat pump's air inlet.",
-    "guidance": "The booster settings R08-R10 and the compressor limit R12 compare against it.",
-    "cloud_type": "TEMP1"
+    "description": "Air temperature at the heat pump's air inlet. Workbook register 2019 (T01), the ambient sensor on AI01.",
+    "guidance": "The booster settings R08-R10 and the compressor limit R12 compare against it. Seen on a Trianco S300 and named Ambient in the HiTemp app.",
+    "cloud_type": "TEMP1",
+    "register": "2019",
+    "source": ["workbook", "app", "s300", "evoheat-manual"]
   },
   {
     "key": "T02",
-    "name": "T02 Bottom water temperature (return)",
+    "name": "T02 Bottom water temperature (2020)",
     "app_name": "Bottom temperature",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1461,13 +1463,15 @@
     "app_range": "Steps of 0.5C",
     "app_value": "33.5C",
     "confidence": "observed",
-    "description": "Water temperature at the controller's bottom sensor. The controller is made for a tank with bottom and top sensors; on your installation it is on the return pipe.",
+    "description": "Water temperature at the controller's bottom sensor (workbook T02, register 2020). The controller is made for a tank with bottom and top sensors; on this installation it is on the return pipe.",
     "guidance": "With R17 = NO this sensor controls heating: it starts when T02 is R03 below R01.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "register": "2020",
+    "source": ["workbook", "app", "s300"]
   },
   {
     "key": "T03",
-    "name": "T03 Top water temperature (flow)",
+    "name": "T03 Top water temperature (2021)",
     "app_name": "Top temperature",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1478,13 +1482,15 @@
     "app_range": "Steps of 0.5C",
     "app_value": "37.0C",
     "confidence": "observed",
-    "description": "Water temperature at the controller's top sensor; on your installation the flow pipe.",
+    "description": "Water temperature at the controller's top sensor (workbook T03, register 2021); on this installation the flow pipe.",
     "guidance": "T03 - T02 is the Water ΔT sensor. T10 showed the same value as T03 throughout your log.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "register": "2021",
+    "source": ["workbook", "app", "s300"]
   },
   {
     "key": "T04",
-    "name": "T04 Coil temperature",
+    "name": "T04 Coil temperature (2022)",
     "app_name": "Coil temperature",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1495,13 +1501,15 @@
     "app_range": "Steps of 0.5C",
     "app_value": "0.5C",
     "confidence": "documented",
-    "description": "Temperature of the evaporator coil, the coil the air passes through.",
+    "description": "Temperature of the evaporator coil (workbook T04, register 2022), the coil the air passes through.",
     "guidance": "Defrost starts and ends on this temperature (D01, D02). It is also the reference for the superheat (T05 - T04).",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "register": "2022",
+    "source": ["workbook", "app", "evoheat-manual"]
   },
   {
     "key": "T05",
-    "name": "T05 Suction temperature",
+    "name": "T05 Suction temperature (2023)",
     "app_name": "Suction temperature",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1512,13 +1520,15 @@
     "app_range": "Steps of 0.5C",
     "app_value": "-13.0C",
     "confidence": "documented",
-    "description": "Refrigerant temperature in the suction pipe, the gas going from the coil to the compressor. It is not an air temperature.",
+    "description": "Refrigerant temperature in the suction pipe (workbook T05, register 2023), the gas going from the coil to the compressor. It is not an air temperature.",
     "guidance": "With E01 = Automatic the EEV keeps T05 - T04 (superheat) at E02. When T05 stays well below T04, as in your log (about -13 °C against 0 °C), the superheat is negative and the EEV closes to its minimum E04. The data can't tell whether that comes from the sensor placement or the refrigerant circuit; ask an installer rather than changing E02 or E04.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "register": "2023",
+    "source": ["workbook", "app", "evoheat-manual"]
   },
   {
     "key": "T10",
-    "name": "T10 Displayed water temperature",
+    "name": "T10 Displayed water temperature (2025)",
     "app_name": "Temperature value shown on APP/display",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1529,22 +1539,26 @@
     "app_range": "Steps of 0.5C",
     "app_value": "37.0C",
     "confidence": "observed",
-    "description": "Water temperature shown on the display and in the app; the climate entity's current temperature.",
+    "description": "Water temperature shown on the display and in the app (workbook T10, register 2025); the climate entity's current temperature.",
     "guidance": "Equal to T03 throughout your log.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "register": "2025",
+    "source": ["workbook", "app", "s300"]
   },
   {
     "key": "T06",
-    "name": "T06 Discharge temperature",
+    "name": "T06 Discharge temperature (2024)",
     "platform": "sensor",
     "device_class": "temperature",
     "unit_of_measurement": "°C",
     "state_class": "measurement",
     "entity_category": null,
-    "confidence": "observed",
-    "description": "Not shown in the app. The vendor parameter file calls it the solar temperature.",
-    "guidance": "On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while T07 reads -30.0, the value of a missing sensor. That fits the compressor discharge (hot gas) temperature, which the manual's P81/E04 protections watch.",
-    "cloud_type": "TEMP1"
+    "confidence": "uncertain",
+    "description": "Workbook register 2024 (T06) is the solar collector temperature. This entity keeps the discharge name because that is how the value behaves on a Trianco S300.",
+    "guidance": "On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while a missing sensor reads about -30 °C. That fits compressor discharge (hot gas), not a solar collector. Treat the workbook name and the S300 behaviour as a conflict.",
+    "cloud_type": "TEMP1",
+    "register": "2024",
+    "source": ["workbook", "s300"]
   },
   {
     "key": "T11",
