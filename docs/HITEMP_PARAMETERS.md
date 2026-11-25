@@ -732,7 +732,7 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 | `L28`  | L28 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
 
 - **T21 Settings write count (2027)**: Counter that rises with every settings change, equal to register 2027. It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes.
-- **2051 Status bits**: Packed status word: bit 2 is set during defrost, bit 1 has always been set.
+- **State1 Function status (2051)**: Packed status word: bit 2 is set during defrost, bit 1 has always been set.
 - **1142 Flags**: Flag word, all bits clear so far.
 - **1151 Flags**: Flag word. It read 1 after the app's Align the device time.
 - **2085 Flags**: Flag word, all bits clear so far.
@@ -755,7 +755,7 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 | `T07`                | T07 Discharge temperature (unconfirmed)  | `-30.0`            |                      | sensor, Sensors, disabled    | uncertain  |
 | `T09`                | T09 Compressor temperature (unconfirmed) | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
 
-- **2050 Operating status bits**: Packed operating status word (State0), shown as its 16 bits (bit 0 is the last). Official bit meanings and the S300 observations are listed under [Live data](#live-data-the-app-heartbeat); prefer the workbook for bit 2 (low pressure) and bit 5 (external heat source) over earlier coil/always-on guesses.
+- **State0 Operating status (2050)**: Packed operating status word (State0), shown as its 16 bits (bit 0 is the last). Official bit meanings and the S300 observations are listed under [Live data](#live-data-the-app-heartbeat); prefer the workbook for bit 2 (low pressure) and bit 5 (external heat source) over earlier coil/always-on guesses.
 - **Compressor running (2050 bit 8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID.
 - **Electric heater on (2050 bit 9)**: Bit 9 of the operating status word 2050. Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.
 - **Defrost (2051 bit 2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.

@@ -89,13 +89,13 @@
         "name": "Power Heat pump on (1011)"
       },
       "1245226668902080512_compressor_running": {
-        "name": "Compressor running (2050 bit 8)"
+        "name": "O01 Compressor running (2050.8)"
       },
       "1245226668902080512_electric_heater_on": {
-        "name": "Electric heater on (2050 bit 9)"
+        "name": "O02 Heater running (2050.9)"
       },
       "1245226668902080512_defrost": {
-        "name": "Defrost (2051 bit 2)"
+        "name": "O14 Defrost running (2051.2)"
       },
       "1245226668902080512_vacation_mode": {
         "name": "L01 Vacation enabled (1129.0)"
@@ -1332,7 +1332,7 @@
         "name": "T12 EEPROM write count empty"
       },
       "1245226668902080512_2050": {
-        "name": "2050 Operating status bits"
+        "name": "State0 Operating status (2050)"
       },
       "1245226668902080512_m06": {
         "name": "M06 Booster mode (1014)"
@@ -1407,7 +1407,7 @@
         "name": "L13 Timer 2 stop minute (1141)"
       },
       "1245226668902080512_2051": {
-        "name": "2051 Status bits"
+        "name": "State1 Function status (2051)"
       },
       "1245226668902080512_1142": {
         "name": "1142 Flags"
@@ -1428,10 +1428,10 @@
         "name": "L28 Flags"
       },
       "1245226668902080512_superheat": {
-        "name": "Superheat (T05 - T04)"
+        "name": "T05-T04 Superheat (2023-2022)"
       },
       "1245226668902080512_water_delta_t": {
-        "name": "Water ΔT (T03 - T02)"
+        "name": "T03-T02 Water temperature rise (2021-2020)"
       }
     },
     "number": {

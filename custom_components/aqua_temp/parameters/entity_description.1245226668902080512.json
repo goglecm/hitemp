@@ -1716,45 +1716,57 @@
   },
   {
     "key": "2050",
-    "name": "2050 Operating status bits",
+    "name": "State0 Operating status (2050)",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "confidence": "uncertain",
-    "description": "Packed operating status word, shown as its 16 bits (bit 0 is the last).",
-    "guidance": "Decoded on a Trianco S300: bit 0 while the unit is switched off, bit 5 always, bit 8 while the compressor runs, bit 9 while the electric heater is on, bit 10 only during defrost (probably the 4-way valve), bits 11 and 12 while the fan runs (both clear during defrost, when the manual says the fan stops). Bit 2 cleared when the coil (T04) fell to about -3 °C (D01) and set again after a defrost or a stop; its meaning isn't confirmed. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), bits 8 and 9 behaved the same."
+    "confidence": "observed",
+    "description": "Packed operating status. Bit 0 is the right-most digit. Outputs and switches O01-O06 and S01-S06 live in this word.",
+    "guidance": "Decoded on a Trianco S300: bit 0 while the unit is switched off, bit 5 always, bit 8 while the compressor runs, bit 9 while the electric heater is on, bit 10 only during defrost (probably the 4-way valve), bits 11 and 12 while the fan runs (both clear during defrost, when the manual says the fan stops). Bit 2 cleared when the coil (T04) fell to about -3 °C (D01) and set again after a defrost or a stop; its meaning isn't confirmed. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), bits 8 and 9 behaved the same.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2050",
+    "named_code": "State0"
   },
   {
     "key": "compressor_running",
-    "name": "Compressor running (2050 bit 8)",
+    "name": "O01 Compressor running (2050.8)",
     "platform": "binary_sensor",
     "device_class": "running",
     "bit_of": ["2050", 8],
     "entity_category": null,
     "confidence": "observed",
-    "description": "Bit 8 of the operating status word 2050.",
-    "guidance": "Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID."
+    "description": "Bit 8 of register 2050. 1 means the compressor is running.",
+    "guidance": "Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID.",
+    "source": ["workbook", "s300", "ha-230400", "darksplat"],
+    "register": "2050.8",
+    "named_code": "O01"
   },
   {
     "key": "electric_heater_on",
-    "name": "Electric heater on (2050 bit 9)",
+    "name": "O02 Heater running (2050.9)",
     "platform": "binary_sensor",
     "device_class": "running",
     "bit_of": ["2050", 9],
     "entity_category": null,
     "confidence": "observed",
-    "description": "Bit 9 of the operating status word 2050.",
-    "guidance": "Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode."
+    "description": "Bit 9 of register 2050. 1 means the electric heater is running.",
+    "guidance": "Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2050.9",
+    "named_code": "O02"
   },
   {
     "key": "defrost",
-    "name": "Defrost (2051 bit 2)",
+    "name": "O14 Defrost running (2051.2)",
     "platform": "binary_sensor",
     "bit_of": ["2051", 2],
     "entity_category": null,
     "confidence": "observed",
-    "description": "Bit 2 of the status word 2051, set while the heat pump defrosts.",
-    "guidance": "On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one."
+    "description": "Bit 2 of register 2051. 1 means a defrost is running. The workbook calls this bit O16; the app code is O14.",
+    "guidance": "On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2051.2",
+    "named_code": "O14"
   },
   {
     "key": "M06",
@@ -2074,12 +2086,15 @@
   },
   {
     "key": "2051",
-    "name": "2051 Status bits",
+    "name": "State1 Function status (2051)",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
     "confidence": "observed",
-    "description": "Packed status word: bit 2 is set during defrost, bit 1 has always been set."
+    "description": "Packed function status. Bit 2 is defrost. Bit 1 has stayed set while the Wi-Fi module is online.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2051",
+    "named_code": "State1"
   },
   {
     "key": "1142",
@@ -2143,7 +2158,7 @@
   },
   {
     "key": "superheat",
-    "name": "Superheat (T05 - T04)",
+    "name": "T05-T04 Superheat (2023-2022)",
     "platform": "sensor",
     "device_class": "temperature_delta",
     "unit_of_measurement": "°C",
@@ -2151,12 +2166,15 @@
     "difference_of": ["T05", "T04"],
     "entity_category": null,
     "confidence": "documented",
-    "description": "Suction minus coil temperature (T05 - T04), calculated by Home Assistant.",
-    "guidance": "The value E02 targets. Negative values mean the suction pipe reads colder than the coil, which keeps the EEV at E04."
+    "description": "Suction temperature minus coil temperature, T05 (2023) minus T04 (2022).",
+    "guidance": "The value E02 targets. Negative values mean the suction pipe reads colder than the coil, which keeps the EEV at E04.",
+    "source": ["workbook", "s300"],
+    "register": "2023-2022",
+    "named_code": "T05-T04"
   },
   {
     "key": "water_delta_t",
-    "name": "Water ΔT (T03 - T02)",
+    "name": "T03-T02 Water temperature rise (2021-2020)",
     "platform": "sensor",
     "device_class": "temperature_delta",
     "unit_of_measurement": "°C",
@@ -2164,7 +2182,10 @@
     "difference_of": ["T03", "T02"],
     "entity_category": null,
     "confidence": "observed",
-    "description": "Top minus bottom water temperature (T03 - T02), calculated by Home Assistant.",
-    "guidance": "On your installation, how much the water warms up through the heat pump. Heat pumps are usually designed for about 5 °C; a much larger value can mean low water flow."
+    "description": "Top water temperature minus bottom water temperature, T03 (2021) minus T02 (2020).",
+    "guidance": "On your installation, how much the water warms up through the heat pump. Heat pumps are usually designed for about 5 °C; a much larger value can mean low water flow.",
+    "source": ["s300", "workbook"],
+    "register": "2021-2020",
+    "named_code": "T03-T02"
   }
 ]

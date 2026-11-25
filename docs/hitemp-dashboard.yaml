@@ -36,8 +36,8 @@ views:
               - sensor.heat_pump_cloud_status
               - binary_sensor.heat_pump_fault
               - sensor.heat_pump_fault_details
-              - binary_sensor.heat_pump_compressor_running_2050_bit_8
-              - binary_sensor.heat_pump_electric_heater_on_2050_bit_9
+              - binary_sensor.heat_pump_o01_compressor_running_2050_8
+              - binary_sensor.heat_pump_o02_heater_running_2050_9
               - sensor.heat_pump_code_changes
               - sensor.heat_pump_t21_settings_write_count_2027
 
@@ -59,7 +59,7 @@ views:
             title: Water temperature rise
             hours_to_show: 24
             entities:
-              - entity: sensor.heat_pump_water_dt_t03_t02
+              - entity: sensor.heat_pump_t03_t02_water_temperature_rise_2021_2020
                 name: Flow - return
           - type: statistics-graph
             title: Compressor hours per day
@@ -90,9 +90,9 @@ views:
             title: Compressor and discharge
             hours_to_show: 24
             entities:
-              - entity: binary_sensor.heat_pump_compressor_running_2050_bit_8
+              - entity: binary_sensor.heat_pump_o01_compressor_running_2050_8
                 name: Compressor
-              - entity: binary_sensor.heat_pump_defrost_2051_bit_2
+              - entity: binary_sensor.heat_pump_o14_defrost_running_2051_2
                 name: Defrost
               - entity: sensor.heat_pump_t06_discharge_temperature_2024
                 name: Discharge (T06)
@@ -100,7 +100,7 @@ views:
             title: Superheat against its target
             hours_to_show: 24
             entities:
-              - entity: sensor.heat_pump_superheat_t05_t04
+              - entity: sensor.heat_pump_t05_t04_superheat_2023_2022
                 name: Superheat (T05 - T04)
               - entity: number.heat_pump_e02_target_superheat_1056
                 name: Target (E02)
