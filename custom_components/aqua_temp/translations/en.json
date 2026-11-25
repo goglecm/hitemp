@@ -153,6 +153,30 @@
       },
       "1245226668902080512_vacation_mode": {
         "name": "L01 Vacation enabled (1129.0)"
+      },
+      "1245226668902080512_2050_bit_00": {
+        "name": "Reg 2050 bit 0 (S01 remote switch open)"
+      },
+      "1245226668902080512_2050_bit_01": {
+        "name": "Reg 2050 bit 1 (S02 overheat switch closed)"
+      },
+      "1245226668902080512_2050_bit_02": {
+        "name": "Reg 2050 bit 2 (S03 low pressure switch open)"
+      },
+      "1245226668902080512_2050_bit_03": {
+        "name": "Reg 2050 bit 3 (S04 high pressure switch open)"
+      },
+      "1245226668902080512_2050_bit_04": {
+        "name": "Reg 2050 bit 4 (S05 heater boost switch open)"
+      },
+      "1245226668902080512_2050_bit_05": {
+        "name": "Reg 2050 bit 5 (S06 external heat switch active)"
+      },
+      "1245226668902080512_2050_bit_06": {
+        "name": "Reg 2050 bit 6"
+      },
+      "1245226668902080512_2050_bit_07": {
+        "name": "Reg 2050 bit 7"
       }
     },
     "climate": {

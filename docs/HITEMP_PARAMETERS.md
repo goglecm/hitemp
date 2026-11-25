@@ -841,3 +841,16 @@ data request and appear in the diagnostics, without entities, until their
 meaning is known:
 
 `2011`, `2012`, `2013`, `2014`, `2026`, `2027`, `2057`, `2058`, `2059`, `2068`, `2069`, `2070`, `2071`, `O18`, `O19`, `O21`, `O22`, `O23`, `O24`, `O25`, `O26`, `O27`, `O28`, `M07`, `M12`, `M13`, `M14`, `M15`, `M16`, `R02`, `R11`, `R13`, `R16`, `H09`, `H16`, `E06`, `C01`, `C02`, `C03`, `C05`, `C06`, `C07`, `C08`, `C09`, `D10`, `D11`, `D12`, `D13`, `F01`, `F02`, `F04`, `F05`, `F06`, `F07`, `F09`, `F10`, `F11`, `F12`, `F13`, `L29`, `L30`, `L31`, `L32`
+
+## Added register bits
+
+| Code          | Name                                             | Confidence |
+| ------------- | ------------------------------------------------ | ---------- |
+| `2050_bit_00` | Reg 2050 bit 0 (S01 remote switch open)          | observed   |
+| `2050_bit_01` | Reg 2050 bit 1 (S02 overheat switch closed)      | uncertain  |
+| `2050_bit_02` | Reg 2050 bit 2 (S03 low pressure switch open)    | documented |
+| `2050_bit_03` | Reg 2050 bit 3 (S04 high pressure switch open)   | documented |
+| `2050_bit_04` | Reg 2050 bit 4 (S05 heater boost switch open)    | documented |
+| `2050_bit_05` | Reg 2050 bit 5 (S06 external heat switch active) | uncertain  |
+| `2050_bit_06` | Reg 2050 bit 6                                   | uncertain  |
+| `2050_bit_07` | Reg 2050 bit 7                                   | uncertain  |
