@@ -17,6 +17,9 @@ are recorded. Writable controls keep their previous defaults: daily setpoints
 are enabled, and installer settings stay disabled until you enable them.
 The register meanings and the sources they come from are in
 [docs/HW211_REGISTER_COMPARISON.md](docs/HW211_REGISTER_COMPARISON.md).
+Since 4.4.0 the named inputs and outputs (`S01`-`S06`, `O01`-`O06`,
+`O10`-`O15`) are binary sensors rather than sensors, so they have new entity
+IDs; update dashboards and automations that used the old `sensor.` ones.
 
 This repository, [goglecm/hitemp](https://github.com/goglecm/hitemp), is the
 maintained continuation of
@@ -190,9 +193,9 @@ Assistant too.
 - Avoid automations that change a parameter every few minutes: every change
   is probably written to the controller's memory, which wears out.
 
-Each entity name starts with its code, for example `R01 Target water
-temperature`. Values with labels read like the app plus the raw value, for
-example `Standard (0)`.
+Each entity name starts with its code and ends with its register, for
+example `R01 Target water temperature (1104)`. Values with labels read like
+the app plus the raw value, for example `Standard (0)`.
 
 ### Graphs and dashboard
 
@@ -204,25 +207,30 @@ with the controls, water temperatures against `R01`, superheat against `E02`,
 the EEV position, daily compressor hours, and status and faults. To use it,
 add a dashboard, open **Edit dashboard → Raw configuration editor**, paste the
 file, and replace `heat_pump` in the entity IDs with the start of your heat
-pump's entity IDs. Installs from before 4.1.0 keep their old entity IDs; pick
-those in the card editors instead.
+pump's entity IDs. The IDs are those of a new install. Installs from before
+4.4.0 keep their old entity IDs, and so do the compressor, heater and defrost
+sensors of installs from before 4.4.1; pick those in the card editors
+instead.
 
 ### Live data
 
 The cloud only keeps some values while the heat pump uploads live data, which
 the app requests while it is open. With **Request live data** on (the
 default), the integration sends the same request before each poll and reads
-further codes in a separate request. On HiTemp the switch inputs `S01`-`S06`
-and outputs `O01`-`O06` stay empty, so they show as unavailable.
+further codes in a separate request. On HiTemp the cloud leaves the named
+switch inputs `S01`-`S06` and outputs `O01`-`O06` empty.
 
-A full scan of another heat pump with the same product ID found the
-operating state in packed status words instead. The integration reads
-register `2050` and shows its compressor and electric heater bits as
-**Compressor running** and **Electric heater on**, plus the operating mode,
-fan speed and a discharge temperature. These are not yet confirmed on every
-model: compare them with the app, and attach the diagnostics of the heat pump
-to an [issue](https://github.com/goglecm/hitemp/issues) to help confirm
-them. The guide explains the details.
+The operating state is in the packed status words `2050` and `2051`
+instead, which the HiTemp app also reads. The integration shows each named
+input and output, and every other bit of those words, as a binary sensor,
+for example `S01 Remote switch open (2050.0)` and
+`O01 Compressor running (2050.8)`. The compressor, heater and defrost are
+also shown in the Sensors section as **Compressor running (2050.8)**,
+**Heater running (2050.9)** and **Defrost running (2051.2)**. Not every bit
+is confirmed on every model: compare them with the app, and attach the
+diagnostics of the heat pump to an
+[issue](https://github.com/goglecm/hitemp/issues) to help confirm them. The
+guide explains the details.
 
 ### Finding out what a setting changes
 

@@ -23,7 +23,7 @@ Changing the wrong setting can damage the heat pump or stop it from heating.
 - Note the current value before you change anything; the `app_value`
   attribute of each entity has the value seen in the app on 2026-11-12.
 - Every change is probably stored in the controller's memory, which allows a
-  limited number of writes (`T12` counts them). Don't let automations change
+  limited number of writes (`T21` counts them). Don't let automations change
   settings every few minutes; your log showed `R01` being written that often.
 - If in doubt, ask an installer.
 
@@ -79,14 +79,37 @@ See also:
 
 ## How Home Assistant shows the codes
 
-- **Names** start with the code and a short name, for example
-  `R01 Target water temperature`. The app's own name is kept in the
-  `app_name` attribute.
+- **Names** start with the code and a short name and end with the HW211
+  register in brackets, where the `dtu_wifi` workbook gives one. The app's
+  own name is kept in the `app_name` attribute.
+
+  | Kind                         | Pattern                                     | Example                                   |
+  | ---------------------------- | ------------------------------------------- | ----------------------------------------- |
+  | Code with a register         | `{Code} {Meaning} ({register})`             | `T01 Ambient temperature (2019)`          |
+  | Code without a register      | `{Code} {Meaning}`                          | `T07 Discharge temperature unconfirmed`   |
+  | Register without a code      | `Reg {register} {Meaning}`                  | `Reg 1158 Heartbeat echo`                 |
+  | Named bit                    | `{Code} {Meaning} ({register}.{bit})`       | `O01 Compressor running (2050.8)`         |
+  | Raw bit                      | `Reg {register} bit {n} ({Code} {meaning})` | `Reg 2050 bit 8 (O01 compressor running)` |
+  | Raw bit of a code            | `{Code} bit {n}`                            | `T08 bit 3`                               |
+  | Several registers            | `{Code}-{Code} {Meaning} ({first}-{last})`  | `L06-L07 Timer 1 start (1134-1135)`       |
+  | Status sensor of a named bit | `{Meaning} ({register}.{bit})`              | `Compressor running (2050.8)`             |
+
+  Running means the compressor, a heater, the fan or a defrost is working;
+  on or active means an output or a stage; open or closed is a switch input,
+  with the polarity the workbook gives. Where the workbook gives none, the
+  name doesn't claim one.
+
+- **Enabled by default:** every sensor and binary sensor, so its value is
+  recorded, including diagnostics and codes whose meaning is unknown. Of the
+  writable controls, only the daily ones (`mode_real`, `M17`, `R01`, `R03`,
+  `R04`, `R05`, `R06`) are enabled; installer settings start disabled.
 - **Sections** on the device page:
-  - **Controls**: the climate entity, `R01`, `R03`, `R04`, `R05`, `R06` and
-    `M17`, the settings meant for daily use.
-  - **Sensors**: live temperatures, the EEV position, running hours and the
-    calculated superheat and water ΔT.
+  - **Controls**: the climate entity, `mode_real`, `R01`, `R03`, `R04`,
+    `R05`, `R06` and `M17`, the settings meant for daily use.
+  - **Sensors**: live temperatures (including the unconfirmed `T07` and
+    `T09`), the EEV position, `O29`, running hours, whether the compressor,
+    heater and defrost are running, vacation mode, and the calculated
+    superheat and water temperature rise.
   - **Configuration**: installer settings you can write, disabled by default.
   - **Diagnostic**: settings you can only read, switch inputs, outputs,
     status and faults.
@@ -94,8 +117,9 @@ See also:
   both the app's text and the raw number are visible. A raw value the app has
   no label for reads like `1 (not listed in the app)`.
 - **Attributes** on every parameter: `code`, `app_name`, `level` (password),
-  `range` and `app_value` as seen in the app, `confidence`, `description` and
-  `guidance`. Labelled values also have `raw_value`. The static attributes
+  `range` and `app_value` as seen in the app, `confidence`, `description`,
+  `guidance`, `register` and `source` (the [source ids](#source-ids) behind
+  the meaning). Labelled values also have `raw_value`. The static attributes
   aren't stored in the history database.
 - **Unavailable** means the cloud returned no usable value for the code, or
   the heat pump is offline. Code-based entities never show Unknown.
@@ -124,19 +148,20 @@ See also:
   your installation the bottom sensor is on the return pipe and the top
   sensor on the flow pipe. `S01` is the remote on/off input, the `DI05` and
   `GND` terminals in the manual, which are linked at the factory and can be
-  wired to a thermostat or volt-free contact. The cloud never reports `S01`
-  itself, but opening the contacts sets `Power` to 0 and closing them sets it
-  to 1, so the Power sensor and the climate entity follow them. Each switch is
+  wired to a thermostat or volt-free contact. The named code `S01` stays
+  empty, but bit 0 of `2050` follows the contacts (the S01 Remote switch open
+  (2050.0) sensor). Opening them sets `Power` to 0 and closing them sets it to
+  1, so the Power sensor and the climate entity follow them. Each switch is
   written to the controller's memory (see `T21` and `H01`). After stopping, the
   compressor waits 3 minutes before it starts again.
 - **Operating modes** (Trianco S300 manual, app names in brackets): Eco (heat
   pump only), Standard (Hybrid: electric heater after `R06` minutes if the
   target isn't reached), High demand (Fast heating: electric heater without
   the delay), Intelligent (chooses between them by ambient temperature) and
-  Vacation. `mode_real` holds the chosen mode (0 Intelligent, 2 Eco, 3
-  Hybrid, 4 Fast heating) and can be set from Home Assistant. `Mode` shows
-  the active mode, 7 while on vacation, when `mode_real` keeps the mode to
-  return to.
+  Vacation. `mode_real` (1013) holds the chosen mode (0 Intelligent, 2 Eco,
+  3 Hybrid, 4 Fast heating) and can be set from Home Assistant. `Mode`
+  (1012), which the workbook calls the requested mode, read 7 while on
+  vacation on a Trianco S300, when `mode_real` kept the mode to return to.
 - **Timer page.** Vacation mode sets bit 0 of `1129` and stores the date in
   `L02`-`L04` (year 20YY, month, day). The two timers keep their on and off
   times in `L06`-`L13` (hour, minute pairs) and their four switches in bits
@@ -151,8 +176,9 @@ See also:
   the heater presumably replaces the heat pump below `R08` (-5.0 °C on your
   unit); without a heater fitted, that would leave no heating. With `R04 =
 YES` the heater heats to `R05` instead of `R01`. `S05` (heater
-  acceleration) probably starts it without the delay, `M06` is probably the
-  app's Electric heating switch, and `O09` counts its hours.
+  acceleration) probably starts it without the delay, bit 9 of `2050` shows
+  it running, and `O09` counts its hours. `M06` (1014, booster mode) stayed 0
+  on a Trianco S300 while the heater ran, so it isn't the heater state.
 - **Expansion valve (EEV).** With `E01 = Automatic` the EEV starts at `E03`
   when the compressor starts, then opens or closes to keep the superheat
   (`T05 - T04`) at `E02`, never closing below `E04`. During defrost it moves
@@ -166,8 +192,8 @@ YES` the heater heats to `R05` instead of `R01`. `S05` (heater
 - **Disinfection (anti-legionella).** `G01`-`G04`: heat to `G01` every `G04`
   days at `G03` o'clock for `G02` minutes. `G02 = 0` most likely means it
   never runs.
-- **Fan.** The controller runs the fan while heating (`O29` is probably its
-  speed). `M17` sets what it does once the target is reached: low, high or
+- **Fan.** The controller runs the fan while heating (`O29` may be its
+  speed, but it read 0 on a Trianco S300). `M17` sets what it does once the target is reached: low, high or
   off (Trianco S300 manual). `O04` and `O05` are the high and low speed
   outputs, and `/01` sets what `OUT05` drives.
 - **Units.** `H07` is the unit the heat pump reports in. Home Assistant's
@@ -194,7 +220,8 @@ YES` the heater heats to `R05` instead of `R01`. `S05` (heater
 - **T06** isn't shown in the app. The vendor file calls it the solar
   temperature, but it rose from about 63 to 87 °C while the compressor ran
   and fell when it stopped, which fits the compressor discharge (hot gas)
-  temperature. It is disabled by default until that is confirmed.
+  temperature. The entity keeps the discharge name with confidence
+  uncertain until that is confirmed.
 - **T10** (the displayed temperature) always equalled `T03`.
 - **Fan:** `M17` changed from 1 to 2 after the climate entity's fan mode was
   set to high. According to the manual that only changes what the fan does
@@ -285,33 +312,32 @@ What we know for HiTemp:
   `2051`**, and does **not** request named `O01`–`O06` or any `S*` (it does
   poll scalars like `O07`–`O09` and, oddly, lone **`O03`**). The app UI that
   shows compressor / heater / fan therefore almost certainly **unpacks
-  `2050`/`2051` on the client**. Empty named O/S in Home Assistant is expected
-  for this product, not a failed heartbeat.
+  `2050`/`2051` on the client**. The named O/S codes staying empty in the
+  cloud is expected for this product, not a failed heartbeat.
 
 The scan of an Indol PV300 with the same product ID by
 [victor987/hitemp](https://github.com/victor987/hitemp) already found that the
 S codes never return data and that operating state lives in packed words such
 as `2050` (bit 8 compressor, bit 9 heater). The integration therefore reads
-`2050`/`2051` and exposes compressor, heater and defrost bits as binary
-sensors, and reads the other codes that scan found (listed at the end of this
-guide) for diagnostics. Prefer those bit sensors over the empty named O/S
-entities.
+`2050` and `2051` and shows each named O and S code, and every other bit of
+those words, as a binary sensor. It also reads the other codes that scan
+found (listed at the end of this guide) for diagnostics.
 
 The bits decoded so far on a Trianco S300. Official meanings come from the
-EVO270 `dtu_wifi` workbook (see [HW211 register comparison](HW211_REGISTER_COMPARISON.md));
-S300 log notes that conflict with the workbook are marked **uncertain**.
+EVO270 `dtu_wifi` workbook (see [HW211 register comparison](HW211_REGISTER_COMPARISON.md)).
+The confidence is that of the entity for the bit.
 
-| Word   | Bit    | Official (`dtu_wifi`)                                | S300 observation                                                               | Confidence |
-| ------ | ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
-| `2050` | 0      | S01 remote on/off (**1=OP open**)                    | set while the unit is switched off (contacts open)                             | observed   |
-| `2050` | 2      | **S03 Low pressure switch open (2050.2)** (**1=OP**) | earlier “coil above about −3 °C (`D01`)” guess — **prefer official**; re-check | uncertain  |
-| `2050` | 5      | **S06 External heat switch active (2050.5)**         | often/always set so far; why on this install is unknown                        | uncertain  |
-| `2050` | 8      | O01 compressor                                       | the compressor runs (**Compressor running**)                                   | observed   |
-| `2050` | 9      | O02 electrical heater                                | the electric heater is on (**Electric heater on**)                             | observed   |
-| `2050` | 10     | O03 4-way valve                                      | set while defrosting                                                           | observed   |
-| `2050` | 11, 12 | O04 fan high / O05 fan low (or solar)                | the fan runs; which bit is which speed isn't known yet                         | uncertain  |
-| `2051` | 1      | DTU&WIFI online                                      | always set so far while online                                                 | observed   |
-| `2051` | 2      | Defrost                                              | defrosting (**Defrost**)                                                       | observed   |
+| Word   | Bit    | Official (`dtu_wifi`)                    | S300 observation                                                                    | Confidence |
+| ------ | ------ | ---------------------------------------- | ----------------------------------------------------------------------------------- | ---------- |
+| `2050` | 0      | S01 remote on/off (1 = OP, open)         | set while the unit is switched off (contacts open)                                  | observed   |
+| `2050` | 2      | S03 low pressure switch (1 = OP, open)   | cleared when the coil fell to about −3 °C in one log; not yet matched to the switch | documented |
+| `2050` | 5      | S06 external heat source, polarity blank | often set so far; why on this install is unknown                                    | uncertain  |
+| `2050` | 8      | O01 compressor                           | the compressor runs (**Compressor running (2050.8)**)                               | observed   |
+| `2050` | 9      | O02 electrical heater                    | the electric heater is on (**Heater running (2050.9)**)                             | observed   |
+| `2050` | 10     | O03 4-way valve                          | set while defrosting                                                                | observed   |
+| `2050` | 11, 12 | O04 fan high / O05 fan low (or solar)    | the fan runs; which bit is which speed isn't known yet                              | uncertain  |
+| `2051` | 1      | O15 DTU&WIFI online (app code O13)       | always set so far while online                                                      | observed   |
+| `2051` | 2      | O16 defrost (app code O14)               | defrosting (**Defrost running (2051.2)**)                                           | observed   |
 
 To find out, download the diagnostics of the heat pump while it runs. The
 `live_data` section lists the result of the last heartbeat, which codes had a
@@ -397,11 +423,11 @@ session expired, and the integration logs in again by itself.
 | ----- | ---------------------------------------------- | ----------------------------- | ---------- | --------------- | -------------------- | ---------------- | ---------- |
 | `R01` | Target temp                                    | 38.0C to 60.0C, steps of 0.5C | Set by you | `60.0`          | TEMP1, 38 to 75      | number, Controls | documented |
 | `R03` | Hysteresis of heat pump startup(bottom sensor) | 1.0C to 20.0C, steps of 0.5C  | 5.0C       | `5.0`           | TEMP1, 1 to 20       | number, Controls | documented |
-| `R04` | Enable R05 as setpoint of booster?             | NO, YES                       | NO         | `0`             | ENUM, 0 to 1         | select, Controls | observed   |
-| `R05` | Setpoint of booster                            | 30.0C to 90.0C, steps of 0.5C | 55.0C      | `55.0`          | TEMP1, 30 to 90      | number, Controls | observed   |
+| `R04` | Enable R05 as setpoint of booster?             | NO, YES                       | NO         | `0`             | ENUM, 0 to 1         | select, Controls | documented |
+| `R05` | Setpoint of booster                            | 30.0C to 90.0C, steps of 0.5C | 55.0C      | `55.0`          | TEMP1, 30 to 90      | number, Controls | documented |
 | `R06` | Booster startup delay                          | 0Min to 450Min, steps of 1Min | 200Min     | `200`           | DIGI4, 0 to 90       | number, Controls | documented |
 
-- **R01 Target water temperature (1104)**: Target water temperature, the main control. The climate entity sets the same value. Heating starts when the controlling sensor (T02 bottom, or T03 top with R17 = YES) drops R03 below R01, and stops at R01. Each change is probably stored in the controller's memory, which allows a limited number of writes (see T12), so avoid automations that change R01 every few minutes.
+- **R01 Target water temperature (1104)**: Target water temperature, the main control. The climate entity sets the same value. Heating starts when the controlling sensor (T02 bottom, or T03 top with R17 = YES) drops R03 below R01, and stops at R01. Each change is probably stored in the controller's memory, which allows a limited number of writes (see T21), so avoid automations that change R01 every few minutes.
 - **R03 Start hysteresis bottom (1106)**: How far below R01 the bottom sensor (T02) must drop before heating restarts. A small value keeps the water closer to R01 but starts the compressor more often; very small values cause short cycling. Your heat pump uses 5.0 °C.
 - **R04 Use R05 as booster setpoint (1107)**: Whether the booster heats to its own setpoint R05 instead of R01. Values: NO (0), YES (1).
 - **R05 Booster setpoint (1108)**: Water temperature the booster heats to when R04 = YES.
@@ -419,7 +445,7 @@ session expired, and the integration logs in again by itself.
 | `E04` | Minimal opening position of EEV | 0N to 500N                     | 100N      | `100`           | DIGI2, 0 to 500      | number, Configuration, disabled | documented |
 
 - **E01 EEV control mode (1055)**: Whether the electronic expansion valve (EEV) regulates itself (Automatic) or not (Manual). 1 = Automatic is confirmed by the PHNIX PC1001 manual; the app lists the options in a different order. Values: Manual (0), Automatic (1). Keep Automatic. In Manual the valve no longer follows the superheat target E02, which can return liquid refrigerant to the compressor or starve the coil.
-- **E02 Target superheat (1056)**: Superheat the EEV aims for: suction minus coil temperature (T05 - T04). Compare it with the Superheat sensor. A higher target closes the valve further (less refrigerant, safer for the compressor, less heat); a lower one opens it. Change it only with an installer: too little superheat can return liquid to the compressor.
+- **E02 Target superheat (1056)**: Superheat the EEV aims for: suction minus coil temperature (T05 - T04). Compare it with T05-T04 Superheat (2023-2022). A higher target closes the valve further (less refrigerant, safer for the compressor, less heat); a lower one opens it. Change it only with an installer: too little superheat can return liquid to the compressor.
 - **E03 EEV start position (1057)**: EEV opening when the compressor starts. The valve starts at E03 (O07 reads 240 at start-up) and then regulates towards E02.
 - **E04 EEV minimum position (1058)**: Smallest opening the EEV may regulate down to. Your EEV often sits at this minimum because the measured superheat is below E02. Lowering E04 lets it close further and reduces the refrigerant flow; don't change it to chase the superheat reading without an installer.
 
@@ -427,7 +453,7 @@ session expired, and the integration logs in again by itself.
 
 | Code  | App name                     | App range  | App value | Raw cloud value | Cloud type and range | Home Assistant                  | Confidence |
 | ----- | ---------------------------- | ---------- | --------- | --------------- | -------------------- | ------------------------------- | ---------- |
-| `H98` | Model selection              | 0X08, 0X18 | 0X08      | `2`             | ENUM, 2 to 3         | sensor, Diagnostic              | uncertain  |
+| `H98` | Model selection              | 0X08, 0X18 | 0X08      | `2`             | ENUM, 2 to 3         | sensor, Diagnostic              | documented |
 | `H99` | Compensate to the shown temp | NO, YES    | NO        | `0`             | ENUM, 0 to 1         | select, Configuration, disabled | uncertain  |
 
 - **H98 Model selection (1074)**: Hardware model the controller is configured for. Values: 0X08 (2), 0X18 (3). Never change it: it tells the controller which hardware it drives. Your heat pump reports 2, which the app shows as 0X08. The cloud declares a range of 2-3, which supports 3 = 0X18, but that isn't confirmed.
@@ -449,11 +475,11 @@ The raw values of live readings are the range seen in the log.
 
 - **T01 Ambient temperature (2019)**: Air temperature at the heat pump's air inlet. The booster settings R08-R10 and the compressor limit R12 compare against it.
 - **T02 Bottom water temperature (2020)**: Water temperature at the controller's bottom sensor. The controller is made for a tank with bottom and top sensors; on your installation it is on the return pipe. With R17 = NO this sensor controls heating: it starts when T02 is R03 below R01.
-- **T03 Top water temperature (2021)**: Water temperature at the controller's top sensor; on your installation the flow pipe. T03 - T02 is the Water ΔT sensor. T10 showed the same value as T03 throughout your log.
+- **T03 Top water temperature (2021)**: Water temperature at the controller's top sensor; on your installation the flow pipe. T03 - T02 is the T03-T02 Water temperature rise (2021-2020) sensor. T10 showed the same value as T03 throughout your log.
 - **T04 Coil temperature (2022)**: Temperature of the evaporator coil, the coil the air passes through. Defrost starts and ends on this temperature (D01, D02). It is also the reference for the superheat (T05 - T04).
 - **T05 Suction temperature (2023)**: Refrigerant temperature in the suction pipe, the gas going from the coil to the compressor. It is not an air temperature. With E01 = Automatic the EEV keeps T05 - T04 (superheat) at E02. When T05 stays well below T04, as in your log (about -13 °C against 0 °C), the superheat is negative and the EEV closes to its minimum E04. The data can't tell whether that comes from the sensor placement or the refrigerant circuit; ask an installer rather than changing E02 or E04.
 - **T10 Displayed water temperature (2025)**: Water temperature shown on the display and in the app; the climate entity's current temperature. Equal to T03 throughout your log.
-- **O07 EEV position (2060)**: Current opening of the electronic expansion valve (EEV), 0-500 steps. On your heat pump it reads 480 (E05) while stopped or defrosting, starts at E03 (240) when heating begins, then works down towards E04 (100) as it regulates the superheat. Plot it with the Superheat sensor and E02.
+- **O07 EEV position (2060)**: Current opening of the electronic expansion valve (EEV), 0-500 steps. On your heat pump it reads 480 (E05) while stopped or defrosting, starts at E03 (240) when heating begins, then works down towards E04 (100) as it regulates the superheat. Plot it with T05-T04 Superheat (2023-2022) and E02.
 
 ## Codes from the app, password 066 (installer)
 
@@ -523,12 +549,12 @@ Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'cl
 
 | Code  | App name                                            | App range                         | App value      | Raw cloud value | Cloud type and range | Home Assistant                  | Confidence |
 | ----- | --------------------------------------------------- | --------------------------------- | -------------- | --------------- | -------------------- | ------------------------------- | ---------- |
-| `H01` | Remember the power status of device when power down | NO, YES                           | YES            | `1`             | ENUM, 0 to 1         | select, Configuration, disabled | observed   |
-| `H03` | Heating source                                      | Air source                        | Air source     | `0`             | ENUM, 0 to 0         | sensor, Diagnostic              | observed   |
-| `H07` | Temperature unit                                    | Celsius degree, Fahrenheit degree | Celsius degree | `0`             | ENUM, 0 to 1         | sensor, Diagnostic              | observed   |
-| `H30` | Device address                                      | 1 to 255, steps of 1              | 1              | `1`             | DIGI1, 1 to 255      | sensor, Diagnostic              | observed   |
-| `H31` | Intelligent control mode                            | Centralized control, DTU&WIFI     | DTU&WIFI       | `1`             | ENUM, 0 to 1         | sensor, Diagnostic              | observed   |
-| `H32` | Circle of submitting data to Cloud                  | 1Min to 255Min, steps of 1Min     | 1Min           | `1`             | DIGI1, 1 to 255      | number, Configuration, disabled | observed   |
+| `H01` | Remember the power status of device when power down | NO, YES                           | YES            | `1`             | ENUM, 0 to 1         | select, Configuration, disabled | documented |
+| `H03` | Heating source                                      | Air source                        | Air source     | `0`             | ENUM, 0 to 0         | sensor, Diagnostic              | documented |
+| `H07` | Temperature unit                                    | Celsius degree, Fahrenheit degree | Celsius degree | `0`             | ENUM, 0 to 1         | sensor, Diagnostic              | documented |
+| `H30` | Device address                                      | 1 to 255, steps of 1              | 1              | `1`             | DIGI1, 1 to 255      | sensor, Diagnostic              | documented |
+| `H31` | Intelligent control mode                            | Centralized control, DTU&WIFI     | DTU&WIFI       | `1`             | ENUM, 0 to 1         | sensor, Diagnostic              | documented |
+| `H32` | Circle of submitting data to Cloud                  | 1Min to 255Min, steps of 1Min     | 1Min           | `1`             | DIGI1, 1 to 255      | number, Configuration, disabled | documented |
 
 - **H01 Remember power state (1067)**: Whether the heat pump returns to its previous on/off state after a power cut. Values: NO (0), YES (1). YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.
 - **H03 Heating source (1069)**: Type of heat source. The app only offers Air source. Values: Air source (0).
@@ -541,19 +567,19 @@ Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'cl
 
 Several values are outside the app's own range, which the app shows as they are.
 
-| Code  | App name                                                | App range                     | App value | Raw cloud value | Cloud type and range | Home Assistant               | Confidence |
-| ----- | ------------------------------------------------------- | ----------------------------- | --------- | --------------- | -------------------- | ---------------------------- | ---------- |
-| `N01` | The sensor to control solar water pump                  | Bottom, Top                   | Bottom    | `0`             | ENUM, 0 to 1         | sensor, Diagnostic, disabled | uncertain  |
-| `N02` | Longest running time of solar water pump                | 1Min to 30Min, steps of 1Min  | 10Min     | `10`            | DIGI1, 1 to 30       | sensor, Diagnostic, disabled | uncertain  |
-| `N03` | Temp hysteresis of solar water pump                     | 0.0C to 20.0C, steps of 0.5C  | 10.0C     | `10.0`          | TEMP1, 0 to 20       | sensor, Diagnostic, disabled | uncertain  |
-| `N04` | Activate the nighttime temp decreases mode              | NO, YES                       | YES       | `1`             | ENUM, 0 to 1         | sensor, Diagnostic, disabled | uncertain  |
-| `N05` | Startup point of the nighttime temp decreases mode      | 0H to 23H, steps of 1H        | 2H        | `2`             | DIGI1, 0 to 23       | sensor, Diagnostic, disabled | uncertain  |
-| `N06` | Shutdown point of the nighttime temp decreases mode     | 0H to 23H, steps of 1H        | 3H        | `3`             | DIGI1, 0 to 23       | sensor, Diagnostic, disabled | uncertain  |
-| `N07` | Startup temp of decreasing solar water temp             | 40.0C to 90.0C, steps of 0.5C | -25.0C    | `-25.0`         | TEMP1, 40 to 90      | sensor, Diagnostic, disabled | uncertain  |
-| `N08` | Temp hysteresis of stopping decreasing solar water temp | 1.0C to 40.0C, steps of 0.5C  | -30.0C    | `-30.0`         | TEMP1, 1 to 40       | sensor, Diagnostic, disabled | uncertain  |
-| `N09` | Solar water releasing temp                              | 50.0C to 90.0C, steps of 0.5C | -30.0C    | `-30.0`         | TEMP1, 50 to 90      | sensor, Diagnostic, disabled | uncertain  |
-| `N10` | Shutdown temp of solar water pump                       | 50.0C to 90.0C, steps of 0.5C | -30.0C    | `-30.0`         | TEMP1, 50 to 90      | sensor, Diagnostic, disabled | uncertain  |
-| `N11` | Working mode of solar water pump                        | Dependent, Independent        | Dependent | `0`             | ENUM, 0 to 1         | sensor, Diagnostic, disabled | uncertain  |
+| Code  | App name                                                | App range                     | App value | Raw cloud value | Cloud type and range | Home Assistant     | Confidence |
+| ----- | ------------------------------------------------------- | ----------------------------- | --------- | --------------- | -------------------- | ------------------ | ---------- |
+| `N01` | The sensor to control solar water pump                  | Bottom, Top                   | Bottom    | `0`             | ENUM, 0 to 1         | sensor, Diagnostic | uncertain  |
+| `N02` | Longest running time of solar water pump                | 1Min to 30Min, steps of 1Min  | 10Min     | `10`            | DIGI1, 1 to 30       | sensor, Diagnostic | uncertain  |
+| `N03` | Temp hysteresis of solar water pump                     | 0.0C to 20.0C, steps of 0.5C  | 10.0C     | `10.0`          | TEMP1, 0 to 20       | sensor, Diagnostic | uncertain  |
+| `N04` | Activate the nighttime temp decreases mode              | NO, YES                       | YES       | `1`             | ENUM, 0 to 1         | sensor, Diagnostic | uncertain  |
+| `N05` | Startup point of the nighttime temp decreases mode      | 0H to 23H, steps of 1H        | 2H        | `2`             | DIGI1, 0 to 23       | sensor, Diagnostic | uncertain  |
+| `N06` | Shutdown point of the nighttime temp decreases mode     | 0H to 23H, steps of 1H        | 3H        | `3`             | DIGI1, 0 to 23       | sensor, Diagnostic | uncertain  |
+| `N07` | Startup temp of decreasing solar water temp             | 40.0C to 90.0C, steps of 0.5C | -25.0C    | `-25.0`         | TEMP1, 40 to 90      | sensor, Diagnostic | uncertain  |
+| `N08` | Temp hysteresis of stopping decreasing solar water temp | 1.0C to 40.0C, steps of 0.5C  | -30.0C    | `-30.0`         | TEMP1, 1 to 40       | sensor, Diagnostic | uncertain  |
+| `N09` | Solar water releasing temp                              | 50.0C to 90.0C, steps of 0.5C | -30.0C    | `-30.0`         | TEMP1, 50 to 90      | sensor, Diagnostic | uncertain  |
+| `N10` | Shutdown temp of solar water pump                       | 50.0C to 90.0C, steps of 0.5C | -30.0C    | `-30.0`         | TEMP1, 50 to 90      | sensor, Diagnostic | uncertain  |
+| `N11` | Working mode of solar water pump                        | Dependent, Independent        | Dependent | `0`             | ENUM, 0 to 1         | sensor, Diagnostic | uncertain  |
 
 - **N01 Solar pump control sensor (1080)**: App name: 'The sensor to control solar water pump'. Values: Bottom (0), Top (1).
 - **N02 Solar pump maximum run time (1081)**: App name: 'Longest running time of solar water pump'.
@@ -579,13 +605,13 @@ Several values are outside the app's own range, which the app shows as they are.
 | `R08` | Setpoint of ambient temp to activate booster to replace heatpump | -20.0C to 10.0C, steps of 0.5C | -5.0C     | `-5.0`          | TEMP1, -20 to 10     | number, Configuration, disabled | documented |
 | `R09` | Setpoint of ambient temp to activate booster without delay       | 0.0C to 30.0C, steps of 0.5C   | 5.0C      | `5.0`           | TEMP1, 0 to 30       | number, Configuration, disabled | documented |
 | `R10` | Setpoint of ambient temp to activate booster with delay          | 10.0C to 40.0C, steps of 0.5C  | 25.0C     | `25.0`          | TEMP1, 10 to 40      | number, Configuration, disabled | documented |
-| `R12` | Ambient temp of shutting down compressor compulsively            | -30.0C to -5.0C, steps of 0.5C | -15.0C    | `-15.0`         | TEMP1, -30 to -5     | sensor, Diagnostic              | observed   |
-| `R14` | The target temp of second heating source                         | 10.0C to 60.0C, steps of 0.5C  | -10.0C    | `-10.0`         | TEMP1, 38 to 78      | sensor, Diagnostic              | uncertain  |
-| `R15` | Maximal ambient temp of working compressor                       | 55.0C to 80.0C, steps of 0.5C  | 78.0C     | `78.0`          | TEMP1, 55 to 80      | sensor, Diagnostic              | uncertain  |
-| `R17` | Enable top sensor to control compressor?                         | NO, YES                        | NO        | `0`             | ENUM, 0 to 1         | sensor, Diagnostic              | observed   |
-| `R18` | Hysteresis of heat pump startup(top sensor)                      | 1.0C to 20.0C, steps of 0.5C   | 5.0C      | `5.0`           | TEMP1, 1 to 20       | sensor, Diagnostic              | observed   |
-| `R19` | Setpoint 1 of ambient temp to stop compressor                    | 30.0C to 90.0C, steps of 0.5C  | 65.0C     | `65.0`          | TEMP1, 30 to 90      | sensor, Diagnostic              | uncertain  |
-| `R20` | Setpoint 2 of ambient temp to stop compressor                    | 30.0C to 90.0C, steps of 0.5C  | 55.0C     | `55.0`          | TEMP1, 30 to 90      | sensor, Diagnostic              | uncertain  |
+| `R12` | Ambient temp of shutting down compressor compulsively            | -30.0C to -5.0C, steps of 0.5C | -15.0C    | `-15.0`         | TEMP1, -30 to -5     | sensor, Diagnostic              | documented |
+| `R14` | The target temp of second heating source                         | 10.0C to 60.0C, steps of 0.5C  | -10.0C    | `-10.0`         | TEMP1, 38 to 78      | sensor, Diagnostic              | documented |
+| `R15` | Maximal ambient temp of working compressor                       | 55.0C to 80.0C, steps of 0.5C  | 78.0C     | `78.0`          | TEMP1, 55 to 80      | sensor, Diagnostic              | documented |
+| `R17` | Enable top sensor to control compressor?                         | NO, YES                        | NO        | `0`             | ENUM, 0 to 1         | sensor, Diagnostic              | documented |
+| `R18` | Hysteresis of heat pump startup(top sensor)                      | 1.0C to 20.0C, steps of 0.5C   | 5.0C      | `5.0`           | TEMP1, 1 to 20       | sensor, Diagnostic              | documented |
+| `R19` | Setpoint 1 of ambient temp to stop compressor                    | 30.0C to 90.0C, steps of 0.5C  | 65.0C     | `65.0`          | TEMP1, 30 to 90      | sensor, Diagnostic              | documented |
+| `R20` | Setpoint 2 of ambient temp to stop compressor                    | 30.0C to 90.0C, steps of 0.5C  | 55.0C     | `55.0`          | TEMP1, 30 to 90      | sensor, Diagnostic              | documented |
 
 - **R07 Booster replaces heat pump (1110)**: Whether the booster takes over from the heat pump below the R08 ambient temperature. Values: NO (0), YES (1). Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted. With YES and no booster fitted, the heat pump presumably stops heating below R08 (-5.0 °C on your unit).
 - **R08 Booster only below ambient (1111)**: Lower ambient temperature (T01) limit of the High demand band of Intelligent mode; below it the electric heater presumably replaces the heat pump (R07 = YES).
@@ -607,13 +633,13 @@ Several values are outside the app's own range, which the app shows as they are.
 
 The app shows `CL` (closed) or `OP` (open).
 
-| Code  | App name                              | App range | App value | Raw cloud value | Cloud type and range | Home Assistant | Confidence |
-| ----- | ------------------------------------- | --------- | --------- | --------------- | -------------------- | -------------- | ---------- |
-| `S01` | Remote ON/OFF switch                  | CL, OP    | CL        | bit of 2050     |                      | binary_sensor  | observed   |
-| `S03` | Low pressure switch                   | CL, OP    | OP        | bit of 2050     |                      | binary_sensor  | documented |
-| `S04` | High pressure switch                  | CL, OP    | CL        | bit of 2050     |                      | binary_sensor  | documented |
-| `S05` | Accelerate the running time of heater | CL, OP    | CL        | bit of 2050     |                      | binary_sensor  | documented |
-| `S06` | Second heating source                 | CL, OP    | OP        | bit of 2050     |                      | binary_sensor  | uncertain  |
+| Code  | App name                              | App range | App value | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
+| ----- | ------------------------------------- | --------- | --------- | --------------- | -------------------- | ------------------------- | ---------- |
+| `S01` | Remote ON/OFF switch                  | CL, OP    | CL        | bit of 2050     |                      | binary_sensor, Diagnostic | observed   |
+| `S03` | Low pressure switch                   | CL, OP    | OP        | bit of 2050     |                      | binary_sensor, Diagnostic | documented |
+| `S04` | High pressure switch                  | CL, OP    | CL        | bit of 2050     |                      | binary_sensor, Diagnostic | documented |
+| `S05` | Accelerate the running time of heater | CL, OP    | CL        | bit of 2050     |                      | binary_sensor, Diagnostic | documented |
+| `S06` | Second heating source                 | CL, OP    | OP        | bit of 2050     |                      | binary_sensor, Diagnostic | uncertain  |
 
 - **S01 Remote switch open (2050.0)**: Remote on/off terminals, DI05 and GND in the manual. The named cloud code stays empty. This sensor reads bit 0 of register 2050. The workbook says 1 = OP (open) and 0 = CL (closed). On a Trianco S300, opening those contacts set Power to 0 and set this bit; closing them set Power to 1 and cleared the bit.
 - **S03 Low pressure switch open (2050.2)**: Low pressure switch of the refrigerant circuit, bit 2 of register 2050. The workbook says 1 = OP (open) and 0 = CL (closed). Open is not necessarily a fault; the app showed OP while the heat pump ran normally.
@@ -627,16 +653,16 @@ The app shows `CL` (closed) or `OP` (open).
 
 The app shows `ON` or `OFF` for the outputs.
 
-| Code  | App name                                | App range | App value | Raw cloud value | Cloud type and range | Home Assistant     | Confidence |
-| ----- | --------------------------------------- | --------- | --------- | --------------- | -------------------- | ------------------ | ---------- |
-| `O01` | Compressor                              | ON, OFF   | ON        | empty           |                      | sensor, Diagnostic | uncertain  |
-| `O02` | Electrical heater                       | ON, OFF   | OFF       | empty           |                      | sensor, Diagnostic | uncertain  |
-| `O03` | 4-way valve                             | ON, OFF   | ON        | empty           |                      | sensor, Diagnostic | uncertain  |
-| `O04` | Fan high speed                          | ON, OFF   | OFF       | empty           |                      | sensor, Diagnostic | uncertain  |
-| `O05` | Fan low speed                           | ON, OFF   | OFF       | empty           |                      | sensor, Diagnostic | uncertain  |
-| `O06` | Reserve/solar pump/solar valve pump     | ON, OFF   | OFF       | empty           |                      | sensor, Diagnostic | uncertain  |
-| `O08` | Accumulative running time of compressor |           | 211H      | `210` to `215`  | DIGI1                | sensor, Sensors    | observed   |
-| `O09` | Accumulative running time of booster    |           | 0H        | `0`             | DIGI1                | sensor, Sensors    | observed   |
+| Code  | App name                                | App range | App value | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
+| ----- | --------------------------------------- | --------- | --------- | --------------- | -------------------- | ------------------------- | ---------- |
+| `O01` | Compressor                              | ON, OFF   | ON        | bit of 2050     |                      | binary_sensor, Diagnostic | observed   |
+| `O02` | Electrical heater                       | ON, OFF   | OFF       | bit of 2050     |                      | binary_sensor, Diagnostic | observed   |
+| `O03` | 4-way valve                             | ON, OFF   | ON        | bit of 2050     |                      | binary_sensor, Diagnostic | observed   |
+| `O04` | Fan high speed                          | ON, OFF   | OFF       | bit of 2050     |                      | binary_sensor, Diagnostic | uncertain  |
+| `O05` | Fan low speed                           | ON, OFF   | OFF       | bit of 2050     |                      | binary_sensor, Diagnostic | uncertain  |
+| `O06` | Reserve/solar pump/solar valve pump     | ON, OFF   | OFF       | bit of 2050     |                      | binary_sensor, Diagnostic | documented |
+| `O08` | Accumulative running time of compressor |           | 211H      | `210` to `215`  | DIGI1                | sensor, Sensors           | observed   |
+| `O09` | Accumulative running time of booster    |           | 0H        | `0`             | DIGI1                | sensor, Sensors           | observed   |
 
 - **O01 Compressor running (2050.8)**: Compressor output. Values: Off (0), On (1).
 - **O02 Heater running (2050.9)**: Electric heater (booster) output. Values: Off (0), On (1).
@@ -662,7 +688,7 @@ The app's settings also have an **Electric heating** switch and an **Align the d
 | `mode_real` | Select Mode             | Intelligent Mode, Eco Mode, Hybrid Mode, Fast Heating Mode | Eco Mode  | `2`             | ENUM, 0 to 4         | select, Controls | observed   |
 | `M17`       | Ventilation / Air Speed | Ventilation ON/OFF, Air Speed Low or High                  |           | `1` to `2`      | ENUM                 | select, Controls | documented |
 
-- **mode_real Operating mode (1013)**: Operating mode, as on the app's Select Mode page. Hybrid is the manual's Standard mode and Fast heating its High demand mode. Values: Intelligent (0), Eco (2), Hybrid (3), Fast heating (4). Eco: heat pump only. Hybrid: the electric heater helps if the target isn't reached after R06 minutes. Fast heating: the electric heater runs at once. Intelligent: chooses between them by the ambient temperature (R08-R10). Without an electric heater fitted, Eco is the mode to use. Vacation is set on the app's Timer page and shows as Mode 7 and the Vacation mode sensor. The values were confirmed by switching modes in the app on a Trianco S300.
+- **mode_real Operating mode (1013)**: Operating mode, as on the app's Select Mode page. Hybrid is the manual's Standard mode and Fast heating its High demand mode. Values: Intelligent (0), Eco (2), Hybrid (3), Fast heating (4). Eco: heat pump only. Hybrid: the electric heater helps if the target isn't reached after R06 minutes. Fast heating: the electric heater runs at once. Intelligent: chooses between them by the ambient temperature (R08-R10). Without an electric heater fitted, Eco is the mode to use. Vacation is set on the app's Timer page and shows as Mode 7 and the L01 Vacation enabled (1129.0) sensor. The values were confirmed by switching modes in the app on a Trianco S300.
 - **M17 Fan after heating (1016)**: What the fan does once the water has reached its target temperature: run at low speed, run at high speed, or stop (Trianco S300 manual). It is the app's Ventilation switch and Air Speed knob. Values: Off (0), Low (1), High (2). A ventilation setting: Low or High keeps air moving through the unit after heating stops, Off lets the fan stop. While heating the controller runs the fan itself, so this doesn't change the fan speed during heating or the efficiency. The climate entity's fan modes write the same code.
 
 ## Codes not shown in the app
@@ -671,18 +697,18 @@ The app's settings also have an **Electric heating** switch and an **Align the d
 
 Their names come from the vendor's parameter file, translated where it is Chinese.
 
-| Code  | Name in Home Assistant               | Raw cloud value  | Cloud type and range | Home Assistant               | Confidence |
-| ----- | ------------------------------------ | ---------------- | -------------------- | ---------------------------- | ---------- |
-| `T06` | T06 Discharge temperature            | `40.5` to `87.0` | TEMP1                | sensor, Sensors              | observed   |
-| `T11` | T11 Out-of-range protection count    | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `T12` | T12 EEPROM write count               | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `S02` | S02 Overheat input (2050.1)          | bit of 2050      |                      | binary_sensor, Diagnostic    | uncertain  |
-| `O10` | O10 3V_DE output                     | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `O11` | O11 MV_DE output                     | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `O12` | O12 Shutdown output                  | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `O13` | O13 DTU/Wi-Fi online                 | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `O14` | O14 Defrost                          | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
-| `O15` | O15 High-temperature hot water stage | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
+| Code  | Name in Home Assistant              | Raw cloud value  | Cloud type and range | Home Assistant            | Confidence |
+| ----- | ----------------------------------- | ---------------- | -------------------- | ------------------------- | ---------- |
+| `T06` | T06 Discharge temperature (2024)    | `40.5` to `87.0` | TEMP1                | sensor, Sensors           | uncertain  |
+| `T11` | T11 Out-of-range count empty        | empty            |                      | sensor, Diagnostic        | uncertain  |
+| `T12` | T12 EEPROM write count empty        | empty            |                      | sensor, Diagnostic        | uncertain  |
+| `S02` | S02 Overheat input (2050.1)         | bit of 2050      |                      | binary_sensor, Diagnostic | uncertain  |
+| `O10` | O10 Anode 3V on (2050.14)           | bit of 2050      |                      | binary_sensor, Diagnostic | documented |
+| `O11` | O11 Anode MV on (2050.15)           | bit of 2050      |                      | binary_sensor, Diagnostic | documented |
+| `O12` | O12 Heating stopped (2051.0)        | bit of 2051      |                      | binary_sensor, Diagnostic | documented |
+| `O13` | O13 Wi-Fi link up (2051.1)          | bit of 2051      |                      | binary_sensor, Diagnostic | observed   |
+| `O14` | O14 Defrost running (2051.2)        | bit of 2051      |                      | binary_sensor, Diagnostic | observed   |
+| `O15` | O15 Hot water stage active (2051.3) | bit of 2051      |                      | binary_sensor, Diagnostic | documented |
 
 - **T06 Discharge temperature (2024)**: Not shown in the app. The vendor parameter file calls it the solar temperature. On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while T07 reads -30.0, the value of a missing sensor. That fits the compressor discharge (hot gas) temperature, which the manual's P81/E04 protections watch.
 - **T11 Out-of-range count empty**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
@@ -695,7 +721,9 @@ Their names come from the vendor's parameter file, translated where it is Chines
 - **O14 Defrost running (2051.2)**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1). Packed as `2051` bit 2 (workbook label O16; also exposed as **Defrost running (2051.2)**).
 - **O15 Hot water stage active (2051.3)**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1). Packed as `2051` bit 3 (workbook label O17).
 
-**T11, T12, O10–O15:** Named cloud codes stay empty on this product; live values are in `2050`/`2051` (same as O01–O06 / S*). See [Live data](#live-data-the-app-heartbeat).
+**T11, T12:** The named codes stay empty on this product. The counts are T20 (2026) and T21 (2027).
+
+**O10–O15:** The named codes stay empty on this product. These binary sensors read bits 14–15 of `2050` and bits 0–3 of `2051`, as O01–O06 and the S codes do. See [Live data](#live-data-the-app-heartbeat).
 
 ### Timer page
 
@@ -703,14 +731,14 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 
 | Code            | Name in Home Assistant            | Raw cloud value    | Cloud type and range | Home Assistant         | Confidence |
 | --------------- | --------------------------------- | ------------------ | -------------------- | ---------------------- | ---------- |
-| `vacation_mode` | L01 Vacation enabled (1129.0)     |                    |                      | binary_sensor, Sensors | observed   |
+| `vacation_mode` | L01 Vacation enabled (1129.0)     | bit of 1129        |                      | binary_sensor, Sensors | observed   |
 | `vacation_date` | L02-L04 Vacation date (1130-1132) |                    |                      | sensor, Diagnostic     | observed   |
 | `timer1_on`     | L06-L07 Timer 1 start (1134-1135) |                    |                      | sensor, Diagnostic     | observed   |
 | `timer1_off`    | L08-L09 Timer 1 stop (1136-1137)  |                    |                      | sensor, Diagnostic     | observed   |
 | `timer2_on`     | L10-L11 Timer 2 start (1138-1139) |                    |                      | sensor, Diagnostic     | observed   |
 | `timer2_off`    | L12-L13 Timer 2 stop (1140-1141)  |                    |                      | sensor, Diagnostic     | observed   |
-| `1133`          | 1133 Timer switches               | `0000000000000000` |                      | sensor, Diagnostic     | observed   |
-| `1129`          | 1129 Vacation flags               | `0000000000000000` |                      | sensor, Diagnostic     | observed   |
+| `1133`          | L05 Timer enables (1133)          | `0000000000000000` |                      | sensor, Diagnostic     | documented |
+| `1129`          | L01 Vacation flags (1129)         | `0000000000000000` |                      | sensor, Diagnostic     | documented |
 
 - **L01 Vacation enabled (1129.0)**: On while vacation mode is set on the app's Timer page. Turning vacation mode on in the app set this bit, changed Mode to 7 and stored the date in L02-L04; turning it off cleared the bit. Read-only.
 - **L02-L04 Vacation date (1130-1132)**: Date set for vacation mode on the app's Timer page. The app showed 28-05-2010 while L02-L04 read 10, 5 and 28. Read-only.
@@ -718,27 +746,27 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 - **L08-L09 Timer 1 stop (1136-1137)**: Off time of timer 1 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L09 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **L10-L11 Timer 2 start (1138-1139)**: On time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **L12-L13 Timer 2 stop (1140-1141)**: Off time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
-- **L05 Timer enables (1133)**: The on/off switches of the app's two timers, as bits. Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet.
+- **L05 Timer enables (1133)**: The on/off switches of the app's two timers, as bits. The workbook gives bits 0-3 as timer 1 start, timer 1 stop, timer 2 start and timer 2 stop. Switching on all four timer switches in the app set bits 0-3 and switching them off cleared them, so that order hasn't been checked one switch at a time.
 - **L01 Vacation flags (1129)**: Flag word whose bit 0 is vacation mode.
 
 ### Status and flag words
 
-| Code   | Name in Home Assistant     | Raw cloud value    | Cloud type and range | Home Assistant               | Confidence |
-| ------ | -------------------------- | ------------------ | -------------------- | ---------------------------- | ---------- |
-| `T21`  | T21 Settings write counter | `3136`             |                      | sensor, Diagnostic           | observed   |
-| `2051` | 2051 Status bits           | `0000000000000010` |                      | sensor, Diagnostic           | observed   |
-| `1142` | 1142 Flags                 | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
-| `1151` | 1151 Flags                 | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
-| `2085` | 2085 Flags                 | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
-| `T08`  | T08 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
-| `F03`  | F03 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
-| `L28`  | L28 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
+| Code   | Name in Home Assistant          | Raw cloud value    | Cloud type and range | Home Assistant     | Confidence |
+| ------ | ------------------------------- | ------------------ | -------------------- | ------------------ | ---------- |
+| `T21`  | T21 Settings write count (2027) | `3136`             |                      | sensor, Diagnostic | observed   |
+| `2051` | State1 Function status (2051)   | `0000000000000010` |                      | sensor, Diagnostic | observed   |
+| `1142` | Reg 1142 Flags                  | `0000000000000000` |                      | sensor, Diagnostic | uncertain  |
+| `1151` | M11 Clock apply (1151)          | `0000000000000000` |                      | sensor, Diagnostic | documented |
+| `2085` | Fault0 Fault bits (2085)        | `0000000000000000` |                      | sensor, Diagnostic | documented |
+| `T08`  | T08 Flags                       | `0000000000000000` |                      | sensor, Diagnostic | uncertain  |
+| `F03`  | F03 Flags                       | `0000000000000000` |                      | sensor, Diagnostic | uncertain  |
+| `L28`  | L28 Flags                       | `0000000000000000` |                      | sensor, Diagnostic | uncertain  |
 
 - **T21 Settings write count (2027)**: Counter that rises with every settings change, equal to register 2027. It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes.
 - **State1 Function status (2051)**: Packed status word: bit 2 is set during defrost, bit 1 has always been set.
 - **Reg 1142 Flags**: Flag word, all bits clear so far.
 - **M11 Clock apply (1151)**: Flag word. It read 1 after the app's Align the device time.
-- **Fault0 Fault bits (2085)**: Flag word, all bits clear so far.
+- **Fault0 Fault bits (2085)**: Fault word, all bits clear so far. The workbook's sensor and protection faults for bits 0-5, 8, 9 and 13 are listed under [Added register bits](#added-register-bits).
 - **T08 Flags**: Sensor status flags on an Indol PV300 with the same product ID; all clear so far.
 - **F03 Flags**: Configuration flags, all clear so far.
 - **L28 Flags**: Schedule flags, all clear so far.
@@ -747,23 +775,23 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 
 These come from the scan of an Indol PV300 with the same product ID. The status bits have since been checked on a Trianco S300; the rest is not confirmed there.
 
-| Code                 | Name in Home Assistant                   | Raw cloud value    | Cloud type and range | Home Assistant               | Confidence |
-| -------------------- | ---------------------------------------- | ------------------ | -------------------- | ---------------------------- | ---------- |
-| `2050`               | 2050 Operating status bits               | `0001100100100000` |                      | sensor, Diagnostic           | uncertain  |
-| `compressor_running` | Compressor running (2050.8)              |                    |                      | binary_sensor, Sensors       | observed   |
-| `electric_heater_on` | Heater running (2050.9)                  |                    |                      | binary_sensor, Sensors       | observed   |
-| `defrost`            | Defrost running (2051.2)                 |                    |                      | binary_sensor, Sensors       | observed   |
-| `M06`                | M06 Electric heating                     | `0`                |                      | sensor, Diagnostic, disabled | uncertain  |
-| `O29`                | O29 Fan speed                            | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
-| `T07`                | T07 Discharge temperature (unconfirmed)  | `-30.0`            |                      | sensor, Sensors, disabled    | uncertain  |
-| `T09`                | T09 Compressor temperature (unconfirmed) | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
+| Code                 | Name in Home Assistant                 | Raw cloud value    | Cloud type and range | Home Assistant         | Confidence |
+| -------------------- | -------------------------------------- | ------------------ | -------------------- | ---------------------- | ---------- |
+| `2050`               | State0 Operating status (2050)         | `0001100100100000` |                      | sensor, Diagnostic     | observed   |
+| `compressor_running` | Compressor running (2050.8)            | bit of 2050        |                      | binary_sensor, Sensors | observed   |
+| `electric_heater_on` | Heater running (2050.9)                | bit of 2050        |                      | binary_sensor, Sensors | observed   |
+| `defrost`            | Defrost running (2051.2)               | bit of 2051        |                      | binary_sensor, Sensors | observed   |
+| `M06`                | M06 Booster mode (1014)                | `0`                |                      | sensor, Diagnostic     | uncertain  |
+| `O29`                | O29 Fan speed                          | `0`                |                      | sensor, Sensors        | uncertain  |
+| `T07`                | T07 Discharge temperature unconfirmed  | `-30.0`            |                      | sensor, Sensors        | uncertain  |
+| `T09`                | T09 Compressor temperature unconfirmed | `0`                |                      | sensor, Sensors        | uncertain  |
 
 - **State0 Operating status (2050)**: Packed operating status word (State0), shown as its 16 bits (bit 0 is the last). Official bit meanings and the S300 observations are listed under [Live data](#live-data-the-app-heartbeat); prefer the workbook for bit 2 (low pressure) and bit 5 (external heat source) over earlier coil/always-on guesses.
 - **Compressor running (2050.8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID. The protocol entity `O01` reads the same bit.
 - **Heater running (2050.9)**: Bit 9 of the operating status word 2050. Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.
 - **Defrost running (2051.2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.
-- **M06 Booster mode (1014)**: Electric heater request register. Values: Off (0), On (1). On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here.
-- **O29 Fan speed**: Fan speed in revolutions per minute. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default.
+- **M06 Booster mode (1014)**: Workbook register 1014, booster works independently: 1 on, 2 off, 0 instruction complete. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here.
+- **O29 Fan speed**: Fan speed in revolutions per minute. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it isn't confirmed there; it is recorded so the value can be compared.
 - **T07 Discharge temperature unconfirmed**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature.
 - **T09 Compressor temperature unconfirmed**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 30-40 °C and dropped when the compressor started.
 
@@ -777,41 +805,41 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 - **T05-T04 Superheat (2023-2022)**: Suction minus coil temperature (T05 - T04), calculated by Home Assistant. The value E02 targets. Negative values mean the suction pipe reads colder than the coil, which keeps the EEV at E04.
 - **T03-T02 Water temperature rise (2021-2020)**: Top minus bottom water temperature (T03 - T02), calculated by Home Assistant. On your installation, how much the water warms up through the heat pump. Heat pumps are usually designed for about 5 °C; a much larger value can mean low water flow.
 
-### Requested without an entity
+### Other requested codes
 
-The climate entity and the Power sensor use some of these; the rest were requested by the original integration and are kept for diagnostics.
+The climate entity and the Power sensor use some of these. The others were requested by the original integration or found on the app's Timer page, and each is a sensor so its value is recorded. Only `ver` and `software_code` have no entity.
 
-| Code            | Name in Home Assistant        | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
-| --------------- | ----------------------------- | --------------- | -------------------- | ------------------------- | ---------- |
-| `Power`         | Power                         | `1`             | ENUM, 0 to 1         | binary_sensor, Diagnostic | observed   |
-| `Mode`          | Mode                          | `2`             | ENUM, 0 to 7         | requested, no entity      |            |
-| `T20`           | T20 Out-of-range count (2026) | `1`             |                      | sensor, Diagnostic        | documented |
-| `L02`           | L02                           | `10`            |                      | requested, no entity      |            |
-| `L03`           | L03                           | `5`             |                      | requested, no entity      |            |
-| `L04`           | L04                           | `28`            |                      | requested, no entity      |            |
-| `L06`           | L06                           | `0`             |                      | requested, no entity      |            |
-| `L07`           | L07                           | `0`             |                      | requested, no entity      |            |
-| `L08`           | L08                           | `0`             |                      | requested, no entity      |            |
-| `L09`           | L09                           | `0`             |                      | requested, no entity      |            |
-| `L10`           | L10                           | `0`             |                      | requested, no entity      |            |
-| `L11`           | L11                           | `0`             |                      | requested, no entity      |            |
-| `L12`           | L12                           | `0`             |                      | requested, no entity      |            |
-| `L13`           | L13                           | `0`             |                      | requested, no entity      |            |
-| `Manual-mute`   | Manual-mute                   | empty           |                      | requested, no entity      |            |
-| `Set_Temp`      | Set_Temp                      | empty           |                      | requested, no entity      |            |
-| `MO6`           | MO6                           | empty           |                      | requested, no entity      |            |
-| `2074`          | 2074                          | `0`             | DIGI1                | requested, no entity      |            |
-| `2075`          | 2075                          | `0`             | DIGI1                | requested, no entity      |            |
-| `2076`          | 2076                          | `0`             | DIGI1                | requested, no entity      |            |
-| `2077`          | 2077                          | empty           |                      | requested, no entity      |            |
-| `1158`          | 1158                          | `0` to `23205`  | DIGI1                | requested, no entity      |            |
-| `1159`          | 1159                          | empty           |                      | requested, no entity      |            |
-| `2064`          | 2064                          | `0`             | DIGI1                | requested, no entity      |            |
-| `ver`           | Version                       | empty           |                      | requested, no entity      |            |
-| `software_code` | Software Code                 | empty           |                      | requested, no entity      |            |
+| Code            | Name in Home Assistant          | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
+| --------------- | ------------------------------- | --------------- | -------------------- | ------------------------- | ---------- |
+| `Power`         | Power Heat pump on (1011)       | `1`             | ENUM, 0 to 1         | binary_sensor, Diagnostic | observed   |
+| `Mode`          | Mode Requested mode (1012)      | `2`             | ENUM, 0 to 7         | sensor, Diagnostic        | observed   |
+| `T20`           | T20 Out-of-range count (2026)   | `1`             |                      | sensor, Diagnostic        | documented |
+| `L02`           | L02 Vacation year (1130)        | `10`            |                      | sensor, Diagnostic        | documented |
+| `L03`           | L03 Vacation month (1131)       | `5`             |                      | sensor, Diagnostic        | documented |
+| `L04`           | L04 Vacation day (1132)         | `28`            |                      | sensor, Diagnostic        | documented |
+| `L06`           | L06 Timer 1 start hour (1134)   | `0`             |                      | sensor, Diagnostic        | documented |
+| `L07`           | L07 Timer 1 start minute (1135) | `0`             |                      | sensor, Diagnostic        | documented |
+| `L08`           | L08 Timer 1 stop hour (1136)    | `0`             |                      | sensor, Diagnostic        | documented |
+| `L09`           | L09 Timer 1 stop minute (1137)  | `0`             |                      | sensor, Diagnostic        | documented |
+| `L10`           | L10 Timer 2 start hour (1138)   | `0`             |                      | sensor, Diagnostic        | documented |
+| `L11`           | L11 Timer 2 start minute (1139) | `0`             |                      | sensor, Diagnostic        | documented |
+| `L12`           | L12 Timer 2 stop hour (1140)    | `0`             |                      | sensor, Diagnostic        | documented |
+| `L13`           | L13 Timer 2 stop minute (1141)  | `0`             |                      | sensor, Diagnostic        | documented |
+| `Manual-mute`   | Manual-mute Fan mode empty      | empty           |                      | sensor, Diagnostic        | uncertain  |
+| `Set_Temp`      | Set_Temp Setpoint empty         | empty           |                      | sensor, Diagnostic        | uncertain  |
+| `MO6`           | MO6 Power empty                 | empty           |                      | sensor, Diagnostic        | uncertain  |
+| `2074`          | Reg 2074 Unknown                | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
+| `2075`          | L31 Unknown (2075)              | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
+| `2076`          | L32 Unknown (2076)              | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
+| `2077`          | Reg 2077 Unknown                | empty           |                      | sensor, Diagnostic        | uncertain  |
+| `1158`          | Reg 1158 Heartbeat echo         | `0` to `23205`  | DIGI1                | sensor, Diagnostic        | observed   |
+| `1159`          | Reg 1159 Unknown                | empty           |                      | sensor, Diagnostic        | uncertain  |
+| `2064`          | Reg 2064 Unknown                | `0`             | DIGI1                | sensor, Diagnostic        | uncertain  |
+| `ver`           | Version                         | empty           |                      | requested, no entity      |            |
+| `software_code` | Software Code                   | empty           |                      | requested, no entity      |            |
 
 - **Power Heat pump on (1011)**: On/off state of the heat pump (1 = on). The climate entity turns it on and off. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The compressor stopped or started about a minute later. Each switch raised T21 by 4: the on/off state is written to the controller's memory, most likely because H01 = YES remembers it. Whether switching on from Home Assistant or the app overrides open contacts isn't known, so avoid switching it from both.
-- **Mode Requested mode (1012)**: Active mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (seen in the app on a Trianco S300). In vacation mode_real keeps the mode to return to.
+- **Mode Requested mode (1012)**: Workbook register 1012, which the workbook calls the requested mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (values seen in the app on a Trianco S300). On that S300 it read 7 while on vacation, when mode_real (1013) kept the mode to return to. Read-only; mode changes are written to mode_real.
 - **T20 Out-of-range count (2026)**: Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11).
 - **L02 Vacation year (1130)**: Vacation year (20YY), from the app's Timer page.
 - **L03 Vacation month (1131)**: Vacation month, from the app's Timer page.
@@ -837,15 +865,38 @@ The climate entity and the Power sensor use some of these; the rest were request
 - **Version**: Version code of other models. Empty on HiTemp, see code_version and MainBoard Version.
 - **Software Code**: Software code of other models. Empty on HiTemp, see code_version and MainBoard Version.
 
+### Controller versions
+
+The About page of the app shows these as the PCB and display software. They are also combined into the device's software version.
+
+| Code   | Name in Home Assistant       | Raw cloud value | Cloud type and range | Home Assistant     | Confidence |
+| ------ | ---------------------------- | --------------- | -------------------- | ------------------ | ---------- |
+| `2011` | Reg 2011 Main version        | `1.0`           |                      | sensor, Diagnostic | documented |
+| `2012` | Reg 2012 Main software code  | `679`           |                      | sensor, Diagnostic | documented |
+| `2013` | Reg 2013 Panel version       | `1.0`           |                      | sensor, Diagnostic | documented |
+| `2014` | Reg 2014 Panel software code | `741`           |                      | sensor, Diagnostic | documented |
+
+- **Reg 2011 Main version**: Main program version. The workbook stores 11 for V1.1; the cloud already returns the version, for example 1.0.
+- **Reg 2012 Main software code**: Software code of the main program. The workbook reads 1234 as software 35005-311234.
+- **Reg 2013 Panel version**: Version of the wired panel's program, in the same form as 2011.
+- **Reg 2014 Panel software code**: Software code of the wired panel.
+
 ### Read for diagnostics only
 
 These codes were found by the same scan. They are read in the separate live
-data request and appear in the diagnostics, without entities, until their
-meaning is known:
+data request and appear in the diagnostics, and in the Code changes sensor
+when they change, without entities, until their meaning is known. The same
+request also asks for the named letter codes `O01`-`O06`, `O10`-`O15` and
+`S01`-`S06`, so a value would show up if the cloud ever filled them:
 
-`2011`, `2012`, `2013`, `2014`, `2026`, `2027`, `2057`, `2058`, `2059`, `2068`, `2069`, `2070`, `2071`, `O18`, `O19`, `O21`, `O22`, `O23`, `O24`, `O25`, `O26`, `O27`, `O28`, `M07`, `M12`, `M13`, `M14`, `M15`, `M16`, `R02`, `R11`, `R13`, `R16`, `H09`, `H16`, `E06`, `C01`, `C02`, `C03`, `C05`, `C06`, `C07`, `C08`, `C09`, `D10`, `D11`, `D12`, `D13`, `F01`, `F02`, `F04`, `F05`, `F06`, `F07`, `F09`, `F10`, `F11`, `F12`, `F13`, `L29`, `L30`, `L31`, `L32`
+`2026`, `2027`, `2057`, `2058`, `2059`, `2068`, `2069`, `2070`, `2071`, `O18`, `O19`, `O21`, `O22`, `O23`, `O24`, `O25`, `O26`, `O27`, `O28`, `M07`, `M12`, `M13`, `M14`, `M15`, `M16`, `R02`, `R11`, `R13`, `R16`, `H09`, `H16`, `E06`, `C01`, `C02`, `C03`, `C05`, `C06`, `C07`, `C08`, `C09`, `D10`, `D11`, `D12`, `D13`, `F01`, `F02`, `F04`, `F05`, `F06`, `F07`, `F09`, `F10`, `F11`, `F12`, `F13`, `L29`, `L30`, `L31`, `L32`
 
 ## Added register bits
+
+Every bit of the status, fault and flag words is a binary sensor in the
+Diagnostic section, enabled by default. It is on when the bit is 1. A
+meaning in brackets comes from the workbook or Darksplat; bits without one
+are recorded so their pattern can be compared with what the heat pump does.
 
 | Code          | Name                                             | Confidence |
 | ------------- | ------------------------------------------------ | ---------- |
@@ -967,7 +1018,3 @@ meaning is known:
 | `1133_bit_03` | Reg 1133 bit 3 (L05 timer 2 stop enabled)        | documented |
 | `1129_bit_00` | Reg 1129 bit 0 (L01 vacation enabled)            | documented |
 | `1151_bit_00` | Reg 1151 bit 0 (M11 clock apply requested)       | documented |
-| `2011`        | Reg 2011 Main version                            | documented |
-| `2012`        | Reg 2012 Main software code                      | documented |
-| `2013`        | Reg 2013 Panel version                           | documented |
-| `2014`        | Reg 2014 Panel software code                     | documented |

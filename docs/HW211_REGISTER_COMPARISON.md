@@ -1,6 +1,6 @@
 # HW211 register comparison (Trianco S300 / HiTemp)
 
-As of integration 4.4.1, the HiTemp entities follow this `dtu_wifi` map.
+As of integration 4.4.2, the HiTemp entities follow this `dtu_wifi` map.
 Sensor names end with the register, named outputs and switches read the
 `2050`/`2051` bits, and every bit of those words is a diagnostic entity.
 Writable controls were not added. Findings below cite the workbook, Darksplat,
@@ -39,11 +39,11 @@ Full 226-row `dtu_wifi` register table:
 | Bucket                  | Count (approx.)                                                                                                | What it covers                                                                                                            |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | **match**               | ~40+ core codes/bits                                                                                           | Power/Mode/R/T/O07–O09, `2050` bits 0/8–13, `2051` bits 0–3 roles, aliases = workbook; Darksplat field-confirms same bits |
-| **empty-in-cloud**      | Named O01–O06, S01–S06, O10–O15, FoxAir `O01~*`/`S01~*`, Fault1–10                                             | **By design:** app polls `2050`/`2051` and unpacks client-side (aquatemp #130)                                            |
+| **empty-in-cloud**      | Named O01–O06, S01–S06, O10–O15, FoxAir `O01~*`/`S01~*`, Fault1–10                                             | **By design:** app polls `2050`/`2051` and unpacks client-side (aquatemp #130); HA entities read the bits                 |
 | **alias-of**            | R↔1104+, T↔2019+, O07↔2060; legacy Aqua Temp O10–O15 ↔ workbook O12–O17                                        | victor + workbook + Darksplat CSV                                                                                         |
 | **conflict**            | `2050` bit2 (S300 “coil” guess), `2050` bit5 (“always set”), T06 name, M06 behaviour, victor O18→2062          | Prefer workbook until re-verified                                                                                         |
 | **uncertain**           | AI06↔T?, fan speed split 11/12, Darksplat S02@bit1 vs blank `dtu_wifi`, lone app poll of `O03`, some C/F codes | Marked in tables                                                                                                          |
-| **only-in-repo**        | Full workbook/`2085` bit entities, Darksplat clock mailbox notes, `hw211`-sheet-only regs, FoxAir heating      | Not HA entities or wrong family                                                                                           |
+| **only-in-repo**        | Darksplat clock mailbox notes, `hw211`-sheet-only regs, FoxAir heating                                         | Not HA entities or wrong family; the `2050`/`2051`/`2085` bits are HA entities since 4.4.0                                |
 | **only-in-integration** | Computed superheat / ΔT, climate orchestration, live probe lists                                               | App/HA layer                                                                                                              |
 
 ### Key verdicts
@@ -70,8 +70,8 @@ Full 226-row `dtu_wifi` register table:
 
 4. **FoxAir / WarmLink / pool PC1004 / Fairland / midas** share address _numbers_
    or product IDs with **different meanings**. Reuse cloud mechanics
-   (`app_heartbeat=23205`, HiTemp `appId` **13**); never reuse their O/S bit
-   maps on S300.
+   (`app_heartbeat=23205`; the HiTemp app's `appId` **13** is noted, not
+   sent by this integration); never reuse their O/S bit maps on S300.
 
 5. **EvoHeat OEM manuals** label PCB **OUT1–OUT5** as compressor / heater /
    4-way / fan high / fan low — same functions as workbook **O01–O05**
@@ -385,73 +385,81 @@ and probes in `common/consts.py` (`LIVE_PROBE_CODES`, `HITEMP_DISCOVERY_CODES`,
 
 ### Status / fault bits
 
-| Code / bit                        | HA exposure          | Confidence            | Match                    | Notes                                                 |
-| --------------------------------- | -------------------- | --------------------- | ------------------------ | ----------------------------------------------------- |
-| `2050` word                       | sensor Diagnostic    | uncertain (word)      | **match** (role)         | App polls this (#130)                                 |
-| `2050` bit 0                      | via Power / guide    | observed              | **match**                | S01 OP when off — **expose binary**                   |
-| `2050` bit 2                      | none                 | uncertain vs workbook | **conflict**             | Prefer S03 LP — candidate binary                      |
-| `2050` bit 5                      | none                 | observed “always set” | **conflict / uncertain** | Workbook S06                                          |
-| `2050` bit 8                      | `compressor_running` | observed              | **match**                |                                                       |
-| `2050` bit 9                      | `electric_heater_on` | observed              | **match**                |                                                       |
-| `2050` bit 10                     | none as entity       | observed              | **match**                | **Add** 4-way binary                                  |
-| `2050` bits 11–12                 | none                 | uncertain speeds      | **match** (role)         | **Add** fan high/low binaries                         |
-| `2050` bits 14–15                 | none                 | Darksplat/workbook    | **only-in-repo**         | Anodes (legacy O10/O11)                               |
-| `2051` bit 0                      | none                 | Darksplat/workbook    | **only-in-repo**         | shutDown / satisfied — **add**                        |
-| `2051` bit 1                      | none                 | observed always set   | **likely match**         | DTU online                                            |
-| `2051` bit 2                      | `defrost`            | observed              | **match**                |                                                       |
-| `2051` bit 3                      | none                 | workbook + Darksplat  | **only-in-repo**         | Hot water function — **add**                          |
-| `2085`                            | sensor (often 0)     | uncertain             | **match** (role)         | Full P/E bit table in §3.4; decode bits when non-zero |
-| `Fault1`–`Fault10`                | live probe           | —                     | **empty-in-cloud**       | FoxAir-style                                          |
-| `O01~015` / `O01~023` / `S01~S10` | not probed on HiTemp | —                     | **empty-in-cloud**       | Wrong family; `2019` is ambient temperature           |
+Every bit of `2050`, `2051` and `2085` is also a raw diagnostic binary sensor
+(`Reg 2050 bit 0` … `Reg 2085 bit 15`), enabled by default.
 
-### Named O / S vs packed alternatives
+| Code / bit                        | HA exposure                                                      | Confidence | Match                    | Notes                                                  |
+| --------------------------------- | ---------------------------------------------------------------- | ---------- | ------------------------ | ------------------------------------------------------ |
+| `2050` word                       | `State0 Operating status (2050)` sensor                          | observed   | **match** (role)         | App polls this (#130)                                  |
+| `2050` bit 0                      | `S01 Remote switch open (2050.0)`                                | observed   | **match**                | 1 = OP; set while the contacts are open and Power is 0 |
+| `2050` bit 1                      | `S02 Overheat input (2050.1)`                                    | uncertain  | **uncertain**            | Blank on `dtu_wifi`; polarity not claimed              |
+| `2050` bit 2                      | `S03 Low pressure switch open (2050.2)`                          | documented | **match** (workbook)     | Earlier S300 coil guess dropped                        |
+| `2050` bits 3–4                   | `S04 …(2050.3)`, `S05 …(2050.4)`                                 | documented | **match**                | 1 = OP                                                 |
+| `2050` bit 5                      | `S06 External heat switch active (2050.5)`                       | uncertain  | **conflict / uncertain** | Often set on the S300; workbook gives no polarity      |
+| `2050` bit 8                      | `O01 Compressor running (2050.8)`, `Compressor running (2050.8)` | observed   | **match**                |                                                        |
+| `2050` bit 9                      | `O02 Heater running (2050.9)`, `Heater running (2050.9)`         | observed   | **match**                |                                                        |
+| `2050` bit 10                     | `O03 Reversing valve on (2050.10)`                               | observed   | **match**                | Set during defrost                                     |
+| `2050` bits 11–12                 | `O04 Fan running high`, `O05 Fan running low`                    | uncertain  | **match** (role)         | Which speed is which isn't confirmed                   |
+| `2050` bit 13                     | `O06 Spare output on (2050.13)`                                  | documented | **match**                |                                                        |
+| `2050` bits 14–15                 | `O10 Anode 3V on`, `O11 Anode MV on`                             | documented | **alias-of**             | Legacy O10/O11 = workbook O12/O13                      |
+| `2051` bit 0                      | `O12 Heating stopped (2051.0)`                                   | documented | **alias-of**             | Workbook O14 shutDown                                  |
+| `2051` bit 1                      | `O13 Wi-Fi link up (2051.1)`                                     | observed   | **alias-of**             | Workbook O15; always set while online                  |
+| `2051` bit 2                      | `O14 Defrost running (2051.2)`, `Defrost running (2051.2)`       | observed   | **alias-of**             | Workbook O16                                           |
+| `2051` bit 3                      | `O15 Hot water stage active (2051.3)`                            | documented | **alias-of**             | Workbook O17                                           |
+| `2085`                            | `Fault0 Fault bits (2085)` sensor and its 16 bits                | documented | **match**                | Bits 0–5, 8, 9, 13 named from the workbook (§3.4)      |
+| `Fault1`–`Fault10`                | live probe                                                       | —          | **empty-in-cloud**       | FoxAir-style                                           |
+| `O01~015` / `O01~023` / `S01~S10` | not probed on HiTemp                                             | —          | **empty-in-cloud**       | Wrong family; `2019` is ambient temperature            |
 
-| Code                       | HA                         | Match                                              | Packed / numeric                                                                  |
-| -------------------------- | -------------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `O01`–`O06`                | sensors Diagnostic (empty) | **empty-in-cloud** (by design) + **alias-of** bits | `2050` bits 8–13 — **prefer bit binaries; optionally hide empty named entities**  |
-| `O03`                      | sensor                     | empty named; app still polls `O03` alone (#130)    | bit 10 — unexplained lone poll                                                    |
-| `O07`/`O08`/`O09`          | sensors                    | **alias-of**                                       | 2060 / 2061 / 2062                                                                |
-| `O10`/`O11`                | sensors                    | empty + alias-of (legacy ≡ workbook O12/O13)       | `2050` bits 14–15                                                                 |
-| `O14` (app/legacy defrost) | empty                      | empty + alias-of (workbook O16)                    | `2051` bit 2 (we expose `defrost`)                                                |
-| `O29`                      | disabled                   | **alias-of** 2067                                  | 0 on S300 while heating                                                           |
-| `S01`–`S06`                | sensors                    | **empty-in-cloud** (by design)                     | `2050` bits 0,2–5 — **prefer bit binaries; optionally hide empty named entities** |
-| `2055`                     | unused                     | **only-in-repo** (heating frost T)                 | Not O03                                                                           |
+### Named O / S codes
 
-### Integration recommendations (strengthened)
+The named cloud codes stay empty on this product, by design. The entities
+with those codes read the bits above instead. The named codes are still
+probed, so diagnostics would show a value if the cloud ever filled them.
 
-1. **Expose more `2050`/`2051` bit binary sensors** (at least: remote/S01 bit 0,
-   4-way bit 10, fan high/low 11–12, shutDown `2051` bit 0, hot-water
-   `2051` bit 3). Match what the official app paints from packed words.
-2. **Optionally hide or disable empty named `O01`–`O06` / `S01`–`S06` (and
-   legacy `O10`–`O15`) entities** — cloud will not fill them; they confuse
-   users. Keep packed-word + bit entities as the source of truth.
-3. Prefer **`appId: "13"`** on HiTemp CRM writes/reads if the cloud enforces it
-   (#130). Keep heartbeat **`23205`**; do not expect `go-heating` / `appId` 14
-   to fix DHW O/S.
-4. When documenting O10–O15 vs O12–O17, state **legacy/app vs workbook**
-   (Darksplat table §3.3a) so entity names stay consistent with the HiTemp UI.
+| Code              | HA                                          | Match                                           | Packed / numeric                   |
+| ----------------- | ------------------------------------------- | ----------------------------------------------- | ---------------------------------- |
+| `O01`–`O06`       | binary sensors, Diagnostic                  | **empty-in-cloud** + **alias-of** bits          | `2050` bits 8–13                   |
+| `O03`             | binary sensor                               | empty named; app still polls `O03` alone (#130) | bit 10 — unexplained lone poll     |
+| `O07`/`O08`/`O09` | sensors                                     | **alias-of**                                    | 2060 / 2061 / 2062                 |
+| `O10`–`O15`       | binary sensors, Diagnostic                  | empty + alias-of (legacy ≡ workbook O12–O17)    | `2050` bits 14–15, `2051` bits 0–3 |
+| `O29`             | `O29 Fan speed` sensor, no register in name | victor alias 2067 (blank in workbook)           | 0 on S300 while heating            |
+| `S01`–`S06`       | binary sensors, Diagnostic                  | **empty-in-cloud** + **alias-of** bits          | `2050` bits 0–5                    |
+| `2055`            | unused                                      | **only-in-repo** (heating frost T)              | Not O03                            |
+
+### Integration decisions
+
+1. The `2050`/`2051` bits the official app paints are binary sensors, and so
+   is every other bit of those words and of `2085`.
+2. The named O/S entities read those bits, so they are no longer empty.
+3. Writes keep using `Power` and `mode_real` without `appId`. The HiTemp app
+   sends `appId: "13"` (#130); this integration does not, and nothing so far
+   shows the cloud requires it. Heartbeat **`23205`** is sent;
+   `go-heating` / `appId` 14 does not fill the DHW O/S codes.
+4. Entity names keep the app's legacy O10–O15 numbers; descriptions give the
+   workbook O12–O17 numbers (Darksplat table §3.3a).
 
 ### Core T / R / Mode / Power / L / M / H
 
-| Code                | Alt                | HA                        | Match                                             |
-| ------------------- | ------------------ | ------------------------- | ------------------------------------------------- |
-| T01–T05, T10        | 2019–2023, 2025    | sensors                   | **match** + **alias-of**                          |
-| T06                 | 2024               | sensor (disabled default) | **conflict** (name: solar vs S300 discharge-like) |
-| R01                 | 1104               | number Controls           | **match**                                         |
-| Power               | 1011               | binary_sensor             | **match**                                         |
-| mode_real / Mode    | 1013 / 1012        | select / requested        | **match**                                         |
-| M17                 | 1016               | select                    | **match** (range model-dependent)                 |
-| M06                 | 1014               | sensor disabled           | **conflict** (Indol writable vs S300 stuck 0)     |
-| H01 / H07 / H31     | 1067 / 1073 / 1077 | config                    | **alias-of**                                      |
-| L02–L04, 1129, 1133 | timers/vacation    | diagnostic                | **match**                                         |
-| M12–M16             | 1152–1156          | discovery                 | **match**                                         |
-| 1158                | heartbeat echo     | requested                 | **match** (role)                                  |
-| T21                 | 2027               | sensor                    | **match**                                         |
+| Code                | Alt                | HA                                    | Match                                                           |
+| ------------------- | ------------------ | ------------------------------------- | --------------------------------------------------------------- |
+| T01–T05, T10        | 2019–2023, 2025    | sensors                               | **match** + **alias-of**                                        |
+| T06                 | 2024               | `T06 Discharge temperature (2024)`    | **conflict** (workbook solar vs S300 discharge-like), uncertain |
+| R01                 | 1104               | number, Controls                      | **match**                                                       |
+| Power               | 1011               | binary_sensor                         | **match**                                                       |
+| mode_real / Mode    | 1013 / 1012        | select (written) / sensor (read-only) | **match** by address; on the S300 1012 read 7 during vacation   |
+| M17                 | 1016               | select                                | **match** (range model-dependent)                               |
+| M06                 | 1014               | `M06 Booster mode (1014)` sensor      | **conflict** (Indol writable vs S300 stuck 0), uncertain        |
+| H01 / H07 / H31     | 1067 / 1073 / 1077 | config / sensors                      | **alias-of**                                                    |
+| L02–L13, 1129, 1133 | timers/vacation    | sensors and bits, Diagnostic          | **match**                                                       |
+| M12–M16             | 1152–1156          | probe only, no entity                 | **match**                                                       |
+| 1158                | heartbeat echo     | `Reg 1158 Heartbeat echo` sensor      | **match** (role)                                                |
+| 2011–2014           | versions           | `Reg 2011` … `Reg 2014` sensors       | **match**                                                       |
+| T20 / T21           | 2026 / 2027        | sensors                               | **match**                                                       |
 
 ### Discovery / probes only-in-integration or only-in-repo
 
 - **only-in-integration:** `superheat`, `water_delta_t`, climate entity, `LIVE_PROBE_CODES` / `HITEMP_DISCOVERY_CODES` (C/F/O18–28/L29–32/…).
-- **only-in-repo:** M07 forced defrost entity, full `2085` binary sensors, `hw211` manual word `1149`, ESPHome derived Operating state.
+- **only-in-repo:** M07 forced defrost as an entity (probed, never written), `hw211` manual word `1149`, ESPHome derived Operating state.
 
 ### Other integrations footnote (aquatemp upstream)
 
@@ -576,7 +584,7 @@ below remain useful for silkscreen cross-check:
 
 ## 9. Gaps and recommended experiments
 
-1. **Full `2050`/`2051` bit sensors** on live S300 — toggle remote, defrost, heater, fan; resolve bit2/bit5 vs workbook. _(Integration recommendation: expose more binaries now; verify bit2/bit5 later.)_
+1. **Full `2050`/`2051` bit sensors** on live S300 — toggle remote, defrost, heater, fan; resolve bit2/bit5 vs workbook. _(Every bit is a binary sensor since 4.4.0; bit 2 and bit 5 still need checking.)_
 2. **Proxy HiTemp app** — **partially closed:** #130 shows the app requests `2050`/`2051` (not named O01–O06/S*). Still open: why lone `O03` is polled; no JADX of the bit→UI map.
 3. **`2085` vs Fault1–10** when a real fault appears (Darksplat only flags non-zero; workbook has P/E bits).
 4. **Photograph S300 remote terminals** vs Activair DI01/DI05 silkscreen (forums did not resolve).
@@ -597,6 +605,7 @@ below remain useful for silkscreen cross-check:
 | 2026-11-20 | Initial comparison from esphome-hw211, victor987/hitemp, FoxAir_Control, Activair 20230302-0005, HiTemp guide.                                                                                                                                                                                                                                                                                                         |
 | 2026-11-20 | **Multi-repo expansion:** merged `_research_hw211_esphome.md`, `_research_hitemp_cloud.md`, `_research_foxair_phnix.md`, `_research_github_sweep.md`. Added scorecard, full source catalog (hydazz, Mozzie-AU, tnako, VAdamec, fleuke trap, …), full 2050/2051/2085 workbook tables, sheet-diff, FoxAir conflict table, integration match matrix, appendix [`HW211_REGISTER_MAP_FULL.md`](HW211_REGISTER_MAP_FULL.md). |
 | 2026-11-20 | **Second-round online merge:** `_research_github_deeper.md` (**Darksplat** bit CSVs + legacy O10–O15↔O12–O17), `_research_app_cloud_api.md` (HiTemp iOS polls `2050`/`2051`; `appId` 13/14/16), `_research_oem_manuals_web.md` (OUT1–5≡O01–O05), `_research_forums_community.md` (HA #230400 reinforcement). Strengthened bit-sensor / hide-empty-O/S recommendations.                                                 |
+| 2026-11-25 | §6 updated to the 4.4.2 entities: every `2050`/`2051`/`2085` bit is a binary sensor and the named O/S entities read those bits. The `appId` 13 recommendation was replaced by the decision not to send it.                                                                                                                                                                                                             |
 
 ---
 

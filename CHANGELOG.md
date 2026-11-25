@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.4.2
+
+_Minimum HA Version: 2026.11.0_
+
+### Documentation
+
+- The parameter guide tables now give each entity's current name, platform,
+  device-page section, default and confidence. They still showed the
+  sensors this release line enabled as disabled, the named inputs and
+  outputs as sensors, and 23 recorded codes as having no entity
+- The guide has the naming rules and which entities are enabled by default,
+  lists the `register` and `source` attributes, and no longer says `T12`
+  counts memory writes (that is `T21`) or that the cloud never reports `S01`
+- `Mode` (1012) is described with the workbook's meaning and what a Trianco
+  S300 showed during vacation, instead of contradicting its entity name
+- The README and the example dashboard say that installs from before 4.4.0
+  keep their old entity ids, and the README no longer says the named inputs
+  and outputs show as unavailable
+- The register comparison describes the current entities and no longer
+  recommends sending `appId` 13
+- A test now fails when a guide table disagrees with the parameter file
+
 ## 4.4.1
 
 _Minimum HA Version: 2026.11.0_

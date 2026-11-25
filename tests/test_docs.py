@@ -64,10 +64,8 @@ async def test_dashboard_entities_exist(
         assert registry.async_get(entity) is not None, entity
 
 
-def test_guide_covers_every_code() -> None:
-    """The parameter guide documents every code of the parameter file."""
-    guide = (DOCS / "HITEMP_PARAMETERS.md").read_text(encoding="utf-8")
-    items = json.loads(
+def _hitemp_items() -> list[dict[str, Any]]:
+    return json.loads(
         (
             ROOT
             / "custom_components"
@@ -76,6 +74,76 @@ def test_guide_covers_every_code() -> None:
             / f"entity_description.{HITEMP}.json"
         ).read_text(encoding="utf-8")
     )
+
+
+def _guide_code_rows() -> list[dict[str, str]]:
+    """Return the rows of the guide tables whose first column is the code."""
+    rows = []
+    header: list[str] | None = None
+
+    for line in (
+        (DOCS / "HITEMP_PARAMETERS.md").read_text(encoding="utf-8").splitlines()
+    ):
+        if not line.startswith("|"):
+            header = None
+            continue
+
+        cells = [cell.strip() for cell in line.strip()[1:-1].split("|")]
+
+        if header is None:
+            header = cells
+        elif header[0] == "Code" and not set("".join(cells)) <= set("-: "):
+            rows.append(dict(zip(header, cells, strict=True)))
+
+    return rows
+
+
+def _home_assistant_column(item: dict[str, Any]) -> str:
+    """Describe an entity the way the guide's Home Assistant column does."""
+    platform = item["platform"]
+    if platform is None:
+        return "requested, no entity"
+
+    controls = platform in ("number", "select")
+    category = item.get("entity_category", None if controls else "diagnostic")
+    section = {
+        "diagnostic": "Diagnostic",
+        "config": "Configuration",
+        None: "Controls" if controls else "Sensors",
+    }[category]
+    disabled = ", disabled" if item.get("enabled_by_default", True) is False else ""
+
+    return f"{platform}, {section}{disabled}"
+
+
+def test_guide_tables_match_the_parameter_file() -> None:
+    """Guide tables give each entity's name, platform, section, default and confidence."""
+    items = {item["key"]: item for item in _hitemp_items()}
+    checked = set()
+
+    for row in _guide_code_rows():
+        key = row["Code"].strip("`")
+        item = items.get(key)
+        if item is None:
+            continue
+
+        checked.add(key)
+        name = row.get("Name in Home Assistant", row.get("Name"))
+        if name is not None:
+            assert name == item["name"], key
+        if "Home Assistant" in row:
+            assert row["Home Assistant"] == _home_assistant_column(item), key
+        if "Confidence" in row:
+            assert row["Confidence"] == (item.get("confidence") or ""), key
+
+    exposed = {key for key, item in items.items() if item["platform"] is not None}
+    assert exposed <= checked
+
+
+def test_guide_covers_every_code() -> None:
+    """The parameter guide documents every code of the parameter file."""
+    guide = (DOCS / "HITEMP_PARAMETERS.md").read_text(encoding="utf-8")
+    items = _hitemp_items()
 
     for item in items:
         assert f"| `{item['key']}` " in guide, item["key"]
