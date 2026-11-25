@@ -88,6 +88,24 @@
       "1245226668902080512_power": {
         "name": "Power Heat pump on (1011)"
       },
+      "1245226668902080512_o01": {
+        "name": "O01 Compressor running (2050.8)"
+      },
+      "1245226668902080512_o02": {
+        "name": "O02 Heater running (2050.9)"
+      },
+      "1245226668902080512_o03": {
+        "name": "O03 Reversing valve on (2050.10)"
+      },
+      "1245226668902080512_o04": {
+        "name": "O04 Fan running high (2050.11)"
+      },
+      "1245226668902080512_o05": {
+        "name": "O05 Fan running low (2050.12)"
+      },
+      "1245226668902080512_o06": {
+        "name": "O06 Spare output on (2050.13)"
+      },
       "1245226668902080512_s01": {
         "name": "S01 Remote switch open (2050.0)"
       },
@@ -1258,24 +1276,6 @@
       },
       "1245226668902080512_r20": {
         "name": "R20 Compressor stop setpoint 2 (1123)"
-      },
-      "1245226668902080512_o01": {
-        "name": "O01 Compressor"
-      },
-      "1245226668902080512_o02": {
-        "name": "O02 Electric heater (booster)"
-      },
-      "1245226668902080512_o03": {
-        "name": "O03 4-way valve"
-      },
-      "1245226668902080512_o04": {
-        "name": "O04 Fan high speed"
-      },
-      "1245226668902080512_o05": {
-        "name": "O05 Fan low speed (OUT05)"
-      },
-      "1245226668902080512_o06": {
-        "name": "O06 Solar pump/valve (OUT06)"
       },
       "1245226668902080512_o07": {
         "name": "O07 EEV position (2060)"

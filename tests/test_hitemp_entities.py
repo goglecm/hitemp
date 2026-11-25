@@ -304,8 +304,9 @@ async def test_live_switches_are_labelled(
         hass.states.get(entity_id(hass, "binary_sensor", "S03", device.code)).state
         == "off"
     )
-    assert hass.states.get(entity_id(hass, "sensor", "O01", device.code)).state == (
-        "On (1)"
+    assert (
+        hass.states.get(entity_id(hass, "binary_sensor", "O01", device.code)).state
+        == "on"
     )
 
 
@@ -328,8 +329,8 @@ async def test_empty_live_switches_are_unavailable(
         == "off"
     )
     assert (
-        hass.states.get(entity_id(hass, "sensor", "O01", device.code)).state
-        == STATE_UNAVAILABLE
+        hass.states.get(entity_id(hass, "binary_sensor", "O01", device.code)).state
+        == "on"
     )
 
 

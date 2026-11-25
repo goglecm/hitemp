@@ -1221,105 +1221,109 @@
   },
   {
     "key": "O01",
-    "name": "O01 Compressor",
+    "name": "O01 Compressor running (2050.8)",
     "app_name": "Compressor",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "ON, OFF",
     "app_value": "ON",
-    "confidence": "uncertain",
-    "description": "Compressor output.",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
+    "confidence": "observed",
+    "description": "Bit 8 of register 2050. 1 means the compressor is running.",
+    "guidance": "Read from the packed status word. The named cloud code stays empty and is probed separately.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2050.8",
+    "enabled_by_default": true,
+    "bit_of": ["2050", 8],
+    "device_class": "running"
   },
   {
     "key": "O02",
-    "name": "O02 Electric heater (booster)",
+    "name": "O02 Heater running (2050.9)",
     "app_name": "Electrical heater",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "ON, OFF",
     "app_value": "OFF",
-    "confidence": "uncertain",
-    "description": "Electric heater (booster) output.",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
+    "confidence": "observed",
+    "description": "Bit 9 of register 2050. 1 means the electric heater is running.",
+    "guidance": "Read from the packed status word. The named cloud code stays empty and is probed separately.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2050.9",
+    "enabled_by_default": true,
+    "bit_of": ["2050", 9],
+    "device_class": "running"
   },
   {
     "key": "O03",
-    "name": "O03 4-way valve",
+    "name": "O03 Reversing valve on (2050.10)",
     "app_name": "4-way valve",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "ON, OFF",
     "app_value": "ON",
-    "confidence": "uncertain",
-    "description": "Four-way valve output, which reverses the refrigerant flow, for example to defrost.",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
+    "confidence": "observed",
+    "description": "Bit 10 of register 2050. 1 means the reversing valve is energised. This is not register 2055.",
+    "guidance": "Read from the packed status word. The named cloud code stays empty and is probed separately.",
+    "source": ["workbook", "s300", "darksplat"],
+    "register": "2050.10",
+    "enabled_by_default": true,
+    "bit_of": ["2050", 10]
   },
   {
     "key": "O04",
-    "name": "O04 Fan high speed",
+    "name": "O04 Fan running high (2050.11)",
     "app_name": "Fan high speed",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "ON, OFF",
     "app_value": "OFF",
     "confidence": "uncertain",
-    "description": "Fan high speed output.",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
+    "description": "Bit 11 of register 2050. 1 means the high-speed fan output is on. Which speed this unit uses is not confirmed.",
+    "guidance": "Read from the packed status word. The named cloud code stays empty and is probed separately.",
+    "source": ["workbook", "s300"],
+    "register": "2050.11",
+    "enabled_by_default": true,
+    "bit_of": ["2050", 11],
+    "device_class": "running"
   },
   {
     "key": "O05",
-    "name": "O05 Fan low speed (OUT05)",
+    "name": "O05 Fan running low (2050.12)",
     "app_name": "Fan low speed",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "ON, OFF",
     "app_value": "OFF",
     "confidence": "uncertain",
-    "description": "Fan low speed output (OUT05, see /01).",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
+    "description": "Bit 12 of register 2050. 1 means the low-speed fan or solar-pump output is on.",
+    "guidance": "Read from the packed status word. The named cloud code stays empty and is probed separately.",
+    "source": ["workbook", "s300"],
+    "register": "2050.12",
+    "enabled_by_default": true,
+    "bit_of": ["2050", 12],
+    "device_class": "running"
   },
   {
     "key": "O06",
-    "name": "O06 Solar pump/valve (OUT06)",
+    "name": "O06 Spare output on (2050.13)",
     "app_name": "Reserve/solar pump/solar valve pump",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "ON, OFF",
     "app_value": "OFF",
-    "confidence": "uncertain",
-    "description": "Reserve, solar pump or solar valve output (OUT06, see /02).",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed."
+    "confidence": "documented",
+    "description": "Bit 13 of register 2050. 1 means the spare or solar output is on.",
+    "guidance": "Read from the packed status word. The named cloud code stays empty and is probed separately.",
+    "source": ["workbook", "darksplat"],
+    "register": "2050.13",
+    "enabled_by_default": true,
+    "bit_of": ["2050", 13]
   },
   {
     "key": "O07",

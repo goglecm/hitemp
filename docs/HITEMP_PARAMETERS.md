@@ -635,12 +635,12 @@ The app shows `ON` or `OFF` for the outputs.
 | `O08` | Accumulative running time of compressor |           | 211H      | `210` to `215`  | DIGI1                | sensor, Sensors    | observed   |
 | `O09` | Accumulative running time of booster    |           | 0H        | `0`             | DIGI1                | sensor, Sensors    | observed   |
 
-- **O01 Compressor**: Compressor output. Values: Off (0), On (1).
-- **O02 Electric heater (booster)**: Electric heater (booster) output. Values: Off (0), On (1).
-- **O03 4-way valve**: Four-way valve output, which reverses the refrigerant flow, for example to defrost. Values: Off (0), On (1).
-- **O04 Fan high speed**: Fan high speed output. Values: Off (0), On (1).
-- **O05 Fan low speed (OUT05)**: Fan low speed output (OUT05, see /01). Values: Off (0), On (1).
-- **O06 Solar pump/valve (OUT06)**: Reserve, solar pump or solar valve output (OUT06, see /02). Values: Off (0), On (1).
+- **O01 Compressor running (2050.8)**: Compressor output. Values: Off (0), On (1).
+- **O02 Heater running (2050.9)**: Electric heater (booster) output. Values: Off (0), On (1).
+- **O03 Reversing valve on (2050.10)**: Four-way valve output, which reverses the refrigerant flow, for example to defrost. Values: Off (0), On (1).
+- **O04 Fan running high (2050.11)**: Fan high speed output. Values: Off (0), On (1).
+- **O05 Fan running low (2050.12)**: Fan low speed output (OUT05, see /01). Values: Off (0), On (1).
+- **O06 Spare output on (2050.13)**: Reserve, solar pump or solar valve output (OUT06, see /02). Values: Off (0), On (1).
 - **O08 Compressor hours (2061)**: Total compressor running time.
 - **O09 Heater hours (2062)**: Total booster (electric heater) running time.
 
