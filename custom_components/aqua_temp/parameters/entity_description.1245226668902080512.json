@@ -625,7 +625,8 @@
     "description": "Heating source selection. Workbook register 1069. The listed value is air source.",
     "cloud_type": "ENUM",
     "source": ["workbook"],
-    "register": "1069"
+    "register": "1069",
+    "guidance": "The workbook lists air source. Do not change it unless an installer confirms another source is fitted."
   },
   {
     "key": "H07",
@@ -1168,7 +1169,8 @@
     "description": "Ambient temperature that forces the compressor off. Workbook register 1115.",
     "cloud_type": "TEMP1",
     "source": ["workbook"],
-    "register": "1115"
+    "register": "1115",
+    "guidance": "The compressor is forced off when the ambient temperature reaches this value."
   },
   {
     "key": "R14",
@@ -1223,7 +1225,8 @@
     "description": "Whether the top tank sensor, rather than the bottom sensor, decides when the compressor runs. Workbook register 1120.",
     "cloud_type": "ENUM",
     "source": ["workbook"],
-    "register": "1120"
+    "register": "1120",
+    "guidance": "YES uses the top tank sensor, rather than the bottom sensor, to decide when the compressor runs."
   },
   {
     "key": "R18",
@@ -1240,7 +1243,8 @@
     "description": "How far the top sensor must fall below the target before heating starts. Workbook register 1121.",
     "cloud_type": "TEMP1",
     "source": ["workbook"],
-    "register": "1121"
+    "register": "1121",
+    "guidance": "How far the top sensor must fall below the target before heating starts."
   },
   {
     "key": "R19",
@@ -1997,7 +2001,8 @@
     "description": "Packed vacation flags. Bit 0 is the vacation date enable.",
     "source": ["workbook"],
     "register": "1129",
-    "named_code": "L01"
+    "named_code": "L01",
+    "guidance": "Bit 0 is the vacation date enable, also shown as L01 Vacation enabled."
   },
   {
     "key": "T21",
@@ -2034,7 +2039,8 @@
     "source": ["workbook", "app"],
     "register": "1130",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L03 and L04 into the vacation date. This sensor is the year on its own."
   },
   {
     "key": "L03",
@@ -2045,7 +2051,8 @@
     "source": ["workbook", "app"],
     "register": "1131",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L02 and L04 into the vacation date. This sensor is the month on its own."
   },
   {
     "key": "L04",
@@ -2056,7 +2063,8 @@
     "source": ["workbook", "app"],
     "register": "1132",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L02 and L03 into the vacation date. This sensor is the day on its own."
   },
   {
     "key": "L06",
@@ -2067,7 +2075,8 @@
     "source": ["workbook", "app"],
     "register": "1134",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L07 into the timer 1 start time. This sensor is the hour on its own."
   },
   {
     "key": "L07",
@@ -2078,7 +2087,8 @@
     "source": ["workbook", "app"],
     "register": "1135",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L06 into the timer 1 start time. This sensor is the minute on its own."
   },
   {
     "key": "L08",
@@ -2089,7 +2099,8 @@
     "source": ["workbook", "app"],
     "register": "1136",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L09 into the timer 1 stop time. This sensor is the hour on its own."
   },
   {
     "key": "L09",
@@ -2100,7 +2111,8 @@
     "source": ["workbook", "app"],
     "register": "1137",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L08 into the timer 1 stop time. This sensor is the minute on its own."
   },
   {
     "key": "L10",
@@ -2111,7 +2123,8 @@
     "source": ["workbook", "app"],
     "register": "1138",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L11 into the timer 2 start time. This sensor is the hour on its own."
   },
   {
     "key": "L11",
@@ -2122,7 +2135,8 @@
     "source": ["workbook", "app"],
     "register": "1139",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L10 into the timer 2 start time. This sensor is the minute on its own."
   },
   {
     "key": "L12",
@@ -2133,7 +2147,8 @@
     "source": ["workbook", "app"],
     "register": "1140",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L13 into the timer 2 stop time. This sensor is the hour on its own."
   },
   {
     "key": "L13",
@@ -2144,7 +2159,8 @@
     "source": ["workbook", "app"],
     "register": "1141",
     "entity_category": "diagnostic",
-    "display_precision": 0
+    "display_precision": 0,
+    "guidance": "Combined with L12 into the timer 2 stop time. This sensor is the minute on its own."
   },
   {
     "key": "2051",
@@ -2156,7 +2172,8 @@
     "description": "Packed function status. Bit 2 is defrost. Bit 1 has stayed set while the Wi-Fi module is online.",
     "source": ["workbook", "s300", "darksplat"],
     "register": "2051",
-    "named_code": "State1"
+    "named_code": "State1",
+    "guidance": "Bit 2 is defrost. Bit 1 has stayed set while the Wi-Fi module is online."
   },
   {
     "key": "1142",

@@ -698,23 +698,23 @@ Their names come from the vendor's parameter file, translated where it is Chines
 
 Decoded by changing these settings in the app of a Trianco S300. Read-only.
 
-| Code            | Name in Home Assistant     | Raw cloud value    | Cloud type and range | Home Assistant         | Confidence |
-| --------------- | -------------------------- | ------------------ | -------------------- | ---------------------- | ---------- |
-| `vacation_mode` | Vacation mode (1129 bit 0) |                    |                      | binary_sensor, Sensors | observed   |
-| `vacation_date` | Vacation date (L02-L04)    |                    |                      | sensor, Diagnostic     | observed   |
-| `timer1_on`     | Timer 1 on (L06:L07)       |                    |                      | sensor, Diagnostic     | observed   |
-| `timer1_off`    | Timer 1 off (L08:L09)      |                    |                      | sensor, Diagnostic     | observed   |
-| `timer2_on`     | Timer 2 on (L10:L11)       |                    |                      | sensor, Diagnostic     | observed   |
-| `timer2_off`    | Timer 2 off (L12:L13)      |                    |                      | sensor, Diagnostic     | observed   |
-| `1133`          | 1133 Timer switches        | `0000000000000000` |                      | sensor, Diagnostic     | observed   |
-| `1129`          | 1129 Vacation flags        | `0000000000000000` |                      | sensor, Diagnostic     | observed   |
+| Code            | Name in Home Assistant            | Raw cloud value    | Cloud type and range | Home Assistant         | Confidence |
+| --------------- | --------------------------------- | ------------------ | -------------------- | ---------------------- | ---------- |
+| `vacation_mode` | L01 Vacation enabled (1129.0)     |                    |                      | binary_sensor, Sensors | observed   |
+| `vacation_date` | L02-L04 Vacation date (1130-1132) |                    |                      | sensor, Diagnostic     | observed   |
+| `timer1_on`     | L06-L07 Timer 1 start (1134-1135) |                    |                      | sensor, Diagnostic     | observed   |
+| `timer1_off`    | L08-L09 Timer 1 stop (1136-1137)  |                    |                      | sensor, Diagnostic     | observed   |
+| `timer2_on`     | L10-L11 Timer 2 start (1138-1139) |                    |                      | sensor, Diagnostic     | observed   |
+| `timer2_off`    | L12-L13 Timer 2 stop (1140-1141)  |                    |                      | sensor, Diagnostic     | observed   |
+| `1133`          | 1133 Timer switches               | `0000000000000000` |                      | sensor, Diagnostic     | observed   |
+| `1129`          | 1129 Vacation flags               | `0000000000000000` |                      | sensor, Diagnostic     | observed   |
 
-- **Vacation mode (1129 bit 0)**: On while vacation mode is set on the app's Timer page. Turning vacation mode on in the app set this bit, changed Mode to 7 and stored the date in L02-L04; turning it off cleared the bit. Read-only.
-- **Vacation date (L02-L04)**: Date set for vacation mode on the app's Timer page. The app showed 28-05-2010 while L02-L04 read 10, 5 and 28. Read-only.
-- **Timer 1 on (L06:L07)**: On time of timer 1 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L07 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
-- **Timer 1 off (L08:L09)**: Off time of timer 1 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L09 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
-- **Timer 2 on (L10:L11)**: On time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
-- **Timer 2 off (L12:L13)**: Off time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
+- **L01 Vacation enabled (1129.0)**: On while vacation mode is set on the app's Timer page. Turning vacation mode on in the app set this bit, changed Mode to 7 and stored the date in L02-L04; turning it off cleared the bit. Read-only.
+- **L02-L04 Vacation date (1130-1132)**: Date set for vacation mode on the app's Timer page. The app showed 28-05-2010 while L02-L04 read 10, 5 and 28. Read-only.
+- **L06-L07 Timer 1 start (1134-1135)**: On time of timer 1 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L07 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
+- **L08-L09 Timer 1 stop (1136-1137)**: Off time of timer 1 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L09 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
+- **L10-L11 Timer 2 start (1138-1139)**: On time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L11 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
+- **L12-L13 Timer 2 stop (1140-1141)**: Off time of timer 2 on the app's Timer page. Setting timer 1 to 9:00-13:00 and timer 2 to 17:00-19:00 in the app set the hours in L06, L08, L10 and L12; L13 holds the minutes. Whether the timer is switched on is in 1133. Read-only.
 - **L05 Timer enables (1133)**: The on/off switches of the app's two timers, as bits. Switching on all four timer switches in the app set bits 0-3, switching them off cleared them. Which bit is which switch isn't known yet.
 - **L01 Vacation flags (1129)**: Flag word whose bit 0 is vacation mode.
 
@@ -766,13 +766,13 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 
 ### Calculated by Home Assistant
 
-| Code            | Name in Home Assistant | Raw cloud value | Cloud type and range | Home Assistant  | Confidence |
-| --------------- | ---------------------- | --------------- | -------------------- | --------------- | ---------- |
-| `superheat`     | Superheat (T05 - T04)  |                 |                      | sensor, Sensors | documented |
-| `water_delta_t` | Water ΔT (T03 - T02)   |                 |                      | sensor, Sensors | observed   |
+| Code            | Name in Home Assistant                     | Raw cloud value | Cloud type and range | Home Assistant  | Confidence |
+| --------------- | ------------------------------------------ | --------------- | -------------------- | --------------- | ---------- |
+| `superheat`     | T05-T04 Superheat (2023-2022)              |                 |                      | sensor, Sensors | documented |
+| `water_delta_t` | T03-T02 Water temperature rise (2021-2020) |                 |                      | sensor, Sensors | observed   |
 
-- **Superheat (T05 - T04)**: Suction minus coil temperature (T05 - T04), calculated by Home Assistant. The value E02 targets. Negative values mean the suction pipe reads colder than the coil, which keeps the EEV at E04.
-- **Water ΔT (T03 - T02)**: Top minus bottom water temperature (T03 - T02), calculated by Home Assistant. On your installation, how much the water warms up through the heat pump. Heat pumps are usually designed for about 5 °C; a much larger value can mean low water flow.
+- **T05-T04 Superheat (2023-2022)**: Suction minus coil temperature (T05 - T04), calculated by Home Assistant. The value E02 targets. Negative values mean the suction pipe reads colder than the coil, which keeps the EEV at E04.
+- **T03-T02 Water temperature rise (2021-2020)**: Top minus bottom water temperature (T03 - T02), calculated by Home Assistant. On your installation, how much the water warms up through the heat pump. Heat pumps are usually designed for about 5 °C; a much larger value can mean low water flow.
 
 ### Requested without an entity
 

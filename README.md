@@ -9,6 +9,15 @@ every other parameter, the online status and faults of the heat pump as
 sensors. HiTemp owners: read the [HiTemp guide](#hitemp-guide) and the
 [parameter guide](docs/HITEMP_PARAMETERS.md) before changing anything.
 
+HiTemp entity names start with the code and end with the HW211 register, for
+example `T01 Ambient temperature (2019)`. Packed status bits are named
+`O01 Compressor running (2050.8)`, and the raw diagnostic bits are named
+`Reg 2050 bit 8 (O01 compressor running)`. Every sensor is enabled so readings
+are recorded. Writable controls keep their previous defaults: daily setpoints
+are enabled, and installer settings stay disabled until you enable them.
+The register meanings and the sources they come from are in
+[docs/HW211_REGISTER_COMPARISON.md](docs/HW211_REGISTER_COMPARISON.md).
+
 This repository, [goglecm/hitemp](https://github.com/goglecm/hitemp), is the
 maintained continuation of
 [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). The

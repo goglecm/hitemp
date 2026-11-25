@@ -1,0 +1,1052 @@
+<!-- Evidence extract. The summary and how it applies to this integration are in HW211_REGISTER_COMPARISON.md. -->
+
+# Research dump: HW211 / EVO270 ESPHome & firmware-related GitHub sources
+
+_Generated: 2026-11-20 16:50 UTC_
+
+Purpose: deep extraction of register and bit definitions from public ESPHome/firmware GitHub repos. **Do not treat this as the integration comparison doc** (`docs/HW211_REGISTER_COMPARISON.md` was not modified).
+
+Rule followed: no invented mappings; every register/bit below is quoted from a named source file.
+
+---
+
+## 0. Repos surveyed
+
+| Repo | Role | Status | Notes |
+| --- | --- | --- | --- |
+| [sjtrny/esphome-hw211](https://github.com/sjtrny/esphome-hw211) | **Primary** ESPHome external component + full `hw211_modbus.json` | Fetched OK | Commit at clone tip: `8a8a7db…`; JSON sha256 `9811f3ec21f1…` |
+| [Allthebester/esphome-iStore-R290](https://github.com/Allthebester/esphome-iStore-R290) | Fork of sjtrny (renamed for iStore R290 / PC1006) | Fetched OK | Parent=`sjtrny/esphome-hw211`; **pruned/translated** JSON (`51f39141e1d5…`); tip `c8d2202` |
+| [echopin664/EVO270-1-HWS](https://github.com/echopin664/EVO270-1-HWS) | Hand-written ESPHome YAML + pinout photos + Modbus PDF | Fetched OK | No JSON workbook extract; uses **dtu_wifi** addresses (slave 99) |
+| [hydazz/esphome-hw211](https://github.com/hydazz/esphome-hw211) | Fork of sjtrny | Fetched OK | **NEW** (vs the three requested). Protocol JSON **identical** sha256 to sjtrny |
+| [Mozzie-AU/esphome-hw211](https://github.com/Mozzie-AU/esphome-hw211) | Fork of sjtrny | Fetched OK | **NEW**. Protocol JSON **identical** sha256 to sjtrny |
+
+### Search notes
+
+- GitHub search `esphome-hw211 OR EVO270-1-HWS OR hw211_modbus` → 2 primary repos (+ forks of sjtrny).
+- sjtrny fork list → Allthebester, hydazz, Mozzie-AU (3 forks).
+- Code search for `hw211_modbus.json` required auth; filename search via repo clone confirmed only these trees carry the workbook JSON.
+- Related-but-**different** ecosystems (FoxAir / PHNIX air-to-water, Warmlink cloud, FoxESS “EVO” inverter) were hit by keyword search and are **out of scope** for this HW211 DHW map.
+- Failed fetches: **none** of the five repos above failed to clone.
+
+### Extraction counts (this dump)
+
+- **sjtrny `dtu_wifi` registers:** 226
+- **sjtrny `hw211` registers:** 223
+- **sjtrny bit definitions parsed from workbook descriptions:** dtu_wifi=33, hw211=43, total=76
+- **Allthebester retained registers:** dtu_wifi=99, hw211=106 (subset + English/data_type edits)
+- **ESPHome presentation bit names** (`COMPONENT_BIT_NAMES` / `FAULT_BIT_NAMES` / sheet overlays): listed in §5 (not inventing bits absent from workbook).
+
+---
+
+## 1. License / origin of the xlsx workbook
+
+**Code license (sjtrny / forks):** MIT — `LICENSE` copyright `(c) 2026 sjtrny`.
+
+**Workbook / datasheets (not MIT):**
+
+- Primary extract source (stated in JSON + `scripts/extract_modbus_spec.py`):
+  - `datasheets/EVO270-1_MODBUS communication_protocol_6.5.25.xlsx`
+  - JSON field: `"source": "datasheets/EVO270-1_MODBUS communication_protocol_6.5.25.xlsx"`
+- Also shipped in sjtrny/Allthebester `datasheets/`:
+  - `Evo-270-1_Modbus Map.pdf`
+  - `302020 00000028 communication protocol.xls`
+  - `Parameter and description.doc`
+- echopin664 ships `Evo-270-1_Modbus Map.pdf` + photos; no LICENSE file in that repo.
+
+Evidence (`scripts/extract_modbus_spec.py`):
+
+```text
+SOURCE = ... / "datasheets" / "EVO270-1_MODBUS communication_protocol_6.5.25.xlsx"
+sheets = {
+  "dtu_wifi": { "name": "DTU&WIFI communication protocol", "path": "xl/worksheets/sheet1.xml",
+               "notes": "Visible sheet. Community ESPHome config uses this map with slave address 99." },
+  "hw211":   { "name": "HW211", "path": "xl/worksheets/sheet2.xml",
+               "notes": "Hidden sheet in the workbook. Mostly Chinese labels with some English terms." },
+}
+```
+
+There is **no SPDX / copyright grant** inside the xlsx itself in the repo; treat the spreadsheet as **manufacturer/OEM protocol documentation** redistributed for reverse-engineering/community use, while the ESPHome component code is MIT.
+
+Community origin repeatedly cited: Home Assistant thread “Implementation of Aqua Temp controller” (`https://community.home-assistant.io/t/implementation-of-aqua-temp-controller/230400/`).
+
+Blog (sjtrny):
+
+- https://sjtrny.com/posts/2026-05-26-heat-pump-hot-water-wi-fi-adapter/
+- https://sjtrny.com/posts/2026-06-03-esphome-hw211-component/
+
+---
+
+## 2. Transport & data-type formulas (sjtrny JSON)
+
+```json
+{
+  "protocol": "Modbus RTU",
+  "baud_rate": 9600,
+  "data_bits": 8,
+  "parity": "N",
+  "stop_bits": 1,
+  "crc": "CRC-16/MODBUS, low byte first on the wire",
+  "default_slave_addresses": {
+    "centralized_control": "H30 device address parameter",
+    "dtu_wifi": 99
+  },
+  "supported_function_codes": {
+    "3": "read holding registers",
+    "6": "write single register",
+    "16": "write multiple registers"
+  }
+}
+```
+
+```json
+{
+  "ENUM": {
+    "formula": "x"
+  },
+  "Binary": {
+    "formula": "16-bit bitfield"
+  },
+  "TEMP": {
+    "formula": "signed_int16(x) * 0.1",
+    "unit": "degC",
+    "fault_value": 32767
+  },
+  "TEMP1": {
+    "formula": "(x - 60) * 0.5",
+    "unit": "degC"
+  },
+  "DIGI1": {
+    "formula": "x"
+  },
+  "DIGI2": {
+    "formula": "x * 10"
+  },
+  "DIGI3": {
+    "formula": "x * 100"
+  },
+  "DIGI4": {
+    "formula": "x * 5"
+  },
+  "DIGI5": {
+    "formula": "x * 0.1"
+  },
+  "DIGI6": {
+    "formula": "x * 0.001"
+  },
+  "DIGI7": {
+    "formula": "x * 0.5"
+  },
+  "DIGI8": {
+    "formula": "x * 2"
+  },
+  "DIGI9": {
+    "formula": "x * 0.01"
+  }
+}
+```
+
+Notable registers shortcut in sjtrny JSON (**dtu_wifi-oriented** addresses):
+
+```json
+{
+  "current_water_temperature_display": 2025,
+  "bottom_tank_temperature": 2020,
+  "top_tank_temperature": 2021,
+  "target_temperature": 1104,
+  "power": 1011,
+  "operation_mode": 1013,
+  "status0": 2050,
+  "status1": 2051,
+  "fault0": 2085
+}
+```
+
+Allthebester splits notables per sheet:
+
+```json
+{
+  "dtu_wifi_slave_99": {
+    "current_water_temperature_display": 2025,
+    "bottom_tank_temperature": 2020,
+    "top_tank_temperature": 2021,
+    "target_temperature": 1104,
+    "power": 1011,
+    "operation_mode": 1013,
+    "status0": 2050,
+    "status1": 2051,
+    "fault0": 2085
+  },
+  "hw211_direct_rs485": {
+    "ambient_temperature": 2011,
+    "bottom_tank_temperature": 2012,
+    "top_tank_temperature": 2013,
+    "target_temperature": 1104,
+    "power": 1011,
+    "operation_mode": 1012,
+    "status0": 2030,
+    "status1": 2031,
+    "fault0": 2060
+  }
+}
+```
+
+Typo note: dtu_wifi register 2060 has data_type `GIDI1` in sjtrny JSON (almost certainly meant `DIGI1`); left as-in-source.
+
+---
+
+## 3. Warnings about sheet mixing
+
+Quoted / paraphrased from sources (do not mix sheets):
+
+1. `docs/entities.md` (sjtrny): *“Registers use the address in the selected sheet; do not interchange telemetry addresses between `dtu_wifi` and `hw211`.”*
+2. Same doc: *“Compressor high-temperature cutoff labels deliberately do not identify an ambient/tank sensor: the two source sheets differ on this point.”*
+3. Same doc: *“The HW211 sheet's missing scaling metadata is not inferred from the DTU sheet.”*
+4. `entity_metadata.py`: *“Addresses below refer to the selected protocol sheet, not Modbus offsets.”* and *“Telemetry and clock addresses differ between the two sheets.”*
+5. `operating_state_logic.h`: derived state consumes one coherent set of power/component/function/fault words — mixing old/new frames or sheets would corrupt the derived state.
+6. Community / component default: **`sheet: dtu_wifi` with Modbus slave address 99** (Wi‑Fi/DTU map). The `hw211` sheet is the **hidden** workbook sheet with a **different telemetry layout**.
+
+### Hard address collisions (same number, different meaning)
+
+| Addr | `dtu_wifi` name | `hw211` name |
+| --- | --- | --- |
+| 2011 | Main program version | 环境温度 AmbieNt temperature |
+| 2012 | Software code | 水箱下部温度 bottom temperature |
+| 2013 | Controller program version | 水箱上部温度top temperature |
+| 2014 | Software code | 盘管温度 coil temperature |
+| 2019 | Ambient temperature | 电子膨胀阀当前开度 EEV positioN |
+| 2020 | bottom temperature | 压机运行累积时间 |
+| 2021 | top temperature | 电加热运行累积时间 |
+| 2050 | Slave component status (State0) | *(empty / unused on this sheet)* |
+| 2030 | *(empty)* | 从机部件状态 (State0) |
+| 2051 | Slave function status (State1) | *(empty)* |
+| 2031 | *(empty)* | 从机功能状态 (State1) |
+| 2060 | EEV current position | 故障页：Failure（W10） |
+| 2085 | Failure（W10） | *(dtu only)* |
+| 1151–1156 | Clock modify / minute / hour / day / month / year | Hour / minute / month / day / weekday / year (different order!) |
+| 1158 | APP Online Heartbeat Package | 线上智能控制 |
+| 1076 | Device address (dtu) | *(see hw211 1157 机组地址)* |
+
+Status/fault word relocation summary:
+
+| Role | `dtu_wifi` | `hw211` |
+| --- | --- | --- |
+| Component status State0 | **2050** | **2030** |
+| Function status State1 | **2051** | **2031** |
+| Fault Fault0 | **2085** | **2060** |
+
+---
+
+## 4. Complete bit listings (workbook text)
+
+Bits are parsed from `description` fields in `protocol/hw211_modbus.json` (sjtrny). Polarity text is left as in the workbook.
+
+### 4.1 `dtu_wifi` bitfields
+
+#### dtu_wifi address 1129 — `L01` Enable vacation mode
+
+- Access: ``  Function: `03/16`  Data type: `Binary`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | Vacation mode date（0-NO/1-YES） |
+
+#### dtu_wifi address 1133 — `L05` Enable timer mode
+
+- Access: ``  Function: `03/16`  Data type: `Binary`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | Timer1ON（0-NO/1-YES) |
+| 1 | Timer1OFF（0-NO/1-YES) |
+| 2 | Timer2ON（0-NO/1-YES) |
+| 3 | Timer2OFF（0-NO/1-YES) |
+
+#### dtu_wifi address 2050 — `State0` Slave component status
+
+- Access: `W`  Function: `16`  Data type: `Binary`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | （S01）Remote oN/off switch （1=OP，0=CL） |
+| 2 | （S03） low pressure switch（1=OP，0=CL） |
+| 3 | （S04） HiGh pressure switch（1=OP，0=CL） |
+| 4 | （S05）Shortened time signal1=OP，0=CL） |
+| 5 | （S06）External heat source switch |
+| 6 | Reserve |
+| 7 | Reserve |
+| 8 | （O01）Compressor（0=OFF，1=ON）（0=OFF，1=ON） |
+| 9 | （O02）Electrical heater（0= OFF，1=ON） |
+| 10 | （O03）4-way valve（0=OFF，1= ON） |
+| 11 | （O04）FaN hiGh speeD（0=OFF，1=ON） |
+| 12 | （O05）FaN low speeD/solar pump（0=OFF，1=ON） |
+| 13 | （O06）Reserve/solar pump/solar valve pump（0=OFF，1=ON） |
+| 14 | O12 Electric anode3V_DE |
+| 15 | O13 Electric anodeMV_DE |
+
+#### dtu_wifi address 2051 — `State1` Slave function status
+
+- Access: `W`  Function: `16`  Data type: `Binary`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | O14 shutDowN（0= NO，1=YES） |
+| 1 | O15DTU&WIFI online or not（0=NO ，1=YES） |
+| 2 | O16Defrost（0=NO，1=YES） |
+| 3 | O17Whether the system enters the hot water function（0=NO，1=YES） |
+
+#### dtu_wifi address 2085 — `Fault0` Failure（W10）
+
+- Access: `W`  Function: `16`  Data type: `Binary`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | AmbieNt seNsor failure（0=NO，1=YES）P04 |
+| 1 | Bottom seNsor failure（0=NO，1=YES）P01 |
+| 2 | Top seNsor failure（0=NO，1=YES）P02 |
+| 3 | Coil seNsor failure（0=NO，1=YES）P05 |
+| 4 | SuctioN seNsor failure（0=无 NO，1=YES）P07 |
+| 5 | Solar seNsor failure（0=NO，1=YES）P034 |
+| 8 | HiGh pressure protectioN（0=NO，1=YES）E01 |
+| 9 | Low pressure protectioN（0= NO，1=YES）E02 |
+| 13 | Antifreezing protection（water tank）（0=NO，1=YES）E09 |
+
+
+### 4.2 `hw211` bitfields
+
+#### hw211 address 1129 — `L01` 假期模式使能
+
+- Access: ``  Function: `03/16`  Data type: `(empty)`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | 假期模式日期使能位（0-不使能/1-使能） |
+
+#### hw211 address 1133 — `L05` 定时开关机使能
+
+- Access: ``  Function: `03/16`  Data type: `(empty)`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | 定时时段1开机使能位（0-不使能/1-使能) |
+| 1 | 定时时段1关机使能位（0-不使能/1-使能) |
+| 2 | 定时时段2开机使能位（0-不使能/1-使能) |
+| 3 | 定时时段2关机使能位（0-不使能/1-使能) |
+
+#### hw211 address 1149 — `M10` 手动功能
+
+- Access: `读/写`  Function: `03/16`  Data type: `无掉电记忆`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | OUT1（0：断开/1：闭合）（即对应状态的O01） |
+| 1 | OUT2（0：断开/1：闭合）（即对应状态的O02） |
+| 2 | OUT3（0：断开/1：闭合）（即对应状态的O03） |
+| 3 | OUT4（0：断开/1：闭合）（即对应状态的O04） |
+| 4 | OUT5（0：断开/1：闭合）（即对应状态的O05） |
+| 5 | OUT6（0：断开/1：闭合）（即对应状态的O06） |
+| 6 | OUT7（0：断开/1：闭合） |
+| 7 | OUT8（0：断开/1：闭合） |
+
+#### hw211 address 2030 — `State0` 从机部件状态
+
+- Access: `写`  Function: `16`  Data type: `(empty)`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | （S01）应急开关Remote oN/off switch （1=断开OP，0=闭合CL） |
+| 1 | （S02）电加热过载保护开关Over heat protection switch （0=断开 OP，1=闭合 CL） |
+| 2 | （S03）低压开关 low pressure switch（1=断开OP，0=闭合 CL） |
+| 3 | （S04）高压开关 HiGh pressure switch（1=断开 OP，0=闭合 CL） |
+| 4 | （S05）电加热缩时信号1=断开OP，0=闭合CL） |
+| 5 | （S06）水流开关 Water flow switch（1=停止 OFF，0=运行 ON） |
+| 6 | 保留 Reserve |
+| 7 | 保留 Reserve |
+| 8 | （O01）压缩机 Compressor（0=失电 OFF，1=得电 ON）（0=停止 OFF，1=运行 ON） |
+| 9 | （O02）电加热Electrical heater（0=停止 OFF，1=运行ON） |
+| 10 | （O03）四通阀 4-way valve（0=停止OFF，1=运行 ON） |
+| 11 | （O04）风机高速FaN hiGh speeD（0=停止OFF，1=运行ON） |
+| 12 | （O05）风机低速/循环泵/太阳能泵FaN low speeD/ circulate pump/ solar pump（0=停止OFF，1=运行ON） |
+| 13 | （O06）保留/循环泵/太阳能泵/太阳能排水阀Reserve/cycle pump/solar pump/solar valve pump（0=停止OFF，1=运行ON） |
+
+#### hw211 address 2031 — `State1` 从机功能状态
+
+- Access: `写`  Function: `16`  Data type: `(empty)`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | 恒温停机shutDowN（0=无 NO，1=有YES） |
+| 1 | 当前线上智能控制方式（0-集控/1-DTU&WIFI） |
+| 2 | 除霜Defrost（0=无，1=有）（0=无 NO，1=有YES） |
+
+#### hw211 address 2060 — `Fault0` 故障页：Failure（W10）
+
+- Access: `写`  Function: `16`  Data type: `(empty)`
+
+| Bit | Workbook text |
+| --- | --- |
+| 0 | 环境感温故障AmbieNt seNsor failure（0=无 NO，1=有 YES）P04 |
+| 1 | 水箱下部感温故障Bottom seNsor failure（0=无 NO，1=有YES）P01 |
+| 2 | 水箱上部感温故障Top seNsor failure（0=无 NO，1=有YES）P02 |
+| 3 | 盘管感温故障Coil seNsor failure（0=无 NO，1=有YES）P05 |
+| 4 | 回气感温故障SuctioN seNsor failure（0=无 NO，1=有YES）P07 |
+| 5 | 太阳能感温故障Solar seNsor failure（0=无 NO，1=有YES）P034 |
+| 8 | 高压保护HiGh pressure protectioN（0=无 NO，1=有YES）E01 |
+| 9 | 低压保护Low pressure protectioN（0=无 NO，1=有YES）E02 |
+| 10 | 电加热过热保护Over heat protection（0=无 NO，1=有YES）E04 |
+| 11 | 水流开关保护 water flow protectioN（0=无 NO，1=有YES）E03 |
+| 12 | 防冻保护aNtifreeziNG protectioN（0=无 NO，1=有YES）E07 |
+| 13 | 冬季防冻保护（水箱）（0=无 NO，1=有YES）E09 |
+| 14 | 冬季二级防冻保护senior antifreezing protection（0=无 NO，1=有YES） |
+
+
+---
+
+## 5. How ESPHome maps bits → entities
+
+Source: `components/hw211/__init__.py` + `components/hw211/entity_metadata.py` (sjtrny).
+
+### Mechanism
+
+1. Config option `sheet: dtu_wifi | hw211` selects `spec["sheets"][sheet]["registers"]`.
+2. A register is treated as a bitfield when `data_type.lower() == "binary"`.
+3. Bits are discovered by regex on the workbook description:
+   `r"[Bb]it\s*(\d+)\s*[:：]\s*([^/；;\n]+)"` (`_bit_options`).
+4. If `create_binary_sensors: true`, each discovered bit becomes a `modbus_binarysensor` entity.
+5. **Display names** come from `BIT_NAMES[sheet][address][bit]` in `entity_metadata.py`, **not** raw workbook English (which is noisy). Fallback: `"{name} bit {bit}"`.
+6. Entity category: bits in `PRIMARY_BITS` stay in the main Sensors card; others are Diagnostics.
+7. **Important:** on the `hw211` sheet, many status/fault registers have **empty `data_type`** in sjtrny JSON, so `_is_binary_type` is false and **automatic binary sensors may not be created** for 2030/2031/2060 unless data_type is Binary (Allthebester partially backfills types on a subset). Timer/vacation bits on dtu_wifi are typed `Binary` and do expand.
+
+### `COMPONENT_BIT_NAMES` / `FAULT_BIT_NAMES` (presentation layer)
+
+From `entity_metadata.py` (evidence excerpt):
+
+```python
+COMPONENT_BIT_NAMES = {
+    0: "Remote switch input open",
+    2: "Low pressure switch input open",
+    3: "High pressure switch input open",
+    4: "Shortened timing input open",
+    6: "Component reserved bit 6",
+    7: "Component reserved bit 7",
+    8: "Compressor running",
+    9: "Electric heater running",
+    10: "Reversing valve active",
+    11: "Fan high speed active",
+    12: "Output O05 active",
+    13: "Output O06 active",
+}
+FAULT_BIT_NAMES = {
+    0: "Fault ambient temperature sensor",
+    1: "Fault lower tank temperature sensor",
+    2: "Fault upper tank temperature sensor",
+    3: "Fault coil temperature sensor",
+    4: "Fault suction temperature sensor",
+    5: "Fault solar temperature sensor",
+    8: "Protection high pressure",
+    9: "Protection low pressure",
+    13: "Protection tank frost",
+}
+```
+
+Sheet overlays:
+
+| Sheet | Addr | Extra / override bits |
+| --- | --- | --- |
+| dtu_wifi | 2050 | +5 External heat source input active; +14 Electronic anode 3 V; +15 Electronic anode MV |
+| dtu_wifi | 2051 | 0 Thermostat satisfied; 1 Network module online; 2 Defrost active; 3 Hot water mode active |
+| dtu_wifi | 2085 | FAULT_BIT_NAMES |
+| hw211 | 1149 | Manual output O01–O08 active (bits 0–7) |
+| hw211 | 2030 | COMPONENT +1 Electric heater overload input closed; +5 Water flow input stopped |
+| hw211 | 2031 | 0 Thermostat satisfied; 1 Network module control selected; 2 Defrost active |
+| hw211 | 2060 | FAULT +10 heater overheat; +11 water flow; +12 frost; +14 second stage frost |
+| both | 1129 | bit0 Vacation date enabled |
+| both | 1133 | bits 0–3 Timer 1/2 start/stop enabled |
+
+`PRIMARY_BITS` (shown outside Diagnostics):
+
+- dtu_wifi: 2050 bits {8,9,10,11,12,13}; 2051 bits {0,2,3}
+- hw211: 2030 bits {8,9,10,11,12,13}; 2031 bits {0,2}
+
+### Derived Operating state (sjtrny only; not in Allthebester)
+
+`operating_state_logic.h` uses:
+
+- any fault word ≠ 0 → Fault / protection
+- function bit2 → Defrosting
+- component bit8 + bit9 → Heating + boost
+- bit8 → Heating; bit9 → Electric heating
+- else power==0 → Off; else Idle
+
+Addresses wired depend on selected sheet (2050/2051/2085 vs 2030/2031/2060).
+
+---
+
+## 6. Sheet differences dedicated section (`dtu_wifi` vs `hw211`)
+
+| Topic | `dtu_wifi` | `hw211` |
+| --- | --- | --- |
+| Workbook sheet | Visible `DTU&WIFI communication protocol` (`sheet1.xml`) | Hidden `HW211` (`sheet2.xml`) |
+| Register count (sjtrny) | 226 | 223 |
+| Labels | Mostly English | Mostly Chinese (+ English fragments) |
+| Data types filled | Often ENUM/TEMP1/DIGI*/Binary | Mostly empty (except some `无掉电记忆`) |
+| Default slave | 99 (DTU/Wi‑Fi) | “centralized_control” / H30 device address (not hard-coded 99) |
+| Ambient temp | 2019 | 2011 |
+| Tank lower / upper | 2020 / 2021 | 2012 / 2013 |
+| Coil / suction / solar | 2022 / 2023 / 2024 | 2014 / 2015 / 2016 |
+| Display water temp | 2025 | *(not present as named field)* |
+| EEV position | 2060 | 2019 |
+| Comp / heater run hours | 2061 / 2062 | 2020 / 2021 |
+| Firmware pairs | 2011–2014 | 2077–2080 |
+| Cooling target / extras | many empty rows | 1105, 1068, 1070–1072, 1114, 1116, 1119, 1149, … |
+| Clock registers | 1151=enable, 1152=min, 1153=hour, 1154=day, 1155=month, 1156=year | 1150=enable, 1151=hour, 1152=min, 1153=month, 1154=day, 1155=weekday, 1156=year |
+| Modbus address param | 1076 | 1157 |
+| Control interface | 1077 | 1158 |
+| State0 / State1 / Fault0 | 2050 / 2051 / 2085 | 2030 / 2031 / 2060 |
+| State0 bit5 | External heat source switch | Water flow switch |
+| State0 bits 14–15 | Electronic anode 3V / MV | *(not in hw211 State0 text)* |
+| State0 bit1 | *(absent in dtu text)* | Electric heater overload switch |
+| State1 bit1 | DTU&WIFI online | Online control mode (集控 vs DTU&WIFI) |
+| State1 bit3 | Hot water function entered | *(absent)* |
+| Fault extras on hw211 | — | E04 overheat, E03 flow, E07 frost, senior antifreeze |
+
+Overlap: 216 shared addresses; 120 of those have different name and/or description text between sheets (often translation of the same control, but **telemetry block is not interchangeable**).
+
+---
+
+## 7. Fork / sibling deltas
+
+### 7.1 Allthebester/esphome-iStore-R290 vs sjtrny
+
+- GitHub marks it a **fork** of `sjtrny/esphome-hw211`, renamed for iStore R290 / **PC1006**.
+- JSON device string changed to `iStore R290…` / `PC1006-family…` but **still sources the same EVO270-1 xlsx**.
+- **Pruned** register lists: dtu_wifi 99 vs 226; hw211 106 vs 223 (reserved/empty rows dropped).
+- Many remaining rows: English renaming, cleaned enum punctuation, and **filled `data_type`** on hw211 rows that sjtrny left blank.
+- Missing vs current sjtrny: `docs/`, `entity_metadata.py`, schedule/operating_state modules, CI tests — older/simpler component surface.
+- `notable_registers` correctly documents **both** address schemes (see §2).
+
+### 7.2 hydazz / Mozzie-AU
+
+- Protocol JSON sha256 **matches** sjtrny (`9811f3ec21f14d814b9f4e6fbe2ed2c917fc45f6beb86ee99fdf07f4144548b4`).
+- Shallow clone showed no file diffs vs sjtrny for hydazz/Mozzie-AU at fetch time (mirror forks).
+
+### 7.3 echopin664/EVO270-1-HWS
+
+- Hardware: **M5 Atom S3 Lite + RS485 base**; pins **UART RX GPIO5 / TX GPIO6**; baud 9600 8N1; Modbus slave **99**.
+- Wiring (README): GND, 485-A, 485-B, 12V on HW211 connector labelled Wi‑Fi; photos `HW211_HWS_Controller.png`, `Atom S3 Lite RS485.png`.
+- YAML uses **dtu_wifi** map explicitly (temps 2019–2023 TEMP1 `(x-60)*0.5`, target 1104, status **2050**, timers 1133, power 1011, etc.).
+- Bit sensors for State0 (2050) match workbook bits 0,2–5,8–15 (skips reserved 6–7; no bit1). Names align with DTU sheet (External heat source on bit5; anodes 14/15).
+- Also ships `Evo-270-1_Modbus Map.pdf` (same family as sjtrny datasheets).
+- No external_components / no hw211 JSON generator.
+
+---
+
+## 8. Complete register tables — sheet `dtu_wifi` (sjtrny)
+
+Source: `sjtrny/esphome-hw211/protocol/hw211_modbus.json` → `sheets.dtu_wifi` (226 rows).
+
+Notes: Visible sheet. Community ESPHome config uses this map with slave address 99.
+
+| Addr | Code | Name | Access | Func | Data type | Scale/unit | Description / enums | Mark |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1001 |  |  |  | 03/16 |  |  | All the yellow parts in this agreement,the bar code are only used for centralized control or DTU, color screen and WIFI module need not be processed |  |
+| 1002 |  |  |  | 03/16 |  |  |  |  |
+| 1003 |  |  |  | 03/16 |  |  |  |  |
+| 1004 |  |  |  | 03/16 |  |  |  |  |
+| 1005 |  |  |  | 03/16 |  |  |  |  |
+| 1006 |  |  |  | 03/16 |  |  |  |  |
+| 1007 |  |  |  | 03/16 |  |  |  |  |
+| 1008 |  |  |  | 03/16 |  |  |  |  |
+| 1009 |  |  |  | 03/16 |  |  |  |  |
+| 1010 |  |  |  | 03/16 |  |  |  |  |
+| 1011 | Power | Power on/off | W/R | 03/16 | ENUM | x | ON/OFF( ON：1/OFF：0) |  |
+| 1012 | Mode | Mode | W/R | 03/16 | ENUM | x | MoDe (0：INtelliGeNt moDe//2：EcoNomic MoDe/3：HybriD MoDe:/4：HiGh DemaND moDe/7：VacatioN MoDe） |  |
+| 1013 | Mode_REAL | Actual operation mode | W/R | 03/16 | ENUM | x | MoDe (0：INtelliGeNt moDe//2：EcoNomic MoDe/3：HybriD MoDe:/4：HiGh DemaND moDe/ |  |
+| 1014 | M06 | Booster works independently | W/R | 03/16 | ENUM | x | （2：OFF/1：ON/0：complete Instructions） | No Power-off memory function |
+| 1015 | M07 | Compulsive defrosting | W/R | 03/16 | ENUM | x | （0：OFF/1：ON）；0: OFF（Adress value=1001）Available | No Power-off memory function |
+| 1016 | M17 | Ventilation mode | W/R | 03/16 | ENUM | x | （0-OFF/1-Low speed/2-High speed） |  |
+| 1017 |  |  |  | 03/16 |  |  |  |  |
+| 1018 |  |  |  | 03/16 |  |  |  |  |
+| 1019 |  |  |  | 03/16 |  |  |  |  |
+| 1020 | /01 | Usage of O05 | W/R | 03/16 | ENUM | x | （0-Low speed air/2-Solar heat pump） |  |
+| 1021 | /02 | Usage of O06 | W/R | 03/16 | ENUM | x | （0-No output/2-Solar heat pump/3-Solar Drain valve） |  |
+| 1022 |  |  |  | 03/16 |  |  |  |  |
+| 1023 |  |  |  | 03/16 |  |  |  |  |
+| 1024 |  |  |  | 03/16 |  |  |  |  |
+| 1025 |  |  |  | 03/16 |  |  |  |  |
+| 1026 |  |  |  | 03/16 |  |  |  |  |
+| 1027 |  |  |  | 03/16 |  |  |  |  |
+| 1028 |  |  |  | 03/16 |  |  |  |  |
+| 1029 |  |  |  | 03/16 |  |  |  |  |
+| 1030 |  |  |  | 03/16 |  |  |  |  |
+| 1031 |  |  |  | 03/16 |  |  |  |  |
+| 1032 |  |  |  | 03/16 |  |  |  |  |
+| 1033 |  |  |  | 03/16 |  |  |  |  |
+| 1034 | D01 | Defrosting startup temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range-30~0℃ |  |
+| 1035 | D02 | Defrosting shutdown temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range0~30℃ |  |
+| 1036 | D03 | Duration of defrosting | W/R | 03/16 | DIGI1 | x | Unit:1min/Range30~90℃ |  |
+| 1037 | D04 | Longest duration of defrosting | W/R | 03/16 | DIGI7 | x * 0.5 | (Longest duration of defrosting 3miN,actual value=3*2=6（D04）);Unit:1min/Range 1~20 |  |
+| 1038 | D05 | Shortest duration of defrosting | W/R | 03/16 | DIGI7 | x * 0.5 | (Shortest duration of defrosting 3miN, actual value=3*2=6（D05）);Unit:1min/Range 0~D04 |  |
+| 1039 | D06 | Defrosting way | W/R | 03/16 | ENUM | x | （0-Standard/1-Eco/2-Intelligent） |  |
+| 1040 | D07 | Intelligent defrosting judgement | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range10~20℃ |  |
+| 1041 |  |  |  | 03/16 |  |  |  |  |
+| 1042 |  |  |  | 03/16 |  |  |  |  |
+| 1043 |  |  |  | 03/16 |  |  |  |  |
+| 1044 |  |  |  | 03/16 |  |  |  |  |
+| 1045 |  |  |  | 03/16 |  |  |  |  |
+| 1046 | G01 | Disinfection target temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range30~70℃ |  |
+| 1047 | G02 | Duration of disinfection | W/R | 03/16 | DIGI1 | x | （Value=0，no disinfection）;Unit:1min/Range 0~90 |  |
+| 1048 | G03 | Startup point of disinfection | W/R | 03/16 | DIGI1 | x | Unit:1h/Range 0~23 |  |
+| 1049 | G04 | Circle of disinfection | W/R | 03/16 | DIGI1 | x | Unit:1d/Range 1~99/default 7days |  |
+| 1050 |  |  |  | 03/16 |  |  |  |  |
+| 1051 |  |  |  | 03/16 |  |  |  |  |
+| 1052 |  |  |  | 03/16 |  |  |  |  |
+| 1053 |  |  |  | 03/16 |  |  |  |  |
+| 1054 |  |  |  | 03/16 |  |  |  |  |
+| 1055 | E01 | EEV adjustment mode | W/R | 03/16 | ENUM | x | （0-Non-auto/1-Auto） |  |
+| 1056 | E02 | Target degree of supreheat | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range -20~20 |  |
+| 1057 | E03 | Original position of EEV | W/R | 03/16 | DIGI2 | x * 10 | Unit:10steps/Range 0~50 |  |
+| 1058 | E04 | Minimal opening position of EEV | W/R | 03/16 | DIGI2 | x * 10 | (≤5，Controller handling=5);Unit:10steps/Range 0~50 |  |
+| 1059 | E05 | Position of EEV for defrosting | W/R | 03/16 | DIGI2 | x * 10 | Unit:10steps/Range 0~50 |  |
+| 1060 |  |  |  | 03/16 |  |  |  |  |
+| 1061 |  |  |  | 03/16 |  |  |  |  |
+| 1062 |  |  |  | 03/16 |  |  |  |  |
+| 1063 |  |  |  | 03/16 |  |  |  |  |
+| 1064 |  |  |  | 03/16 |  |  |  |  |
+| 1065 |  |  |  | 03/16 |  |  |  |  |
+| 1066 | H32 | Circle of submitting data to Cloud | W/R | 03/16 | DIGI1 | x | 1~255（Min） |  |
+| 1067 | H01 | Remenber the status of device when power down | W/R | 03/16 | ENUM | x | （0-No/1-Yes） |  |
+| 1068 |  |  |  | 03/16 |  |  |  |  |
+| 1069 | H03 | Heating source | W/R | 03/16 | ENUM | x | （0-Air source） |  |
+| 1070 |  |  |  | 03/16 |  |  |  |  |
+| 1071 |  |  |  | 03/16 |  |  |  |  |
+| 1072 |  |  |  | 03/16 |  |  |  |  |
+| 1073 | H07 | Temperature unit | W/R | 03/16 | ENUM | x | （0-Celsius degree/1-Fahrenheit degree） |  |
+| 1074 | H98 | Model mode parameter | W/R | 03/16 | ENUM | x | 0-0X07 ;  1-0X17; 2-0X08; 3-0X18 |  |
+| 1075 | H99 | Compensate to the shown temp | W/R | 03/16 | ENUM | x | （0-NO/1-YES）（Note：H99 is stored on the controller） |  |
+| 1076 | H30 | Device address | W/R | 03/16 | DIGI1 | x | 1~255 |  |
+| 1077 | H31 | Intelligent control mode | W/R | 03/16 | ENUM | x | （0-Centralized control/1-DTU&WIFI） |  |
+| 1078 |  |  |  | 03/16 |  |  |  |  |
+| 1079 |  |  |  | 03/16 |  |  |  |  |
+| 1080 | N01 | The sensor to control solar water pump | W/R | 03/16 | ENUM | x | （0-Bottom/1-Top） |  |
+| 1081 | N02 | Longest running time of solar water pump | W/R | 03/16 | DIGI1 | x | Unit:1min/Range0~30 |  |
+| 1082 | N03 | Temp hysteresis of solar water pump | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range0~20℃ |  |
+| 1083 | N04 | Activate the nighttime temp decreases mode | W/R | 03/16 | ENUM | x | （0-NO/1-YES） |  |
+| 1084 | N05 | Startup point of the nighttime temp decreases mode | W/R | 03/16 | DIGI1 | x | Unit:1h/Range0~23 |  |
+| 1085 | N06 | Shutdown point of the nighttime temp decreases mode | W/R | 03/16 | DIGI1 | x | Unit:1h/Range0~23 |  |
+| 1086 | N07 | Startup temp of decreasing solar water temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range40~90℃ |  |
+| 1087 | N08 | Temp hysteresis of stopping  decreasing solar water temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range1~40℃ |  |
+| 1088 | N09 | Solar water releasing temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range50~90℃ |  |
+| 1089 | N10 | Shutdown temp of solar water pump | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range50~90℃ |  |
+| 1090 | N11 | Working mode of solar water pump | W/R | 03/16 | ENUM | x | （0-NO/1-YES） |  |
+| 1091 |  |  |  | 03/16 |  |  | All the yellow parts in this agreement,the bar code are only used for centralized control or DTU, color screen and WIFI module need not be processed |  |
+| 1092 |  |  |  | 03/16 |  |  |  |  |
+| 1093 |  |  |  | 03/16 |  |  |  |  |
+| 1094 |  |  |  | 03/16 |  |  |  |  |
+| 1095 |  |  |  | 03/16 |  |  |  |  |
+| 1096 |  |  |  | 03/16 |  |  |  |  |
+| 1097 |  |  |  | 03/16 |  |  |  |  |
+| 1098 |  |  |  | 03/16 |  |  |  |  |
+| 1099 |  |  |  | 03/16 |  |  |  |  |
+| 1100 |  |  |  | 03/16 |  |  |  |  |
+| 1104 | R01 | Target temp | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range10~75℃ |  |
+| 1105 |  |  |  | 03/16 |  |  |  |  |
+| 1106 | R03 | Return difference of heat pump startup(bottom sensor) | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range1~20℃ |  |
+| 1107 | R04 | Enable R05 as setpoint of booster? | W/R | 03/16 | ENUM | x | （0-NO/1-YES） |  |
+| 1108 | R05 | Setpoint of booster | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range30~90℃ |  |
+| 1109 | R06 | Booster startup delay | W/R | 03/16 | DIGI4 | x * 5 | Unit:1℃/Range0~90℃ |  |
+| 1110 | R07 | Booster replaces heat pump? | W/R | 03/16 | ENUM | x | （0-NO/1-YES） |  |
+| 1111 | R08 | Setpoint of ambient temp to activate booster to replace heat pump | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range-20~10℃ |  |
+| 1112 | R09 | Setpoint of ambient temp to activate booster without delay | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range0~30℃ |  |
+| 1113 | R10 | Setpoint of ambient temp to activate booster with delay | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range10~40℃ |  |
+| 1114 |  |  |  | 03/16 |  |  |  |  |
+| 1115 | R12 | Ambient temp of shutting down compressor compulsively | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range-30~5℃ |  |
+| 1116 |  |  |  | 03/16 |  |  |  |  |
+| 1117 | R14 | The target temp of second heating source | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | 10～60℃ |  |
+| 1118 | R15 | Maximal ambient temp of working compressor | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | 55~80℃ |  |
+| 1119 |  |  |  | 03/16 |  |  |  |  |
+| 1120 | R17 | Enable top sensor to control compressor? | W/R | 03/16 | ENUM | x | （0-NO/1-YES） |  |
+| 1121 | R18 | Return difference of heat pump startup(top sensor) | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | Unit:1℃/Range1~20℃ |  |
+| 1122 | R19 | Setpoint 1 of ambient temp to stop compressor | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | 30～90℃ |  |
+| 1123 | R20 | Setpoint 2 of ambient temp to stop compressor | W/R | 03/16 | TEMP1 | (x - 60) * 0.5; unit=degC | 30～90℃ |  |
+| 1129 | L01 | Enable vacation mode |  | 03/16 | Binary | 16-bit bitfield | bit0:Vacation mode date（0-NO/1-YES） |  |
+| 1130 | L02 | Vacation-year |  | 03/16 | DIGI1 | x | 0~99Y |  |
+| 1131 | L03 | Vacation-month |  | 03/16 | DIGI1 | x | 1~12M |  |
+| 1132 | L04 | Vacation-day |  | 03/16 | DIGI1 | x | 1~31D |  |
+| 1133 | L05 | Enable timer mode |  | 03/16 | Binary | 16-bit bitfield | bit0:Timer1ON（0-NO/1-YES)；<br>bit1:Timer1OFF（0-NO/1-YES)；<br>bit2:Timer2ON（0-NO/1-YES)；<br>bit3:Timer2OFF（0-NO/1-YES)； |  |
+| 1134 | L06 | Hour setting of turning on timer 1 |  | 03/16 | DIGI1 | x | 0~23h |  |
+| 1135 | L07 | Minute setting of turning on timer 1 |  | 03/16 | DIGI1 | x | 0~59min |  |
+| 1136 | L08 | Hour setting of turning off timer 1 |  | 03/16 | DIGI1 | x | 0~23h |  |
+| 1137 | L09 | Minute setting of turning off timer 1 |  | 03/16 | DIGI1 | x | 0~59min |  |
+| 1138 | L10 | Hour setting of turning on timer 2 |  | 03/16 | DIGI1 | x | 0~23h |  |
+| 1139 | L11 | Minute setting of turning on timer 2 |  | 03/16 | DIGI1 | x | 0~59min |  |
+| 1140 | L12 | Hour setting of turning off timer 2 |  | 03/16 | DIGI1 | x | 0~23h |  |
+| 1141 | L13 | Minute setting of turning off timer 2 |  | 03/16 | DIGI1 | x | 0~59min |  |
+| 1151 | M11 | System Clock Modify Enable | W/R | 03/16 | Binary | 16-bit bitfield | Flag bit for whether or not the current clock is modified by line control (1-yes/0-no) | No Power-off memory function |
+| 1152 | M12 | System Current minute | W/R | 03/16 | DIGI1 | x | （minute）(0~59) | No Power-off memory function |
+| 1153 | M13 | System current o'clock | W/R | 03/16 | DIGI1 | x | （o'clock）   （0~23) | No Power-off memory function |
+| 1154 | M14 | System current date | W/R | 03/16 | DIGI1 | x | （date）(1~31) | No Power-off memory function |
+| 1155 | M15 | System current month | W/R | 03/16 | DIGI1 | x | (month）   （1~12) | No Power-off memory function |
+| 1156 | M16 | System current year | W/R | 03/16 | DIGI1 | x | （year） (0~99) | No Power-off memory function |
+| 1158 |  | APP Online Heartbeat Package | W/R | 03/16 | DIGI1 | x | 0x5AA5 | No Power-off memory function |
+| 2001 |  |  |  | 03/16 |  |  | All the yellow parts in this agreement,the bar code are only used for centralized control or DTU, color screen and WIFI module need not be processed |  |
+| 2002 |  |  |  | 03/16 |  |  |  |  |
+| 2003 |  |  |  | 03/16 |  |  |  |  |
+| 2004 |  |  |  | 03/16 |  |  |  |  |
+| 2005 |  |  |  | 03/16 |  |  |  |  |
+| 2006 |  |  |  | 03/16 |  |  |  |  |
+| 2007 |  |  |  | 03/16 |  |  |  |  |
+| 2008 |  |  |  | 03/16 |  |  |  |  |
+| 2009 |  |  |  | 03/16 |  |  |  |  |
+| 2010 |  |  |  | 03/16 |  |  |  |  |
+| 2011 |  | Main program version | R | 16 | DIGI5 | x * 0.1 | 11 means software version V1.1 |  |
+| 2012 |  | Software code | R | 16 | DIGI1 | x | 1234 means software version 35005-311234；12means software version 35005-310012 |  |
+| 2013 |  | Controller program version | W | 16 | DIGI5 | x * 0.1 | 11 means software V1.1 |  |
+| 2014 |  | Software code | W | 16 | DIGI1 | x | 1234 means software version 35005-311234；12means software version 35005-310012 |  |
+| 2019 | T01 | Ambient temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2020 | T02 | bottom temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2021 | T03 | top temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2022 | T04 | coil temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2023 | T05 | suction temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2024 | T06 | solar temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2025 | T10 | APP/display interface temperature | W | 16 | TEMP1 | (x - 60) * 0.5; unit=degC |  |  |
+| 2026 | T20 | Enter parameter out of range protection times | W | 16 | GIDI1 |  |  |  |
+| 2027 | T21 | Memory chip EEPROM number of times stored | W | 16 |  |  |  |  |
+| 2028 |  |  | W | 16 |  |  |  |  |
+| 2029 |  |  | W | 16 |  |  |  |  |
+| 2030 |  |  | W | 16 |  |  |  |  |
+| 2031 |  |  | W | 16 |  |  |  |  |
+| 2032 |  |  | W | 16 |  |  |  |  |
+| 2033 |  |  | W | 16 |  |  |  |  |
+| 2034 |  |  | W | 16 |  |  |  |  |
+| 2035 |  |  | W | 16 |  |  |  |  |
+| 2036 |  |  | W | 16 |  |  |  |  |
+| 2037 |  |  | W | 16 |  |  |  |  |
+| 2038 |  |  | W | 16 |  |  |  |  |
+| 2039 |  |  | W | 16 |  |  |  |  |
+| 2040 |  |  | W | 16 |  |  |  |  |
+| 2041 |  |  | W | 16 |  |  |  |  |
+| 2042 |  |  | W | 16 |  |  |  |  |
+| 2043 |  |  | W | 16 |  |  |  |  |
+| 2044 |  |  | W | 16 |  |  |  |  |
+| 2045 |  |  | W | 16 |  |  |  |  |
+| 2046 |  |  | W | 16 |  |  |  |  |
+| 2047 |  |  | W | 16 |  |  |  |  |
+| 2048 |  |  | W | 16 |  |  |  |  |
+| 2049 |  |  | W | 16 |  |  |  |  |
+| 2050 | State0 | Slave component status | W | 16 | Binary | 16-bit bitfield | Bit0：（S01）Remote oN/off switch （1=OP，0=CL）<br><br>Bit2：（S03） low pressure switch（1=OP，0=CL）<br>Bit3：（S04） HiGh pressure switch（1=OP，0=CL）<br>Bit4：（S05）Shortened time signal1=OP，0=CL）<br>Bit5：（S06）External heat source switch <br>Bit6：Reserve<br>Bit7：Reserve<br>Bit8：（O01）Compressor（0=OFF，1=ON）（0=OFF，1=ON）<br>Bit9：（O02）Electrical heater（0= OFF，1=ON）<br>Bit10：（O03）4-way valve（0=OFF，1= ON）<br>Bit11：（O04）FaN hiGh speeD（0=OFF，1=ON）<br>Bit12：（O05）FaN low speeD/solar pump（0=OFF，1=ON）<br>Bit13：（O06）Reserve/solar pump/solar valve pump（0=OFF，1=ON）<br>Bit14:O12 Electric anode3V_DE;<br>Bit15:O13 Electric anodeMV_DE; |  |
+| 2051 | State1 | Slave function status | W | 16 | Binary | 16-bit bitfield | Bit0：O14 shutDowN（0= NO，1=YES）<br>Bit1：O15DTU&WIFI online or not（0=NO ，1=YES）<br>Bit2：O16Defrost（0=NO，1=YES）<br>bit3: O17Whether the system enters the hot water function（0=NO，1=YES） |  |
+| 2052 |  |  | W | 16 |  |  |  |  |
+| 2053 |  |  | W | 16 |  |  |  |  |
+| 2054 |  |  | W | 16 |  |  |  |  |
+| 2055 |  |  | W | 16 |  |  |  |  |
+| 2056 |  |  | W | 16 |  |  |  |  |
+| 2057 |  |  | W | 16 |  |  |  |  |
+| 2058 |  |  | W | 16 |  |  |  |  |
+| 2059 |  |  | W | 16 |  |  |  |  |
+| 2060 | O07 | EEV current position | W | 16 | DIGI1 | x | unit 1℃ /range 0~480 |  |
+| 2061 | O08 | Accumulative running time of compressor | W | 16 | DIGI1 | x | 0～9999h |  |
+| 2062 | O09 | Accumulative running time of booster | W | 16 | DIGI1 | x | 0～9999h |  |
+| 2063 |  |  | W | 16 |  |  |  |  |
+| 2064 |  |  | W | 16 |  |  |  |  |
+| 2065 |  |  | W | 16 |  |  |  |  |
+| 2066 |  |  | W | 16 |  |  |  |  |
+| 2067 |  |  | W | 16 |  |  |  |  |
+| 2068 |  |  | W | 16 |  |  |  |  |
+| 2069 |  |  | W | 16 |  |  |  |  |
+| 2070 |  |  | W | 16 |  |  |  |  |
+| 2071 |  |  | W | 16 |  |  |  |  |
+| 2072 |  |  | W | 16 |  |  |  |  |
+| 2073 |  |  | W | 16 |  |  |  |  |
+| 2074 |  |  | W | 16 |  |  |  |  |
+| 2075 |  |  | W | 16 |  |  |  |  |
+| 2076 |  |  | W | 16 |  |  |  |  |
+| 2077 |  |  | W | 16 |  |  |  |  |
+| 2078 |  |  | W | 16 |  |  |  |  |
+| 2079 |  |  | W | 16 |  |  |  |  |
+| 2080 |  |  | W | 16 |  |  |  |  |
+| 2081 |  |  | W | 16 |  |  |  |  |
+| 2082 |  |  | W | 16 |  |  |  |  |
+| 2083 |  |  | W | 16 |  |  |  |  |
+| 2084 |  |  | W | 16 |  |  |  |  |
+| 2085 | Fault0 | Failure（W10） | W | 16 | Binary | 16-bit bitfield | Bit0：AmbieNt seNsor failure（0=NO，1=YES）P04<br>Bit1：Bottom seNsor failure（0=NO，1=YES）P01<br>Bit2：Top seNsor failure（0=NO，1=YES）P02<br>Bit3：Coil seNsor failure（0=NO，1=YES）P05<br>Bit4：SuctioN seNsor failure（0=无 NO，1=YES）P07<br>Bit5：Solar seNsor failure（0=NO，1=YES）P034<br>Bit8：HiGh pressure protectioN（0=NO，1=YES）E01<br>Bit9：Low pressure protectioN（0= NO，1=YES）E02<br>Bit13：Antifreezing protection（water tank）（0=NO，1=YES）E09 |  |
+| 2086 |  |  | W | 16 |  |  |  |  |
+| 2087 |  |  | W | 16 |  |  |  |  |
+| 2088 |  |  | W | 16 |  |  |  |  |
+| 2089 |  |  | W | 16 |  |  |  |  |
+| 2090 |  |  | W | 16 |  |  |  |  |
+
+---
+
+## 9. Complete register tables — sheet `hw211` (sjtrny)
+
+Source: `sjtrny/esphome-hw211/protocol/hw211_modbus.json` → `sheets.hw211` (223 rows).
+
+Notes: Hidden sheet in the workbook. Mostly Chinese labels with some English terms.
+
+| Addr | Code | Name | Access | Func | Data type | Scale/unit | Description / enums | Mark |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1001 |  |  |  | 03/16 |  |  | 本协议内所有黄色部分，是仅在配集控或DTU使用时，<br>才使用到的条码，彩屏和WIFI模块无需处理 |  |
+| 1002 |  |  |  | 03/16 |  |  |  |  |
+| 1003 |  |  |  | 03/16 |  |  |  |  |
+| 1004 |  |  |  | 03/16 |  |  |  |  |
+| 1005 |  |  |  | 03/16 |  |  |  |  |
+| 1006 |  |  |  | 03/16 |  |  |  |  |
+| 1007 |  |  |  | 03/16 |  |  |  |  |
+| 1008 |  |  |  | 03/16 |  |  |  |  |
+| 1009 |  |  |  | 03/16 |  |  |  |  |
+| 1010 |  |  |  | 03/16 |  |  |  |  |
+| 1011 |  | 开关机 | 读/写 | 03/16 |  |  | ON/OFF(开 ON：1/关OFF：0) |  |
+| 1012 |  | 模式 | 读/写 | 03/16 |  |  | 模式 MoDe (0：智能模式INtelliGeNt moDe//2：经济模式EcoNomic MoDe/3：标准模式HybriD MoDe:/4：高需求模式HiGh DemaND moDe/7：假期模式VacatioN MoDe |  |
+| 1013 |  |  |  | 03/16 |  |  |  |  |
+| 1014 |  | 电加热独立开启 | 读/写 | 03/16 |  |  | （2：关/1：开）（M06） |  |
+| 1015 |  | 强制除霜 | 读/写 | 03/16 |  |  | （0：关/1：开）（M07）；地址1001值为0时有效 |  |
+| 1016 |  | 通风模式 | 读/写 | 03/16 |  |  | （0-关闭/1-低风/2-高风）(M17) |  |
+| 1017 |  |  |  | 03/16 |  |  |  |  |
+| 1018 |  |  |  | 03/16 |  |  |  |  |
+| 1019 |  |  |  | 03/16 |  |  |  |  |
+| 1020 | /01 | O05的用途 | 读/写 | 03/16 |  |  | （0-低风/1-使用侧水泵/2-太阳能泵/3-热回收电磁阀/4-独立制冷输出） |  |
+| 1021 | /02 | O06的用途 | 读/写 | 03/16 |  |  | （0-无输出/1-循环泵/2-太阳能泵/3-太阳能排水阀） |  |
+| 1022 |  |  |  | 03/16 |  |  |  |  |
+| 1023 |  |  |  | 03/16 |  |  |  |  |
+| 1024 |  |  |  | 03/16 |  |  |  |  |
+| 1025 | C01 | 是否有环境温度补偿 | 读/写 | 03/16 |  |  | （0-无/1-有） |  |
+| 1026 | C02 | 温度补偿的最大偏移量 | 读/写 | 03/16 |  |  | 1～10℃ |  |
+| 1027 | C03 | 温度补偿的补偿系数 | 读/写 | 03/16 |  |  | （精度为0.1℃）-5～5 |  |
+| 1028 | C04 | 开始补偿的环温 | 读/写 | 03/16 |  |  | -30～30℃ |  |
+| 1029 |  |  |  | 03/16 |  |  |  |  |
+| 1030 |  |  |  | 03/16 |  |  |  |  |
+| 1031 |  |  |  | 03/16 |  |  |  |  |
+| 1032 |  |  |  | 03/16 |  |  |  |  |
+| 1033 |  |  |  | 03/16 |  |  |  |  |
+| 1034 | D01 | 制热进入除霜温度点 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围-30~0度 |  |
+| 1035 | D02 | 制热退出除霜温度点 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围0~30度 |  |
+| 1036 | D03 | 制热除霜周期 | 读/写 | 03/16 |  |  | 无符号整型/单位1miN /范围30~90 |  |
+| 1037 | D04 | 制热除霜最长时间 | 读/写 | 03/16 |  |  | (例如制热除霜最长时间3miN实际值=3*2=6（D04）);无符号整型/单位1miN/范围1~20 |  |
+| 1038 | D05 | 经济除霜最短时间 | 读/写 | 03/16 |  |  | (例如经济除霜最短时间3miN实际值=3*2=6（D05）);有符号整型/单位1miN/范围0~D04 |  |
+| 1039 | D06 | 除霜方式 | 读/写 | 03/16 |  |  | （0-标准/1-经济/2-智能） |  |
+| 1040 | D07 | 智能除霜温度转换点 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围-10~20度 |  |
+| 1041 |  |  |  | 03/16 |  |  |  |  |
+| 1042 |  |  |  | 03/16 |  |  |  |  |
+| 1043 |  |  |  | 03/16 |  |  |  |  |
+| 1044 |  |  |  | 03/16 |  |  |  |  |
+| 1045 |  |  |  | 03/16 |  |  |  |  |
+| 1046 | G01 | 高温消毒目标温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围30~70度 |  |
+| 1047 | G02 | 高温消毒维持时间 | 读/写 | 03/16 |  |  | （设置为0时，无高温消毒功能）;无符号整型/单位1miN/范围0~90 |  |
+| 1048 | G03 | 高温消毒的启动时间 | 读/写 | 03/16 |  |  | 无符号整型/单位1h/范围0~23 |  |
+| 1049 | G04 | 高温消毒周期 | 读/写 | 03/16 |  |  | 无符号整型/单位1天/范围7~99/默认6天 |  |
+| 1050 |  |  |  | 03/16 |  |  |  |  |
+| 1051 |  |  |  | 03/16 |  |  |  |  |
+| 1052 |  |  |  | 03/16 |  |  |  |  |
+| 1053 |  |  |  | 03/16 |  |  |  |  |
+| 1054 |  |  |  | 03/16 |  |  |  |  |
+| 1055 | E01 | 电子膨胀阀调节 | 读/写 | 03/16 |  |  | （0-手动/1-自动） |  |
+| 1056 | E02 | 电子膨胀阀目标过热度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围-20~20 |  |
+| 1057 | E03 | 电子膨胀阀初开度 | 读/写 | 03/16 |  |  | 无符号整型/单位10步/范围0~50 |  |
+| 1058 | E04 | 电子膨胀阀最小开度 | 读/写 | 03/16 |  |  | (≤5时，控制器处理为5);无符号整型/单位10步/范围0~50 |  |
+| 1059 | E05 | 除霜开度 | 读/写 | 03/16 |  |  | 无符号整型/单位10步/范围0~50 |  |
+| 1060 | E06 | 电子膨胀阀动作的低环温温度 | 读/写 | 03/16 |  |  | -10～15℃ |  |
+| 1061 | E07 | 电子膨胀阀的低环温开度 | 读/写 | 03/16 |  |  | 50～250单位10步 |  |
+| 1062 |  |  |  | 03/16 |  |  |  |  |
+| 1063 |  |  |  | 03/16 |  |  |  |  |
+| 1064 |  |  |  | 03/16 |  |  |  |  |
+| 1065 |  |  |  | 03/16 |  |  |  |  |
+| 1066 |  |  |  | 03/16 |  |  |  |  |
+| 1067 | H01 | 掉电记忆功能 | 读/写 | 03/16 |  |  | （0-无记忆/1-有记忆） |  |
+| 1068 | H02 | 是否启用冷气模式 | 读/写 | 03/16 |  |  | （0-不启用/1-启用） |  |
+| 1069 | H03 | 热源模式 | 读/写 | 03/16 |  |  | （0-空气源/1-水源） |  |
+| 1070 | H04 | 热源侧水泵提前压缩机运行时间 | 读/写 | 03/16 |  |  | 无符号整型/单位1miN/范围0~30 |  |
+| 1071 | H05 | 是否启用独立制冷 | 读/写 | 03/16 |  |  | （0-不启用/1-启用） |  |
+| 1072 | H06 | 独立冷气制冷维持时间 | 读/写 | 03/16 |  |  | 1.0～5.0h |  |
+| 1073 | H07 | 华氏度摄氏度转换 | 读/写 | 03/16 |  |  | （0-摄氏度/1-华氏度） |  |
+| 1074 | H98 | 线控器模式参数 | 读/写 | 03/16 |  |  | 0X07（0X17） |  |
+| 1075 | H99 | 主界面温度调整 | 读/写 | 03/16 |  |  | （0-不调整/1-调整）（注意：H99参数保存在控制器上） |  |
+| 1076 |  |  |  | 03/16 |  |  |  |  |
+| 1077 |  |  |  | 03/16 |  |  |  |  |
+| 1078 |  |  |  | 03/16 |  |  |  |  |
+| 1079 |  |  |  | 03/16 |  |  |  |  |
+| 1080 | N01 | 使用何种感温头控制太阳能 | 读/写 | 03/16 |  |  | （0-下部/1-上部） |  |
+| 1081 | N02 | 太阳能水泵最长运行时间 | 读/写 | 03/16 |  |  | 无符号整型/单位1miN/范围1~30 |  |
+| 1082 | N03 | 太阳能水泵启动回差 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围0~20度 |  |
+| 1083 | N04 | 夜间降温模式是否开启 | 读/写 | 03/16 |  |  | （0-不启用/1-启用） |  |
+| 1084 | N05 | 降温功能的开启时间 | 读/写 | 03/16 |  |  | 无符号整型/单位1h/范围0~23 |  |
+| 1085 | N06 | 降温功能的停止时间 | 读/写 | 03/16 |  |  | 无符号整型/单位1h/范围0~23 |  |
+| 1086 | N07 | 夜间降温的开启温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围40~90度 |  |
+| 1087 | N08 | 夜间降温的停止温差 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围1~40度 |  |
+| 1088 | N09 | 太阳能排水阀温度设定点 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围50~90度 |  |
+| 1089 | N10 | 太阳能水泵停止温度设定点 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围50~90度 |  |
+| 1090 | N11 | 太阳能是否独立运行 | 读/写 | 03/16 |  |  | （0-不启用/1-启用） |  |
+| 1091 |  |  |  | 03/16 |  |  | 本协议内所有黄色部分，是仅在配集控或DTU使用时，<br>才使用到的条码，彩屏和WIFI模块无需处理 |  |
+| 1092 |  |  |  | 03/16 |  |  |  |  |
+| 1093 |  |  |  | 03/16 |  |  |  |  |
+| 1094 |  |  |  | 03/16 |  |  |  |  |
+| 1095 |  |  |  | 03/16 |  |  |  |  |
+| 1096 |  |  |  | 03/16 |  |  |  |  |
+| 1097 |  |  |  | 03/16 |  |  |  |  |
+| 1098 |  |  |  | 03/16 |  |  |  |  |
+| 1099 |  |  |  | 03/16 |  |  |  |  |
+| 1100 |  |  |  | 03/16 |  |  |  |  |
+| 1104 | R01 | 热水设定温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围10~60度 |  |
+| 1105 | R02 | 冷气设定温度 | 读/写 | 03/16 |  |  | 40～60℃ |  |
+| 1106 | R03 | 制热时下部回差温度设定 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围1~20度 |  |
+| 1107 | R04 | 是否启用电加热设定温度 | 读/写 | 03/16 |  |  | （0-不启用/1-启用） |  |
+| 1108 | R05 | 电加热设定温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围30~90度 |  |
+| 1109 | R06 | 电加热启动延时 | 读/写 | 03/16 |  |  | 无符号整型/单位5miN/范围0~90 |  |
+| 1110 | R07 | 电加热是否取代压缩机 | 读/写 | 03/16 |  |  | （0-不取代/1-取代） |  |
+| 1111 | R08 | 电加热取代压缩机的环境温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围-20~10度 |  |
+| 1112 | R09 | 电加热零延时启动的环境温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围0~30度 |  |
+| 1113 | R10 | 电加热延时启动的环境温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围10~40度 |  |
+| 1114 | R11 | 循环泵开启时间 | 读/写 | 03/16 |  |  | 0～255s |  |
+| 1115 | R12 | 压缩机强制停止温度 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围-30~-5度 |  |
+| 1116 | R13 | 冷气模式转换温度 | 读/写 | 03/16 |  |  | 50～65℃ |  |
+| 1117 | R14 | 第二外部温度设定点 | 读/写 | 03/16 |  |  | 10～60℃ |  |
+| 1118 | R15 | 压缩机高温停止温度 | 读/写 | 03/16 |  |  | 55℃ |  |
+| 1119 | R16 | 高低风切换环境温度 | 读/写 | 03/16 |  |  | 55℃ |  |
+| 1120 | R17 | 压机开启是否启用上部温度 | 读/写 | 03/16 |  |  | （0-不启用/1-启用） |  |
+| 1121 | R18 | 制热时上部回差温度设定 | 读/写 | 03/16 |  |  | 无符号整型/单位:1度/范围1~20度 |  |
+| 1122 | R19 | 压缩机高温停止温度1 | 读/写 | 03/16 |  |  | 30～90℃ |  |
+| 1123 | R20 | 压缩机高温停止温度2 | 读/写 | 03/16 |  |  | 30～90℃ |  |
+| 1129 | L01 | 假期模式使能 |  | 03/16 |  |  | bit0:假期模式日期使能位（0-不使能/1-使能） |  |
+| 1130 | L02 | 假期模式年份位 |  | 03/16 |  |  | 0~99Y |  |
+| 1131 | L03 | 假期模式月份位 |  | 03/16 |  |  | 1~12M |  |
+| 1132 | L04 | 假期模式日份位 |  | 03/16 |  |  | 1~31D |  |
+| 1133 | L05 | 定时开关机使能 |  | 03/16 |  |  | bit0:定时时段1开机使能位（0-不使能/1-使能)；<br>bit1:定时时段1关机使能位（0-不使能/1-使能)；<br>bit2:定时时段2开机使能位（0-不使能/1-使能)；<br>bit3:定时时段2关机使能位（0-不使能/1-使能)； |  |
+| 1134 | L06 | 定时时段1开机小时位 |  | 03/16 |  |  | 0~23h |  |
+| 1135 | L07 | 定时时段1开机分钟位 |  | 03/16 |  |  | 0~59min |  |
+| 1136 | L08 | 定时时段1关机小时位 |  | 03/16 |  |  | 0~23h |  |
+| 1137 | L09 | 定时时段1关机分钟位 |  | 03/16 |  |  | 0~59min |  |
+| 1138 | L10 | 定时时段2开机小时位 |  | 03/16 |  |  | 0~23h |  |
+| 1139 | L11 | 定时时段2开机分钟位 |  | 03/16 |  |  | 0~59min |  |
+| 1140 | L12 | 定时时段2关机小时位 |  | 03/16 |  |  | 0~23h |  |
+| 1141 | L13 | 定时时段2关机分钟位 |  | 03/16 |  |  | 0~59min |  |
+| 1149 | M10 | 手动功能 | 读/写 | 03/16 | 无掉电记忆 |  | 手动功能（M05）（预留）<br>Bit0：OUT1（0：断开/1：闭合）（即对应状态的O01）<br>Bit1：OUT2（0：断开/1：闭合）（即对应状态的O02）<br>Bit2：OUT3（0：断开/1：闭合）（即对应状态的O03）<br>Bit3：OUT4（0：断开/1：闭合）（即对应状态的O04）<br>Bit4：OUT5（0：断开/1：闭合）（即对应状态的O05）<br>Bit5：OUT6（0：断开/1：闭合）（即对应状态的O06）<br>Bit6：OUT7（0：断开/1：闭合）<br>Bit7：OUT8（0：断开/1：闭合） |  |
+| 1150 | M11 | 时钟修改使能 | 读/写 | 03/16 | 无掉电记忆 |  | 时钟是否修改标志位(1-是/0-否) |  |
+| 1151 | M12 | 当前时 | 读/写 | 03/16 | 无掉电记忆 |  | （时）   （0~23) |  |
+| 1152 | M13 | 当前分 | 读/写 | 03/16 | 无掉电记忆 |  | （分）(0~59) |  |
+| 1153 | M14 | 当前月 | 读/写 | 03/16 | 无掉电记忆 |  | (月）   （1~12) |  |
+| 1154 | M15 | 当前日 | 读/写 | 03/16 | 无掉电记忆 |  | （日）(1~31) |  |
+| 1155 | M16 | 当前星期 | 读/写 | 03/16 | 无掉电记忆 |  | （星期） （1~7) |  |
+| 1156 | M17 | 当前年 | 读/写 | 03/16 | 无掉电记忆 |  | （年） (0~99) |  |
+| 1157 | M30 | 机组地址 | 读/写 | 03/16 |  |  | 机子地址（M16） |  |
+| 1158 | M31 | 线上智能控制 | 读/写 | 03/16 |  |  | （0-集控/1-DTU&WIFI） |  |
+| 2001 |  |  |  | 03/16 |  |  | 本协议内所有黄色部分，是仅在配集控或DTU使用时，<br>才使用到的条码，彩屏和WIFI模块无需处理 |  |
+| 2002 |  |  |  | 03/16 |  |  |  |  |
+| 2003 |  |  |  | 03/16 |  |  |  |  |
+| 2004 |  |  |  | 03/16 |  |  |  |  |
+| 2005 |  |  |  | 03/16 |  |  |  |  |
+| 2006 |  |  |  | 03/16 |  |  |  |  |
+| 2007 |  |  |  | 03/16 |  |  |  |  |
+| 2008 |  |  |  | 03/16 |  |  |  |  |
+| 2009 |  |  |  | 03/16 |  |  |  |  |
+| 2010 |  |  |  | 03/16 |  |  |  |  |
+| 2011 | T01 | 环境温度 AmbieNt temperature | 写 | 16 |  |  |  |  |
+| 2012 | T02 | 水箱下部温度 bottom temperature | 写 | 16 |  |  |  |  |
+| 2013 | T03 | 水箱上部温度top temperature | 写 | 16 |  |  |  |  |
+| 2014 | T04 | 盘管温度 coil temperature | 写 | 16 |  |  |  |  |
+| 2015 | T05 | 回气温度 suctioN temperature | 写 | 16 |  |  |  |  |
+| 2016 | T06 | 太阳能温度 solar temperature | 写 | 16 |  |  |  |  |
+| 2017 |  |  | 写 | 16 |  |  |  |  |
+| 2018 |  |  | 写 | 16 |  |  |  |  |
+| 2019 | O07 | 电子膨胀阀当前开度 EEV positioN | 写 | 16 |  |  | 单位uNit 1度 C /范围raNGe 0~480步 0-480 |  |
+| 2020 | O08 | 压机运行累积时间 | 写 | 16 |  |  | 0～9999h |  |
+| 2021 | O09 | 电加热运行累积时间 | 写 | 16 |  |  | 0～9999h |  |
+| 2022 |  |  | 写 | 16 |  |  |  |  |
+| 2023 |  |  | 写 | 16 |  |  |  |  |
+| 2024 |  |  | 写 | 16 |  |  |  |  |
+| 2025 |  |  | 写 | 16 |  |  |  |  |
+| 2026 |  |  | 写 | 16 |  |  |  |  |
+| 2027 |  |  | 写 | 16 |  |  |  |  |
+| 2028 |  |  | 写 | 16 |  |  |  |  |
+| 2029 |  |  | 写 | 16 |  |  |  |  |
+| 2030 | State0 | 从机部件状态 | 写 | 16 |  |  | Bit0：（S01）应急开关Remote oN/off switch （1=断开OP，0=闭合CL）<br>Bit1：（S02）电加热过载保护开关Over heat protection switch （0=断开 OP，1=闭合 CL）<br>Bit2：（S03）低压开关 low pressure switch（1=断开OP，0=闭合 CL）<br>Bit3：（S04）高压开关 HiGh pressure switch（1=断开 OP，0=闭合 CL）<br>Bit4：（S05）电加热缩时信号1=断开OP，0=闭合CL）<br>Bit5：（S06）水流开关 Water flow switch（1=停止 OFF，0=运行 ON）<br>Bit6：保留 Reserve<br>Bit7：保留 Reserve<br>Bit8：（O01）压缩机 Compressor（0=失电 OFF，1=得电 ON）（0=停止 OFF，1=运行 ON）<br>Bit9：（O02）电加热Electrical heater（0=停止 OFF，1=运行ON）<br>Bit10：（O03）四通阀 4-way valve（0=停止OFF，1=运行 ON）<br>Bit11：（O04）风机高速FaN hiGh speeD（0=停止OFF，1=运行ON）<br>Bit12：（O05）风机低速/循环泵/太阳能泵FaN low speeD/ circulate pump/ solar pump（0=停止OFF，1=运行ON）<br>Bit13：（O06）保留/循环泵/太阳能泵/太阳能排水阀Reserve/cycle pump/solar pump/solar valve pump（0=停止OFF，1=运行ON） |  |
+| 2031 | State1 | 从机功能状态 | 写 | 16 |  |  | Bit0：恒温停机shutDowN（0=无 NO，1=有YES）<br>Bit1：当前线上智能控制方式（0-集控/1-DTU&WIFI）<br>Bit2：除霜Defrost（0=无，1=有）（0=无 NO，1=有YES） |  |
+| 2032 |  |  | 写 | 16 |  |  |  |  |
+| 2033 |  |  | 写 | 16 |  |  |  |  |
+| 2034 |  |  | 写 | 16 |  |  |  |  |
+| 2035 |  |  | 写 | 16 |  |  |  |  |
+| 2036 |  |  | 写 | 16 |  |  |  |  |
+| 2037 |  |  | 写 | 16 |  |  |  |  |
+| 2038 |  |  | 写 | 16 |  |  |  |  |
+| 2039 |  |  | 写 | 16 |  |  |  |  |
+| 2040 |  |  | 写 | 16 |  |  |  |  |
+| 2041 |  |  | 写 | 16 |  |  |  |  |
+| 2042 |  |  | 写 | 16 |  |  |  |  |
+| 2043 |  |  | 写 | 16 |  |  |  |  |
+| 2044 |  |  | 写 | 16 |  |  |  |  |
+| 2045 |  |  | 写 | 16 |  |  |  |  |
+| 2046 |  |  | 写 | 16 |  |  |  |  |
+| 2047 |  |  | 写 | 16 |  |  |  |  |
+| 2048 |  |  | 写 | 16 |  |  |  |  |
+| 2049 |  |  | 写 | 16 |  |  |  |  |
+| 2050 |  |  | 写 | 16 |  |  |  |  |
+| 2051 |  |  | 写 | 16 |  |  |  |  |
+| 2052 |  |  | 写 | 16 |  |  |  |  |
+| 2053 |  |  | 写 | 16 |  |  |  |  |
+| 2054 |  |  | 写 | 16 |  |  |  |  |
+| 2055 |  |  | 写 | 16 |  |  |  |  |
+| 2056 |  |  | 写 | 16 |  |  |  |  |
+| 2057 |  |  | 写 | 16 |  |  |  |  |
+| 2058 |  |  | 写 | 16 |  |  |  |  |
+| 2059 |  |  | 写 | 16 |  |  |  |  |
+| 2060 | Fault0 | 故障页：Failure（W10） | 写 | 16 |  |  | Bit0：环境感温故障AmbieNt seNsor failure（0=无 NO，1=有 YES）P04<br>Bit1：水箱下部感温故障Bottom seNsor failure（0=无 NO，1=有YES）P01<br>Bit2：水箱上部感温故障Top seNsor failure（0=无 NO，1=有YES）P02<br>Bit3：盘管感温故障Coil seNsor failure（0=无 NO，1=有YES）P05<br>Bit4：回气感温故障SuctioN seNsor failure（0=无 NO，1=有YES）P07<br>Bit5：太阳能感温故障Solar seNsor failure（0=无 NO，1=有YES）P034<br>Bit8：高压保护HiGh pressure protectioN（0=无 NO，1=有YES）E01<br>Bit9：低压保护Low pressure protectioN（0=无 NO，1=有YES）E02<br>Bit10：电加热过热保护Over heat protection（0=无 NO，1=有YES）E04<br>Bit11：水流开关保护 water flow protectioN（0=无 NO，1=有YES）E03<br>Bit12：防冻保护aNtifreeziNG protectioN（0=无 NO，1=有YES）E07<br>Bit13：冬季防冻保护（水箱）（0=无 NO，1=有YES）E09<br>Bit14：冬季二级防冻保护senior antifreezing protection（0=无 NO，1=有YES） |  |
+| 2061 |  |  | 写 | 16 |  |  |  |  |
+| 2062 |  |  | 写 | 16 |  |  |  |  |
+| 2063 |  |  | 写 | 16 |  |  |  |  |
+| 2064 |  |  | 写 | 16 |  |  |  |  |
+| 2065 |  |  | 写 | 16 |  |  |  |  |
+| 2066 |  |  | 写 | 16 |  |  |  |  |
+| 2067 |  |  | 写 | 16 |  |  |  |  |
+| 2068 |  |  | 写 | 16 |  |  |  |  |
+| 2069 |  |  | 写 | 16 |  |  |  |  |
+| 2070 |  |  | 写 | 16 |  |  |  |  |
+| 2071 |  |  | 读 | 03 |  |  |  |  |
+| 2072 |  |  | 写 | 16 |  |  |  |  |
+| 2073 |  |  | 写 | 16 |  |  |  |  |
+| 2074 |  |  | 写 | 16 |  |  |  |  |
+| 2075 |  |  | 写 | 16 |  |  |  |  |
+| 2076 |  |  | 写 | 16 |  |  |  |  |
+| 2077 |  | 主程序版本号 | 读 | 16 |  |  | 数据传输为11，表示版本号为V1.1 |  |
+| 2078 |  | 软件代码 | 读 | 16 |  |  | 数据为1234时，表示软件代码为35005-311234；数据为12时，表示软件代码为35005-310012 |  |
+| 2079 |  | 主程序版本号 | 写 | 16 |  |  | 数据传输为11，表示版本号为V1.1 |  |
+| 2080 |  | 软件代码 | 写 | 16 |  |  | 数据为1234时，表示软件代码为35005-311234；数据为12时，表示软件代码为35005-310012 |  |
+
+---
+
+## 10. Allthebester retained subset (for delta awareness)
+
+Not a second ground truth — a **fork edit**. Full tables omitted here to avoid duplicating cleaned English; instead:
+
+- dtu_wifi addresses retained (99): 1001, 1011, 1012, 1013, 1014, 1015, 1016, 1020, 1021, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1046, 1047, 1048, 1049, 1055, 1056, 1057, 1058, 1059, 1066, 1067, 1069, 1073, 1074, 1075, 1076, 1077, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1104, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1115, 1117, 1118, 1120, 1121, 1122, 1123, 1129, 1130, 1131, 1132, 1133, 1134, 1135, 1136, 1137, 1138, 1139, 1140, 1141, 1151, 1152, 1153, 1154, 1155, 1156, 1158, 2011, 2012, 2013, 2014, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2050, 2051, 2060, 2061, 2062, 2085
+
+- hw211 addresses retained (106): 1011, 1012, 1014, 1015, 1016, 1020, 1021, 1025, 1026, 1027, 1028, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1046, 1047, 1048, 1049, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1067, 1068, 1069, 1070, 1071, 1072, 1073, 1074, 1075, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112, 1113, 1114, 1115, 1116, 1117, 1118, 1119, 1120, 1121, 1122, 1123, 1129, 1130, 1131, 1132, 1133, 1134, 1135, 1136, 1137, 1138, 1139, 1140, 1141, 1149, 1150, 1151, 1152, 1153, 1154, 1155, 1156, 1157, 1158, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2020, 2021, 2030, 2031, 2060, 2077, 2078
+
+Prefer **sjtrny** JSON (§8–§9) as the complete workbook extract; use Allthebester only when studying iStore/PC1006 naming or its filled data_types.
+
+---
+
+## 11. Evidence index (file paths)
+
+| Path | What it contributed |
+| --- | --- |
+| `protocol/hw211_modbus.json` | Full register rows + bit description text |
+| `scripts/extract_modbus_spec.py` | xlsx → JSON mapping; sheet paths/notes; formulas |
+| `datasheets/EVO270-1_MODBUS communication_protocol_6.5.25.xlsx` | Origin workbook |
+| `components/hw211/entity_metadata.py` | Display names, BIT_NAMES, UNIT_OVERRIDES, sheet warnings |
+| `components/hw211/__init__.py` | Entity generation, `_bit_options`, sheet selection |
+| `components/hw211/operating_state_logic.h` | Derived state bit usage |
+| `docs/entities.md` | Sheet-mixing warnings; name tables; binary field tables |
+| `LICENSE` | MIT for code |
+| `echopin664/.../HWS.yaml` | Hand mapping of dtu_wifi + GPIO pinout |
+| `echopin664/.../README.md` | HW211 Wi‑Fi connector pin roles |
+
+---
+
+## 12. Stats footer
+
+- Repos cloned OK: 5 (sjtrny, Allthebester, echopin664, hydazz, Mozzie-AU)
+- Repos failed: 0
+- New vs the three named in the brief: hydazz/esphome-hw211, Mozzie-AU/esphome-hw211
+- Registers tabulated (sjtrny both sheets): 449
+- Bits tabulated from workbook descriptions: 76
+- Presentation-layer named bits in entity_metadata BIT_NAMES: counted separately in §5
+
+_End of research dump._

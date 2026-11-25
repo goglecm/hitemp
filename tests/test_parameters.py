@@ -282,6 +282,22 @@ def test_main_temperatures_name_their_register() -> None:
     assert items["T07"]["register"] if False else "register" not in items["T07"]
 
 
+def test_every_exposed_entity_cites_its_source() -> None:
+    """Finished entities explain themselves and name a known source."""
+    guide = (Path(__file__).parents[1] / "docs" / "HITEMP_PARAMETERS.md").read_text(
+        encoding="utf-8"
+    )
+
+    for key, item in _hitemp_items().items():
+        if item.get("platform") is None:
+            continue
+        assert item["description"], key
+        assert item["guidance"], key
+        assert item["confidence"] in CONFIDENCE_LEVELS, key
+        assert set(item["source"]) <= SOURCE_IDS, key
+        assert item["name"] in guide, key
+
+
 def test_hitemp_model_selection_is_read_only() -> None:
     """H98 selects the unit model and must never be written from Home Assistant."""
     h98 = _hitemp_items()["H98"]

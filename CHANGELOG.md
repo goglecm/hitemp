@@ -1,5 +1,31 @@
 # Changelog
 
+## 4.4.0
+
+_Minimum HA Version: 2026.11.0_
+
+### New
+
+- HiTemp names now start with the code and end with the HW211 register, for
+  example `T01 Ambient temperature (2019)` and `O01 Compressor running (2050.8)`
+- Every bit of the status and fault words `2050`, `2051` and `2085`, plus the
+  unlabeled flag words, is a diagnostic binary sensor
+- Named `O` and `S` codes read those bits instead of staying empty. The letter
+  codes are still probed
+- Requested mode (`Mode`, register 1012), the vacation and timer fields, the
+  controller versions `2011`-`2014` and the heartbeat echo are sensors
+- Existing installs re-enable sensors this integration had disabled. Controls
+  you disabled, and installer settings, stay disabled
+- Each entity records the register and the source of its meaning. The sources
+  are listed in the parameter guide
+
+### Breaking
+
+- `O01`-`O06`, `O10`-`O15` and `S01`-`S06` moved from sensors to binary
+  sensors, so their entity ids change
+- Fresh installs get new entity ids where the name gained a register number.
+  Existing installs keep the previous ids
+
 ## 4.3.1
 
 _Minimum HA Version: 2026.11.0_
