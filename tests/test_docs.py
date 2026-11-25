@@ -79,3 +79,7 @@ def test_guide_covers_every_code() -> None:
 
     for item in items:
         assert f"| `{item['key']}` " in guide, item["key"]
+
+    for item in items:
+        for source in item.get("source", []):
+            assert f"`{source}`" in guide, source

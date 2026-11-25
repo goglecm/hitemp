@@ -47,6 +47,36 @@ Sources:
 - [FoxAir_Control](https://github.com/dosordie/FoxAir_Control), which
   documented the same cloud for a related board.
 
+## Source ids
+
+Findings in this guide and in the parameter file cite these ids.
+
+| Id               | Source                                                                                                                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workbook`       | EVO270-1 Modbus workbook, `dtu_wifi` sheet, via [sjtrny/esphome-hw211](https://github.com/sjtrny/esphome-hw211) `protocol/hw211_modbus.json`                                                             |
+| `workbook-hw211` | Same workbook, `hw211` sheet. Used only where the `dtu_wifi` sheet is blank                                                                                                                              |
+| `darksplat`      | [Darksplat/EVOHeat-EVO270-ESP32-Modbus](https://github.com/Darksplat/EVOHeat-EVO270-ESP32-Modbus) field notes and `data/status_bits.csv`                                                                 |
+| `victor`         | [victor987/hitemp](https://github.com/victor987/hitemp) `DEVICE_PARAMETERS.md` cloud scan                                                                                                                |
+| `aquatemp-130`   | [radical-squared/aquatemp#130](https://github.com/radical-squared/aquatemp/issues/130) HiTemp iOS capture                                                                                                |
+| `aquatemp-108`   | [radical-squared/aquatemp#108](https://github.com/radical-squared/aquatemp/issues/108)                                                                                                                   |
+| `trianco-manual` | Trianco ActivAir S300 manual                                                                                                                                                                             |
+| `evoheat-manual` | [EvoHeat Evo270 manual](https://evoheat.com.au/wp-content/uploads/2021/07/pdf-manual-Evo270-Manual.pdf) and the [EVO270-E manual](https://evoheat.com.au/wp-content/uploads/2026/10/MANUAL-EVO270-E.pdf) |
+| `ha-230400`      | [Home Assistant community thread 230400](https://community.home-assistant.io/t/implementation-of-aqua-temp-controller/230400)                                                                            |
+| `schematic`      | Activair indoor heat pump wiring diagram, code 20230302-0005                                                                                                                                             |
+| `app`            | HiTemp app screens on a Trianco S300                                                                                                                                                                     |
+| `s300`           | Logs and remote-contact tests from that S300                                                                                                                                                             |
+
+See also:
+
+- [HW211 register comparison](HW211_REGISTER_COMPARISON.md) — official EVO270 /
+  HW211 Modbus bitfields for `2050`/`2051`/`2085`, named↔numeric aliases,
+  Darksplat field CSVs, OEM OUT1–5≡O01–O05, app poll evidence, FoxAir
+  conflicts, and match status vs this integration;
+- [HW211 `dtu_wifi` full register map](HW211_REGISTER_MAP_FULL.md) — complete
+  226-register workbook extract (appendix);
+- [`_research_app_cloud_api.md`](_research_app_cloud_api.md) — HiTemp iOS
+  `getDataByCode` poll list (`2050`/`2051`, `appId` 13).
+
 ## How Home Assistant shows the codes
 
 - **Names** start with the code and a short name, for example
@@ -193,7 +223,9 @@ A fourth log, with one read per minute and no changes in the app (18:44 to
   Each switch raised `T21`/`2027` by 4, so the on/off state is written to the
   controller's memory, most likely because `H01` = YES remembers it.
 - After each start the EEV opened at 240 (`E03`) and worked down to 100
-  (`E04`) within about 20 minutes, when bit 2 of `2050` cleared.
+  (`E04`) within about 20 minutes, when bit 2 of `2050` cleared (that bit
+  tracked roughly with coil temperature in this log, but the official workbook
+  names it S03 low-pressure open — treat the coil correlation as unconfirmed).
 
 A third log, while modes, vacation, the timers and the clock were changed in
 the app (17:37 to 18:16), showed:
@@ -242,32 +274,41 @@ What we know for HiTemp:
   it.
 - With the request sent before every poll, the cloud still returned nothing
   for the S and O codes, the fault words or the PCB versions. Only `ModeState`
-  had a value. So on HiTemp the request doesn't make these values available
-  through the cloud, at least not the way the integration sends it.
-- The app shows the S and O values, so it must read them some other way.
+  had a value. So on HiTemp the heartbeat does **not** fill named S/O through
+  the cloud.
+- **Why named O/S stay empty (app evidence):** a Proxyman capture of HiTemp
+  iOS v1.3.3 ([aquatemp #130](https://github.com/radical-squared/aquatemp/issues/130))
+  shows the official app's periodic `getDataByCode` list includes **`2050` and
+  `2051`**, and does **not** request named `O01`–`O06` or any `S*` (it does
+  poll scalars like `O07`–`O09` and, oddly, lone **`O03`**). The app UI that
+  shows compressor / heater / fan therefore almost certainly **unpacks
+  `2050`/`2051` on the client**. Empty named O/S in Home Assistant is expected
+  for this product, not a failed heartbeat.
 
-The best lead is the scan of an Indol PV300 with the same product ID by
-[victor987/hitemp](https://github.com/victor987/hitemp). It found that the S
-codes never return data on this product, and that the operating state is in
-packed status words, for example register `2050`, where bit 8 followed the
-compressor and bit 9 the electric heater. The integration therefore reads
-`2050` and shows it, with the compressor and heater bits as binary sensors,
-and reads the other codes that scan found (listed at the end of this guide)
-for diagnostics.
+The scan of an Indol PV300 with the same product ID by
+[victor987/hitemp](https://github.com/victor987/hitemp) already found that the
+S codes never return data and that operating state lives in packed words such
+as `2050` (bit 8 compressor, bit 9 heater). The integration therefore reads
+`2050`/`2051` and exposes compressor, heater and defrost bits as binary
+sensors, and reads the other codes that scan found (listed at the end of this
+guide) for diagnostics. Prefer those bit sensors over the empty named O/S
+entities.
 
-The bits decoded so far on a Trianco S300:
+The bits decoded so far on a Trianco S300. Official meanings come from the
+EVO270 `dtu_wifi` workbook (see [HW211 register comparison](HW211_REGISTER_COMPARISON.md));
+S300 log notes that conflict with the workbook are marked **uncertain**.
 
-| Word   | Bit    | Set while                                                  | Confidence |
-| ------ | ------ | ---------------------------------------------------------- | ---------- |
-| `2050` | 0      | the unit is switched off                                   | observed   |
-| `2050` | 2      | the coil is above about -3 °C (`D01`); meaning unconfirmed | uncertain  |
-| `2050` | 5      | always, so far                                             | observed   |
-| `2050` | 8      | the compressor runs (**Compressor running**)               | observed   |
-| `2050` | 9      | the electric heater is on (**Electric heater on**)         | observed   |
-| `2050` | 10     | defrosting, probably the 4-way valve                       | observed   |
-| `2050` | 11, 12 | the fan runs; which bit is which speed isn't known yet     | uncertain  |
-| `2051` | 1      | always, so far                                             | observed   |
-| `2051` | 2      | defrosting (**Defrost**)                                   | observed   |
+| Word   | Bit    | Official (`dtu_wifi`)                 | S300 observation                                                               | Confidence |
+| ------ | ------ | ------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
+| `2050` | 0      | S01 remote on/off (**1=OP open**)     | set while the unit is switched off (contacts open)                             | observed   |
+| `2050` | 2      | **S03 low pressure** (**1=OP**)       | earlier “coil above about −3 °C (`D01`)” guess — **prefer official**; re-check | uncertain  |
+| `2050` | 5      | **S06 external heat source switch**   | often/always set so far; why on this install is unknown                        | uncertain  |
+| `2050` | 8      | O01 compressor                        | the compressor runs (**Compressor running**)                                   | observed   |
+| `2050` | 9      | O02 electrical heater                 | the electric heater is on (**Electric heater on**)                             | observed   |
+| `2050` | 10     | O03 4-way valve                       | set while defrosting                                                           | observed   |
+| `2050` | 11, 12 | O04 fan high / O05 fan low (or solar) | the fan runs; which bit is which speed isn't known yet                         | uncertain  |
+| `2051` | 1      | DTU&WIFI online                       | always set so far while online                                                 | observed   |
+| `2051` | 2      | Defrost                               | defrosting (**Defrost**)                                                       | observed   |
 
 To find out, download the diagnostics of the heat pump while it runs. The
 `live_data` section lists the result of the last heartbeat, which codes had a
@@ -275,10 +316,9 @@ value and which stayed empty, and any packed switch words as value, hex and
 bits. The **Request live data** option in the integration's settings turns
 the heartbeat off.
 
-If the S and O codes stay empty, the remaining way to learn how the app reads
-them is to capture its traffic while the parameter pages are open, for example
-with Proxyman on iOS or HTTP Toolkit on Android, and share the request and
-response of `getDataByCode` with the token and password removed.
+Named S/O emptiness is explained by the #130 poll list above. Further captures
+(Android, full response bodies, or JADX of the bit→label map) would still help
+explain the lone `O03` poll and confirm Android matches iOS.
 
 ## How often values update
 
@@ -425,7 +465,7 @@ The app shows the raw value 1 instead of one of its options for both codes.
 | `/01` | Usage of OUT 05 | Low speed, Solar water pump                            | 1         | `1`             | ENUM, 0 to 2         | sensor, Diagnostic | uncertain  |
 | `/02` | Usage of OUT 06 | No output, Solar water pump, Solar water release valve | 1         | `1`             | ENUM, 0 to 3         | sensor, Diagnostic | uncertain  |
 
-- **/01 Use of OUT05**: Function of output OUT05 (O05): fan low speed or solar water pump.
+- **/01 Use of OUT05**: Function of output OUT05 (O05): fan low speed or solar water pump. EvoHeat OEM manuals label hardware **OUT1–OUT5** as compressor, electric heater, 4-way valve, fan high, fan low — the same roles as app codes **O01–O05** (bits of `2050`); see [HW211 register comparison](HW211_REGISTER_COMPARISON.md) §8.
 - **/02 Use of OUT06**: Function of output OUT06 (O06): no output, solar water pump or solar water release valve.
 
 The heat pump reports 1, which the app can't name either, so the active function isn't known. The cloud declares one more value than the app lists (0-2 for /01, 0-3 for /02), so the app's list may be incomplete. Read-only.
@@ -604,7 +644,7 @@ The app shows `ON` or `OFF` for the outputs.
 - **O08 Compressor running hours**: Total compressor running time.
 - **O09 Booster running hours**: Total booster (electric heater) running time.
 
-**O01, O02, O03, O04, O05, O06:** In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. 1 = On is assumed.
+**O01, O02, O03, O04, O05, O06:** Named codes stay empty on this product (the app paints them from `2050` bits 8–13). These entities stay Unavailable; use the compressor / heater / defrost binary sensors and the `2050` word instead. 1 = On is assumed if a value ever appears.
 
 **O08, O09:** A statistics graph with the 'change' statistic per day shows the daily running hours.
 
@@ -645,14 +685,14 @@ Their names come from the vendor's parameter file, translated where it is Chines
 - **T11 Out-of-range protection count**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
 - **T12 EEPROM write count**: Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.
 - **S02 Overheat protection switch**: Not shown in the app. Vendor name: 'Over heat protection switch'. Values: Open (0), Closed (1). In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **O10 3V_DE output**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1).
-- **O11 MV_DE output**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1).
-- **O12 Shutdown output**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1).
-- **O13 DTU/Wi-Fi online**: Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online. Values: NO (0), YES (1).
-- **O14 Defrost**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1).
-- **O15 High-temperature hot water stage**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1).
+- **O10 3V_DE output**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label **O12** on that bit; this entity keeps legacy/app **O10**).
+- **O11 MV_DE output**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook **O13**).
+- **O12 Shutdown output**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1). Packed as `2051` bit 0 (workbook **O14**).
+- **O13 DTU/Wi-Fi online**: Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online. Values: NO (0), YES (1). Packed as `2051` bit 1 (workbook **O15**).
+- **O14 Defrost**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1). Packed as `2051` bit 2 (workbook **O16**; also exposed as the **Defrost** binary sensor).
+- **O15 High-temperature hot water stage**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1). Packed as `2051` bit 3 (workbook **O17**).
 
-**T11, T12, O10, O11, O12, O13, O14, O15:** The cloud has returned no value for it so far.
+**T11, T12, O10–O15:** Named cloud codes stay empty on this product; live values are in `2050`/`2051` (same as O01–O06 / S*). See [Live data](#live-data-the-app-heartbeat).
 
 ### Timer page
 
@@ -715,7 +755,7 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 | `T07`                | T07 Discharge temperature (unconfirmed)  | `-30.0`            |                      | sensor, Sensors, disabled    | uncertain  |
 | `T09`                | T09 Compressor temperature (unconfirmed) | `0`                |                      | sensor, Sensors, disabled    | uncertain  |
 
-- **2050 Operating status bits**: Packed operating status word, shown as its 16 bits (bit 0 is the last). The bits decoded so far are listed under [Live data](#live-data-the-app-heartbeat).
+- **2050 Operating status bits**: Packed operating status word (State0), shown as its 16 bits (bit 0 is the last). Official bit meanings and the S300 observations are listed under [Live data](#live-data-the-app-heartbeat); prefer the workbook for bit 2 (low pressure) and bit 5 (external heat source) over earlier coil/always-on guesses.
 - **Compressor running (2050 bit 8)**: Bit 8 of the operating status word 2050. Confirmed on a Trianco S300 against the app; it also followed the compressor on an Indol PV300 with the same product ID.
 - **Electric heater on (2050 bit 9)**: Bit 9 of the operating status word 2050. Confirmed on a Trianco S300: it came on with the app's electric heater (O02) and Electric heating switch in Fast heating mode.
 - **Defrost (2051 bit 2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.

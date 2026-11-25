@@ -112,6 +112,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -
             minor_version=2,
         )
 
+    if entry.version == 1 and entry.minor_version < 3:
+        await _async_enable_integration_disabled_sensors(hass, entry)
+
+        hass.config_entries.async_update_entry(entry, minor_version=3)
+
     _LOGGER.info(
         f"Migrated {entry.title} to version {entry.version}.{entry.minor_version}"
     )
@@ -174,6 +179,26 @@ async def _async_disable_installer_parameters(
                 registry_entry.entity_id,
                 disabled_by=er.RegistryEntryDisabler.INTEGRATION,
             )
+
+
+async def _async_enable_integration_disabled_sensors(
+    hass: HomeAssistant, entry: AquaTempConfigEntry
+) -> None:
+    """Turn sensors back on when this integration disabled them.
+
+    New installs create every sensor enabled so readings are recorded.
+    Numbers, selects, and anything the user disabled stay as they are.
+    """
+    registry = er.async_get(hass)
+
+    for registry_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if (
+            registry_entry.domain in (Platform.SENSOR, Platform.BINARY_SENSOR)
+            and registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        ):
+            _LOGGER.info(f"Enabling {registry_entry.entity_id}")
+
+            registry.async_update_entity(registry_entry.entity_id, disabled_by=None)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> None:

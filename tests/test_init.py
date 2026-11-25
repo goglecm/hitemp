@@ -191,18 +191,55 @@ async def test_migration_disables_installer_parameters(
     e02 = register("number", "E02", er.RegistryEntryDisabler.USER)
     r01 = register("number", "R01")
     t02 = register("sensor", "T02")
+    hidden = register("sensor", "N01", er.RegistryEntryDisabler.INTEGRATION)
 
     await setup_entry(hass, entry)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert (entry.version, entry.minor_version) == (1, 2)
+    assert (entry.version, entry.minor_version) == (1, 3)
     integration = er.RegistryEntryDisabler.INTEGRATION
     assert registry.async_get(e03).disabled_by is integration
     assert registry.async_get(e04).disabled_by is integration
     assert registry.async_get(e02).disabled_by is er.RegistryEntryDisabler.USER
     assert registry.async_get(r01).disabled_by is None
     assert registry.async_get(t02).disabled_by is None
+    assert registry.async_get(hidden).disabled_by is None
     assert hass.states.get(r01).state == "60.0"
+
+
+async def test_migration_enables_sensors_the_integration_disabled(
+    hass: HomeAssistant,
+    fake_cloud: FakeCloud,
+    add_device: Callable[..., FakeDevice],
+    make_entry: Callable[..., MockConfigEntry],
+) -> None:
+    """A current install keeps user choices and re-enables hidden sensors."""
+    device = add_device(HITEMP_FIXTURE)
+    entry = make_entry(minor_version=2)
+    registry = er.async_get(hass)
+    integration = er.RegistryEntryDisabler.INTEGRATION
+
+    def register(platform: str, key: str, disabled_by=None) -> str:
+        return registry.async_get_or_create(
+            platform,
+            DOMAIN,
+            slugify(f"{DOMAIN}_{platform}_{key}_{device.code}"),
+            config_entry=entry,
+            disabled_by=disabled_by,
+        ).entity_id
+
+    sensor = register("sensor", "N01", integration)
+    binary = register("binary_sensor", "Power", integration)
+    chosen = register("sensor", "T07", er.RegistryEntryDisabler.USER)
+    number = register("number", "D01", integration)
+
+    await setup_entry(hass, entry)
+
+    assert entry.minor_version == 3
+    assert registry.async_get(sensor).disabled_by is None
+    assert registry.async_get(binary).disabled_by is None
+    assert registry.async_get(chosen).disabled_by is er.RegistryEntryDisabler.USER
+    assert registry.async_get(number).disabled_by is integration
 
 
 async def test_migration_restores_api_type_from_options(
@@ -236,7 +273,7 @@ async def test_migration_skips_unique_id_already_in_use(
 
     await setup_entry(hass, entry)
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id is None
 
 

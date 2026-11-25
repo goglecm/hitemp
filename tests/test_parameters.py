@@ -185,6 +185,41 @@ HITEMP_APP_CODES = {
     "App settings": {"M17", "mode_real"},
 }
 CONFIDENCE_LEVELS = {"documented", "observed", "uncertain"}
+SOURCE_IDS = {
+    "workbook",
+    "workbook-hw211",
+    "darksplat",
+    "victor",
+    "aquatemp-130",
+    "aquatemp-108",
+    "trianco-manual",
+    "evoheat-manual",
+    "ha-230400",
+    "schematic",
+    "app",
+    "s300",
+}
+
+
+def _assert_register_name(key: str, item: dict[str, Any]) -> None:
+    """A finished entity uses the code-first name and a known source."""
+    name = item["name"]
+    code = item.get("named_code", key)
+    register = item.get("register")
+
+    if register and f"({register})" in name:
+        assert name.startswith(f"{code} "), key
+    elif register and "." in str(register):
+        address, bit = str(register).split(".", 1)
+        assert name.startswith(f"Reg {address} bit {int(bit)}"), key
+    elif register:
+        assert name.startswith(f"Reg {register} ") or name.startswith(f"{code} "), key
+    else:
+        assert name.startswith(f"{code} "), key
+
+    if "source" in item:
+        assert set(item["source"]) <= SOURCE_IDS, key
+        assert item["source"], key
 
 
 def _hitemp_items() -> dict[str, dict[str, Any]]:
@@ -266,7 +301,9 @@ def test_hitemp_entities_are_explained() -> None:
         assert item["confidence"] in CONFIDENCE_LEVELS, key
         assert item["description"], key
 
-        if "difference_of" in item:
+        if item.get("register") or item.get("named_code"):
+            _assert_register_name(key, item)
+        elif "difference_of" in item:
             first, second = item["difference_of"]
             assert item["name"].endswith(f"({first} - {second})"), key
         elif "bit_of" in item:

@@ -56,7 +56,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CREDENTIAL_KEYS = (CONF_PASSWORD, CONF_USERNAME)
 
-# Parameter file fields shown as state attributes, in display order
+# Parameter file fields shown as state attributes, in display order.
+# register and source are explanations of the code, not live readings, so they
+# stay out of the recorder with the rest of this map.
 PARAMETER_INFO_ATTRIBUTES = {
     "app_name": "app_name",
     "level": "level",
@@ -66,6 +68,8 @@ PARAMETER_INFO_ATTRIBUTES = {
     "confidence": "confidence",
     "description": "description",
     "guidance": "guidance",
+    "register": "register",
+    "source": "source",
 }
 
 
