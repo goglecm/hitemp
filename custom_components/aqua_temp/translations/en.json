@@ -177,6 +177,30 @@
       },
       "1245226668902080512_2050_bit_07": {
         "name": "Reg 2050 bit 7"
+      },
+      "1245226668902080512_2050_bit_08": {
+        "name": "Reg 2050 bit 8 (O01 compressor running)"
+      },
+      "1245226668902080512_2050_bit_09": {
+        "name": "Reg 2050 bit 9 (O02 heater running)"
+      },
+      "1245226668902080512_2050_bit_10": {
+        "name": "Reg 2050 bit 10 (O03 reversing valve on)"
+      },
+      "1245226668902080512_2050_bit_11": {
+        "name": "Reg 2050 bit 11 (O04 fan running high)"
+      },
+      "1245226668902080512_2050_bit_12": {
+        "name": "Reg 2050 bit 12 (O05 fan running low)"
+      },
+      "1245226668902080512_2050_bit_13": {
+        "name": "Reg 2050 bit 13 (O06 spare output on)"
+      },
+      "1245226668902080512_2050_bit_14": {
+        "name": "Reg 2050 bit 14 (O10 anode 3V on)"
+      },
+      "1245226668902080512_2050_bit_15": {
+        "name": "Reg 2050 bit 15 (O11 anode MV on)"
       }
     },
     "climate": {

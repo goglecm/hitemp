@@ -854,3 +854,11 @@ meaning is known:
 | `2050_bit_05` | Reg 2050 bit 5 (S06 external heat switch active) | uncertain  |
 | `2050_bit_06` | Reg 2050 bit 6                                   | uncertain  |
 | `2050_bit_07` | Reg 2050 bit 7                                   | uncertain  |
+| `2050_bit_08` | Reg 2050 bit 8 (O01 compressor running)          | observed   |
+| `2050_bit_09` | Reg 2050 bit 9 (O02 heater running)              | observed   |
+| `2050_bit_10` | Reg 2050 bit 10 (O03 reversing valve on)         | observed   |
+| `2050_bit_11` | Reg 2050 bit 11 (O04 fan running high)           | uncertain  |
+| `2050_bit_12` | Reg 2050 bit 12 (O05 fan running low)            | uncertain  |
+| `2050_bit_13` | Reg 2050 bit 13 (O06 spare output on)            | documented |
+| `2050_bit_14` | Reg 2050 bit 14 (O10 anode 3V on)                | documented |
+| `2050_bit_15` | Reg 2050 bit 15 (O11 anode MV on)                | documented |
