@@ -870,3 +870,11 @@ meaning is known:
 | `2051_bit_05` | Reg 2051 bit 5                                   | uncertain  |
 | `2051_bit_06` | Reg 2051 bit 6                                   | uncertain  |
 | `2051_bit_07` | Reg 2051 bit 7                                   | uncertain  |
+| `2051_bit_08` | Reg 2051 bit 8                                   | uncertain  |
+| `2051_bit_09` | Reg 2051 bit 9                                   | uncertain  |
+| `2051_bit_10` | Reg 2051 bit 10                                  | uncertain  |
+| `2051_bit_11` | Reg 2051 bit 11                                  | uncertain  |
+| `2051_bit_12` | Reg 2051 bit 12                                  | uncertain  |
+| `2051_bit_13` | Reg 2051 bit 13                                  | uncertain  |
+| `2051_bit_14` | Reg 2051 bit 14                                  | uncertain  |
+| `2051_bit_15` | Reg 2051 bit 15                                  | uncertain  |
