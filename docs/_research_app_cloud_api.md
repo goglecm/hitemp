@@ -18,15 +18,15 @@
 
 **Public evidence strongly supports client-side decode of packed words, not a second HiTemp API that returns named `O01`/`S01`.**
 
-| Claim | Evidence | Confidence |
-| ----- | -------- | ---------- |
-| Named `O01`–`O06` / `S01`–`S06` stay empty on this product | aquatemp #108; victor987; local guide; goglecm README | **High** (already known) |
-| Official **HiTemp iOS** poll list requests **`2050` + `2051`**, not `O01`–`O06` / any `S*` | aquatemp **#130** Proxyman capture (full 155-code list below) | **High — NEW detail** |
-| App still shows compressor / heater / fan UI | Same issue: app UI works while HA named O/S empty | **High** |
-| Therefore app almost certainly **unpacks `2050`/`2051` locally** | Inference from poll list + empty named codes; **no JADX dump** of the decode published | **Medium–High** |
-| Second cloud host `cloud.go-heating.com` | openHAB AquaTemp binding + Reddit; **pool AquaTemp**, `appId` **14** | **High for pool**; **not shown for HiTemp DHW** |
-| Device-side cache beyond heartbeat echo `1158`=`23205` | No public Wireshark/Charles logs of a second upload path | **Not found** |
-| Heartbeat value variants other than `23205` / `0x5AA5` | FoxAir + local only | **None found** |
+| Claim                                                                                      | Evidence                                                                               | Confidence                                      |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Named `O01`–`O06` / `S01`–`S06` stay empty on this product                                 | aquatemp #108; victor987; local guide; goglecm README                                  | **High** (already known)                        |
+| Official **HiTemp iOS** poll list requests **`2050` + `2051`**, not `O01`–`O06` / any `S*` | aquatemp **#130** Proxyman capture (full 155-code list below)                          | **High — NEW detail**                           |
+| App still shows compressor / heater / fan UI                                               | Same issue: app UI works while HA named O/S empty                                      | **High**                                        |
+| Therefore app almost certainly **unpacks `2050`/`2051` locally**                           | Inference from poll list + empty named codes; **no JADX dump** of the decode published | **Medium–High**                                 |
+| Second cloud host `cloud.go-heating.com`                                                   | openHAB AquaTemp binding + Reddit; **pool AquaTemp**, `appId` **14**                   | **High for pool**; **not shown for HiTemp DHW** |
+| Device-side cache beyond heartbeat echo `1158`=`23205`                                     | No public Wireshark/Charles logs of a second upload path                               | **Not found**                                   |
+| Heartbeat value variants other than `23205` / `0x5AA5`                                     | FoxAir + local only                                                                    | **None found**                                  |
 
 ---
 
@@ -87,13 +87,13 @@ H15, H08, H06, H13, O03, Z03
 
 ### 2.3 O/S implications of this list (NEW analysis)
 
-| Pattern | Codes | Implication |
-| ------- | ----- | ----------- |
-| Packed status words requested | **`2050`, `2051`** | App expects live O/S bits here |
-| Named compressor/heater/fan/switch codes **absent** | No `O01`, `O02`, `O04`, `O05`, `O06`; **no `S01`–`S06`** | App does **not** rely on named O/S from cloud |
-| Odd exception | **`O03`** alone among O01–O06 | May be dead request, dual-use alias, or UI leftover — **unexplained** publicly |
-| Scalars that *are* named O | `O07`–`O09`, `O18`–`O29` (incl. `O25`–`O27`) | Match victor “populated O except O01–O06” pattern |
-| Heartbeat | **Not** in this `getDataByCode` list | Live trigger is a separate `control` write (`app_heartbeat`); not captured in the posted poll body |
+| Pattern                                             | Codes                                                    | Implication                                                                                        |
+| --------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Packed status words requested                       | **`2050`, `2051`**                                       | App expects live O/S bits here                                                                     |
+| Named compressor/heater/fan/switch codes **absent** | No `O01`, `O02`, `O04`, `O05`, `O06`; **no `S01`–`S06`** | App does **not** rely on named O/S from cloud                                                      |
+| Odd exception                                       | **`O03`** alone among O01–O06                            | May be dead request, dual-use alias, or UI leftover — **unexplained** publicly                     |
+| Scalars that _are_ named O                          | `O07`–`O09`, `O18`–`O29` (incl. `O25`–`O27`)             | Match victor “populated O except O01–O06” pattern                                                  |
+| Heartbeat                                           | **Not** in this `getDataByCode` list                     | Live trigger is a separate `control` write (`app_heartbeat`); not captured in the posted poll body |
 
 **Conclusion for the goal question:** the public MITM shows the official app reading the same packed registers integrations must decode. There is **no** public evidence of a parallel endpoint that returns filled `O01`/`S01` strings for this product.
 
@@ -103,11 +103,11 @@ H15, H08, H06, H13, O03, Z03
 
 Prior dumps mentioned 13 (HiTemp #130) and 16 (WarmLink) in isolation. Combined public picture:
 
-| `appId` | App / stack | Host | Source |
-| ------: | ----------- | ---- | ------ |
-| **13** | **HiTemp** (iOS MITM) | `cloud.linked-go.com:449/crmservice/api` | aquatemp **#130** |
-| **14** | **AquaTemp** current Flutter app | `cloud.go-heating.com/crmservice/api` | openHAB binding `AquatempAuth.buildLoginRequest` |
-| **16** | **WarmLink** / heating CRM scripts | `cloud.linked-go.com:449/crmservice/api` | aquatemp **#99**, VAdamec/WarmLink `APP_ID = "16"`, FoxAir |
+| `appId` | App / stack                        | Host                                     | Source                                                     |
+| ------: | ---------------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
+|  **13** | **HiTemp** (iOS MITM)              | `cloud.linked-go.com:449/crmservice/api` | aquatemp **#130**                                          |
+|  **14** | **AquaTemp** current Flutter app   | `cloud.go-heating.com/crmservice/api`    | openHAB binding `AquatempAuth.buildLoginRequest`           |
+|  **16** | **WarmLink** / heating CRM scripts | `cloud.linked-go.com:449/crmservice/api` | aquatemp **#99**, VAdamec/WarmLink `APP_ID = "16"`, FoxAir |
 
 **openHAB go-heating login body** ([`AquatempAuth.java`](https://github.com/rogrun/openhab-addons/blob/Release-AquaTemp-Binding-5.1.0.202610151811/bundles/org.openhab.binding.aquatemp/src/main/java/org/openhab/binding/aquatemp/internal/api/AquatempAuth.java)):
 
@@ -124,10 +124,10 @@ Prior dumps mentioned 13 (HiTemp #130) and 16 (WarmLink) in isolation. Combined 
 
 **Hosts enum** ([`AquatempApiType.java`](https://github.com/rogrun/openhab-addons/blob/Release-AquaTemp-Binding-5.1.0.202610151811/bundles/org.openhab.binding.aquatemp/src/main/java/org/openhab/binding/aquatemp/internal/api/AquatempApiType.java)):
 
-| Config key | Base URL |
-| ---------- | -------- |
-| `linkedGo` | `https://cloud.linked-go.com/cloudservice/api` (legacy pool path, **no** `:449`) |
-| `goHeating` | `https://cloud.go-heating.com/crmservice/api` |
+| Config key  | Base URL                                                                         |
+| ----------- | -------------------------------------------------------------------------------- |
+| `linkedGo`  | `https://cloud.linked-go.com/cloudservice/api` (legacy pool path, **no** `:449`) |
+| `goHeating` | `https://cloud.go-heating.com/crmservice/api`                                    |
 
 **Relevance to HW211 DHW:** HiTemp captures still hit **linked-go `:449` + appId 13**. `go-heating` + appId **14** is a real second OEM cloud for **newer AquaTemp pool** accounts; **no public HiTemp DHW capture** on `go-heating.com` was found. Do not assume it populates named O/S for product `1245…`.
 
@@ -137,27 +137,27 @@ Local goglecm/hitemp `api.hi_temp.json` uses linked-go `:449` and does **not** e
 
 ## 4. NEW — Second API / host landscape
 
-| Stack | URL | Product family | Register relevance |
-| ----- | --- | -------------- | ------------------ |
-| Legacy AquaTemp | `cloud.linked-go.com/cloudservice/api` (+ `.json` paths) | Pool (pre ~1.5.9) | Different code sets; O01 often real on pool units |
-| CRM Linked-Go | `cloud.linked-go.com:449/crmservice/api` | HiTemp DHW, WarmLink heating, newer AquaTemp-on-CRM | DHW uses `2050`; heating uses `O01~023` |
-| **Go Heating** | `cloud.go-heating.com/crmservice/api` | Current AquaTemp pool Flutter app | openHAB + Reddit; **no DHW `1245…` map published** |
+| Stack           | URL                                                      | Product family                                      | Register relevance                                 |
+| --------------- | -------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| Legacy AquaTemp | `cloud.linked-go.com/cloudservice/api` (+ `.json` paths) | Pool (pre ~1.5.9)                                   | Different code sets; O01 often real on pool units  |
+| CRM Linked-Go   | `cloud.linked-go.com:449/crmservice/api`                 | HiTemp DHW, WarmLink heating, newer AquaTemp-on-CRM | DHW uses `2050`; heating uses `O01~023`            |
+| **Go Heating**  | `cloud.go-heating.com/crmservice/api`                    | Current AquaTemp pool Flutter app                   | openHAB + Reddit; **no DHW `1245…` map published** |
 
 ioBroker “API level” taxonomy (forum script; still useful):
 
-| Level | Meaning (script comments) | Host used in script |
-| ----: | ------------------------- | ------------------- |
-| 1 | AquaTemp accounts ≤ v1.5.8 | linked-go `/cloudservice` |
-| 2 | HiTemp accounts | linked-go `/cloudservice` (older script) / CRM in practice for modern HiTemp |
-| 3 | Newer AquaTemp | linked-go `:449/crmservice` (MD5) — later apps also moved to **go-heating** |
+| Level | Meaning (script comments)  | Host used in script                                                          |
+| ----: | -------------------------- | ---------------------------------------------------------------------------- |
+|     1 | AquaTemp accounts ≤ v1.5.8 | linked-go `/cloudservice`                                                    |
+|     2 | HiTemp accounts            | linked-go `/cloudservice` (older script) / CRM in practice for modern HiTemp |
+|     3 | Newer AquaTemp             | linked-go `:449/crmservice` (MD5) — later apps also moved to **go-heating**  |
 
 Reddit thread (2026-10): user asking how to auth to `cloud.go-heating.com` — no register dump; points to MITM / openHAB.
 
 **PHNIX official app naming** ([phnix-e.com/technology](https://www.phnix-e.com/technology.html)):
 
-- AQUA TEMP — pool  
-- AIWarmLink — heating & cooling  
-- Hitemp — domestic heat-pump water heaters  
+- AQUA TEMP — pool
+- AIWarmLink — heating & cooling
+- Hitemp — domestic heat-pump water heaters
 
 No public AIWarmLink JADX / parameter JSON for DHW `1245…` found.
 
@@ -165,12 +165,12 @@ No public AIWarmLink JADX / parameter JSON for DHW `1245…` found.
 
 ## 5. APK / JADX / strings hunt
 
-| Artifact | Result |
-| -------- | ------ |
-| Package | `com.phinx.hitemp` (APKPure metadata; developer “Heater SoftWare Team”; versions cited in issues e.g. 1.3.3 / 1.3.7 / store 1.4.6) |
-| Public JADX dumps / GitHub repos of decompiled HiTemp with `mode_real` / `2050` / `app_heartbeat` | **Not found** |
-| Shared Wireshark / Charles `.pcap` / `.chls` with HiTemp bodies | **Not found** beyond issue paste (#130 Proxyman text; #99 WarmLink curl) |
-| Paywalled / mirror APK reverse | **Skipped** per task rules |
+| Artifact                                                                                          | Result                                                                                                                             |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Package                                                                                           | `com.phinx.hitemp` (APKPure metadata; developer “Heater SoftWare Team”; versions cited in issues e.g. 1.3.3 / 1.3.7 / store 1.4.6) |
+| Public JADX dumps / GitHub repos of decompiled HiTemp with `mode_real` / `2050` / `app_heartbeat` | **Not found**                                                                                                                      |
+| Shared Wireshark / Charles `.pcap` / `.chls` with HiTemp bodies                                   | **Not found** beyond issue paste (#130 Proxyman text; #99 WarmLink curl)                                                           |
+| Paywalled / mirror APK reverse                                                                    | **Skipped** per task rules                                                                                                         |
 
 So: **no independent bit-packing table from the APK**; only MITM + workbook + HA entity JSON.
 
@@ -180,10 +180,10 @@ So: **no independent bit-packing table from the APK**; only MITM + workbook + HA
 
 Still concentrated in HA forks (already known lineage):
 
-| File | Repo |
-| ---- | ---- |
-| `entity_description.1245226668902080512.json` / `mapping.…` | radical-squared/aquatemp, goglecm/hitemp, forks |
-| WarmLink / Trianco heating product JSONs | arthuriansoft/aquatemp (`trianco`), zyznos321/warmlink, PR #105 product `1501438265440362496` |
+| File                                                        | Repo                                                                                          |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `entity_description.1245226668902080512.json` / `mapping.…` | radical-squared/aquatemp, goglecm/hitemp, forks                                               |
+| WarmLink / Trianco heating product JSONs                    | arthuriansoft/aquatemp (`trianco`), zyznos321/warmlink, PR #105 product `1501438265440362496` |
 
 **No new Trianco/Activair/Indol parameter JSON** beyond that family was located on the public web. App-shipped product catalogs (if they exist as remote downloads) are not mirrored in public repos.
 
@@ -193,22 +193,22 @@ ioBroker Midas script for product `1245226668902080512` still **requests named `
 
 ## 7. WeChat / Chinese OEM variants
 
-| Item | Finding |
-| ---- | ------- |
-| WeChat mini-program “PHNIX芬尼空气能” | Exists (AppID partially public on WeChat radar sites); **no** Linked-Go register / `2050` / `O01` artifacts published |
-| 芬尼 云集控 | Commercial multi-unit RS-485 + “phone mini-program”; not the HiTemp consumer cloud map |
-| Gitee / Chinese blog dumps of HiTemp protocol | **Not found** in this pass |
+| Item                                          | Finding                                                                                                               |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| WeChat mini-program “PHNIX芬尼空气能”         | Exists (AppID partially public on WeChat radar sites); **no** Linked-Go register / `2050` / `O01` artifacts published |
+| 芬尼 云集控                                   | Commercial multi-unit RS-485 + “phone mini-program”; not the HiTemp consumer cloud map                                |
+| Gitee / Chinese blog dumps of HiTemp protocol | **Not found** in this pass                                                                                            |
 
 ---
 
 ## 8. Heartbeat `23205` variants
 
-| Variant | Found? |
-| ------- | ------ |
+| Variant                                  | Found?                                                     |
+| ---------------------------------------- | ---------------------------------------------------------- |
 | `app_heartbeat` = **`23205`** (`0x5AA5`) | Yes — FoxAir tests/docs; local `1158` echo; goglecm consts |
-| Other numeric heartbeat values | **No** public source |
-| Heartbeat on go-heating.com | **Not** documented in openHAB sources reviewed |
-| Heartbeat in #130 poll body | Absent (expected — separate `control` call) |
+| Other numeric heartbeat values           | **No** public source                                       |
+| Heartbeat on go-heating.com              | **Not** documented in openHAB sources reviewed             |
+| Heartbeat in #130 poll body              | Absent (expected — separate `control` call)                |
 
 FoxAir note (already known): heartbeat `control` payload often **omits** `appId`; normal reads/writes use `appId` 16 on WarmLink.
 
@@ -216,12 +216,12 @@ FoxAir note (already known): heartbeat `control` payload often **omits** `appId`
 
 ## 9. Evidence about “device-side cache”
 
-| Mechanism | Public evidence |
-| --------- | --------------- |
-| App open → DTU uploads live block | Heartbeat write; FoxAir bus observation after heartbeat (heating); local `1158` tracks `23205` while app open |
-| Cloud retains named O/S for DHW | Contradicted — values stay `''` even with live `2050` |
-| Separate cache API / MQTT / WeChat push with O/S | **Not found** |
-| `tmJson` field on `getDataByCode` rows | Present but **null/empty** for O codes (#108); not a packing map |
+| Mechanism                                        | Public evidence                                                                                               |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| App open → DTU uploads live block                | Heartbeat write; FoxAir bus observation after heartbeat (heating); local `1158` tracks `23205` while app open |
+| Cloud retains named O/S for DHW                  | Contradicted — values stay `''` even with live `2050`                                                         |
+| Separate cache API / MQTT / WeChat push with O/S | **Not found**                                                                                                 |
+| `tmJson` field on `getDataByCode` rows           | Present but **null/empty** for O codes (#108); not a packing map                                              |
 
 ---
 
