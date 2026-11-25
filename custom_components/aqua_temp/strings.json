@@ -489,6 +489,24 @@
       },
       "1245226668902080512_l28_bit_15": {
         "name": "L28 bit 15"
+      },
+      "1245226668902080512_1133_bit_00": {
+        "name": "Reg 1133 bit 0 (L05 timer 1 start enabled)"
+      },
+      "1245226668902080512_1133_bit_01": {
+        "name": "Reg 1133 bit 1 (L05 timer 1 stop enabled)"
+      },
+      "1245226668902080512_1133_bit_02": {
+        "name": "Reg 1133 bit 2 (L05 timer 2 start enabled)"
+      },
+      "1245226668902080512_1133_bit_03": {
+        "name": "Reg 1133 bit 3 (L05 timer 2 stop enabled)"
+      },
+      "1245226668902080512_1129_bit_00": {
+        "name": "Reg 1129 bit 0 (L01 vacation enabled)"
+      },
+      "1245226668902080512_1151_bit_00": {
+        "name": "Reg 1151 bit 0 (M11 clock apply requested)"
       }
     },
     "climate": {

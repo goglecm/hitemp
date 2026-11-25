@@ -958,3 +958,9 @@ meaning is known:
 | `L28_bit_13`  | L28 bit 13                                       | uncertain  |
 | `L28_bit_14`  | L28 bit 14                                       | uncertain  |
 | `L28_bit_15`  | L28 bit 15                                       | uncertain  |
+| `1133_bit_00` | Reg 1133 bit 0 (L05 timer 1 start enabled)       | documented |
+| `1133_bit_01` | Reg 1133 bit 1 (L05 timer 1 stop enabled)        | documented |
+| `1133_bit_02` | Reg 1133 bit 2 (L05 timer 2 start enabled)       | documented |
+| `1133_bit_03` | Reg 1133 bit 3 (L05 timer 2 stop enabled)        | documented |
+| `1129_bit_00` | Reg 1129 bit 0 (L01 vacation enabled)            | documented |
+| `1151_bit_00` | Reg 1151 bit 0 (M11 clock apply requested)       | documented |

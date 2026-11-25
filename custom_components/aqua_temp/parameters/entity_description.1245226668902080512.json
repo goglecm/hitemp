@@ -3663,5 +3663,83 @@
     "description": "Bit 15 of L28. No published meaning.",
     "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
     "named_code": "L28"
+  },
+  {
+    "key": "1133_bit_00",
+    "platform": "binary_sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 1133 bit 0 (L05 timer 1 start enabled)",
+    "enabled_by_default": true,
+    "bit_of": ["1133", 0],
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Bit 0 of 1133. L05 timer 1 start enabled",
+    "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
+    "register": "1133.0"
+  },
+  {
+    "key": "1133_bit_01",
+    "platform": "binary_sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 1133 bit 1 (L05 timer 1 stop enabled)",
+    "enabled_by_default": true,
+    "bit_of": ["1133", 1],
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Bit 1 of 1133. L05 timer 1 stop enabled",
+    "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
+    "register": "1133.1"
+  },
+  {
+    "key": "1133_bit_02",
+    "platform": "binary_sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 1133 bit 2 (L05 timer 2 start enabled)",
+    "enabled_by_default": true,
+    "bit_of": ["1133", 2],
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Bit 2 of 1133. L05 timer 2 start enabled",
+    "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
+    "register": "1133.2"
+  },
+  {
+    "key": "1133_bit_03",
+    "platform": "binary_sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 1133 bit 3 (L05 timer 2 stop enabled)",
+    "enabled_by_default": true,
+    "bit_of": ["1133", 3],
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Bit 3 of 1133. L05 timer 2 stop enabled",
+    "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
+    "register": "1133.3"
+  },
+  {
+    "key": "1129_bit_00",
+    "platform": "binary_sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 1129 bit 0 (L01 vacation enabled)",
+    "enabled_by_default": true,
+    "bit_of": ["1129", 0],
+    "confidence": "documented",
+    "source": ["workbook", "app"],
+    "description": "Bit 0 of 1129. L01 vacation enabled",
+    "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
+    "register": "1129.0"
+  },
+  {
+    "key": "1151_bit_00",
+    "platform": "binary_sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 1151 bit 0 (M11 clock apply requested)",
+    "enabled_by_default": true,
+    "bit_of": ["1151", 0],
+    "confidence": "documented",
+    "source": ["workbook", "darksplat"],
+    "description": "Bit 0 of 1151. M11 clock apply requested",
+    "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
+    "register": "1151.0"
   }
 ]
