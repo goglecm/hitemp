@@ -902,3 +902,11 @@ meaning is known:
 | `1142_bit_05` | Reg 1142 bit 5                                   | uncertain  |
 | `1142_bit_06` | Reg 1142 bit 6                                   | uncertain  |
 | `1142_bit_07` | Reg 1142 bit 7                                   | uncertain  |
+| `1142_bit_08` | Reg 1142 bit 8                                   | uncertain  |
+| `1142_bit_09` | Reg 1142 bit 9                                   | uncertain  |
+| `1142_bit_10` | Reg 1142 bit 10                                  | uncertain  |
+| `1142_bit_11` | Reg 1142 bit 11                                  | uncertain  |
+| `1142_bit_12` | Reg 1142 bit 12                                  | uncertain  |
+| `1142_bit_13` | Reg 1142 bit 13                                  | uncertain  |
+| `1142_bit_14` | Reg 1142 bit 14                                  | uncertain  |
+| `1142_bit_15` | Reg 1142 bit 15                                  | uncertain  |
