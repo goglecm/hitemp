@@ -1384,87 +1384,83 @@
   },
   {
     "key": "O10",
-    "name": "O10 3V_DE output",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "name": "O10 Anode 3V on (2050.14)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: '3V_DE'.",
-    "guidance": "The cloud has returned no value for it so far."
+    "enabled_by_default": true,
+    "confidence": "documented",
+    "description": "Bit 14 of register 2050. 1 means the 3 V anode output is on. The workbook calls this bit O12.",
+    "guidance": "Read from the packed status word. The app's O number is kept; the workbook uses a higher O number for the same bit.",
+    "source": ["workbook", "darksplat", "s300"],
+    "register": "2050.14",
+    "bit_of": ["2050", 14]
   },
   {
     "key": "O11",
-    "name": "O11 MV_DE output",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "name": "O11 Anode MV on (2050.15)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: 'MV_DE'.",
-    "guidance": "The cloud has returned no value for it so far."
+    "enabled_by_default": true,
+    "confidence": "documented",
+    "description": "Bit 15 of register 2050. 1 means the MV anode output is on. The workbook calls this bit O13.",
+    "guidance": "Read from the packed status word. The app's O number is kept; the workbook uses a higher O number for the same bit.",
+    "source": ["workbook", "darksplat", "s300"],
+    "register": "2050.15",
+    "bit_of": ["2050", 15]
   },
   {
     "key": "O12",
-    "name": "O12 Shutdown output",
-    "platform": "sensor",
-    "options": {
-      "0": "Off",
-      "1": "On"
-    },
+    "name": "O12 Heating stopped (2051.0)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: 'shutDown'.",
-    "guidance": "The cloud has returned no value for it so far."
+    "enabled_by_default": true,
+    "confidence": "documented",
+    "description": "Bit 0 of register 2051. 1 means the thermostat is satisfied and heating has stopped. The workbook calls this bit O14.",
+    "guidance": "Read from the packed status word. The app's O number is kept; the workbook uses a higher O number for the same bit.",
+    "source": ["workbook", "darksplat", "s300"],
+    "register": "2051.0",
+    "bit_of": ["2051", 0]
   },
   {
     "key": "O13",
-    "name": "O13 DTU/Wi-Fi online",
-    "platform": "sensor",
-    "options": {
-      "0": "NO",
-      "1": "YES"
-    },
+    "name": "O13 Wi-Fi link up (2051.1)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online.",
-    "guidance": "The cloud has returned no value for it so far."
+    "enabled_by_default": true,
+    "confidence": "observed",
+    "description": "Bit 1 of register 2051. 1 means the DTU/Wi-Fi link is up. The workbook calls this bit O15.",
+    "guidance": "Read from the packed status word. The app's O number is kept; the workbook uses a higher O number for the same bit.",
+    "source": ["workbook", "darksplat", "s300"],
+    "register": "2051.1",
+    "bit_of": ["2051", 1],
+    "device_class": "connectivity"
   },
   {
     "key": "O14",
-    "name": "O14 Defrost",
-    "platform": "sensor",
-    "options": {
-      "0": "NO",
-      "1": "YES"
-    },
+    "name": "O14 Defrost running (2051.2)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: '除霜Defrost', defrost.",
-    "guidance": "The cloud has returned no value for it so far."
+    "enabled_by_default": true,
+    "confidence": "observed",
+    "description": "Bit 2 of register 2051. 1 means a defrost is running. The workbook calls this bit O16.",
+    "guidance": "Read from the packed status word. The app's O number is kept; the workbook uses a higher O number for the same bit.",
+    "source": ["workbook", "darksplat", "s300"],
+    "register": "2051.2",
+    "bit_of": ["2051", 2],
+    "device_class": "running"
   },
   {
     "key": "O15",
-    "name": "O15 High-temperature hot water stage",
-    "platform": "sensor",
-    "options": {
-      "0": "NO",
-      "1": "YES"
-    },
+    "name": "O15 Hot water stage active (2051.3)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage.",
-    "guidance": "The cloud has returned no value for it so far."
+    "enabled_by_default": true,
+    "confidence": "documented",
+    "description": "Bit 3 of register 2051. 1 means the hot-water stage is active. The workbook calls this bit O17.",
+    "guidance": "Read from the packed status word. The app's O number is kept; the workbook uses a higher O number for the same bit.",
+    "source": ["workbook", "darksplat", "s300"],
+    "register": "2051.3",
+    "bit_of": ["2051", 3]
   },
   {
     "key": "S01",

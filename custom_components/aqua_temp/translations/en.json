@@ -106,6 +106,24 @@
       "1245226668902080512_o06": {
         "name": "O06 Spare output on (2050.13)"
       },
+      "1245226668902080512_o10": {
+        "name": "O10 Anode 3V on (2050.14)"
+      },
+      "1245226668902080512_o11": {
+        "name": "O11 Anode MV on (2050.15)"
+      },
+      "1245226668902080512_o12": {
+        "name": "O12 Heating stopped (2051.0)"
+      },
+      "1245226668902080512_o13": {
+        "name": "O13 Wi-Fi link up (2051.1)"
+      },
+      "1245226668902080512_o14": {
+        "name": "O14 Defrost running (2051.2)"
+      },
+      "1245226668902080512_o15": {
+        "name": "O15 Hot water stage active (2051.3)"
+      },
       "1245226668902080512_s01": {
         "name": "S01 Remote switch open (2050.0)"
       },
@@ -1285,24 +1303,6 @@
       },
       "1245226668902080512_o09": {
         "name": "O09 Heater hours (2062)"
-      },
-      "1245226668902080512_o10": {
-        "name": "O10 3V_DE output"
-      },
-      "1245226668902080512_o11": {
-        "name": "O11 MV_DE output"
-      },
-      "1245226668902080512_o12": {
-        "name": "O12 Shutdown output"
-      },
-      "1245226668902080512_o13": {
-        "name": "O13 DTU/Wi-Fi online"
-      },
-      "1245226668902080512_o14": {
-        "name": "O14 Defrost"
-      },
-      "1245226668902080512_o15": {
-        "name": "O15 High-temperature hot water stage"
       },
       "1245226668902080512_t01": {
         "name": "T01 Ambient temperature (2019)"

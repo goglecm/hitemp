@@ -335,18 +335,18 @@ async def test_empty_live_switches_are_unavailable(
 
 
 @pytest.mark.usefixtures("fake_cloud")
-async def test_unconfirmed_and_unused_codes_are_disabled(
+async def test_anode_and_stage_bits_are_enabled(
     hass: HomeAssistant,
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Sensors not yet given an enabled default stay off until their batch."""
+    """The legacy O10 and O15 bits are recorded rather than hidden."""
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
     for key in ("O10", "O15"):
-        entry = registry.async_get(entity_id(hass, "sensor", key, device.code))
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
+        entry = registry.async_get(entity_id(hass, "binary_sensor", key, device.code))
+        assert entry.disabled_by is None, key
 
 
 async def test_each_code_is_requested_once(

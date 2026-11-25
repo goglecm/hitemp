@@ -69,6 +69,12 @@ PRODUCT_ID_HITEMP = "1245226668902080512"
 # (github.com/victor987/hitemp), read for diagnostics until their meaning on
 # other models is known
 HITEMP_DISCOVERY_CODES = [
+    "O15",
+    "O14",
+    "O13",
+    "O12",
+    "O11",
+    "O10",
     "O06",
     "O05",
     "O04",

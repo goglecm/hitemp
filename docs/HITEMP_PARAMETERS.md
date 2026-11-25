@@ -685,12 +685,12 @@ Their names come from the vendor's parameter file, translated where it is Chines
 - **T11 Out-of-range count empty**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
 - **T12 EEPROM write count empty**: Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.
 - **S02 Overheat switch closed (2050.1)**: Not shown in the app. Vendor name: 'Over heat protection switch'. Values: Open (0), Closed (1). In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **O10 3V_DE output**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label **O12** on that bit; this entity keeps legacy/app **O10**).
-- **O11 MV_DE output**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook **O13**).
-- **O12 Shutdown output**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1). Packed as `2051` bit 0 (workbook **O14**).
-- **O13 DTU/Wi-Fi online**: Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online. Values: NO (0), YES (1). Packed as `2051` bit 1 (workbook **O15**).
-- **O14 Defrost**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1). Packed as `2051` bit 2 (workbook **O16**; also exposed as the **Defrost** binary sensor).
-- **O15 High-temperature hot water stage**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1). Packed as `2051` bit 3 (workbook **O17**).
+- **O10 Anode 3V on (2050.14)**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label **O12 Heating stopped (2051.0)** on that bit; this entity keeps legacy/app **O10 Anode 3V on (2050.14)**).
+- **O11 Anode MV on (2050.15)**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook **O13 Wi-Fi link up (2051.1)**).
+- **O12 Heating stopped (2051.0)**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1). Packed as `2051` bit 0 (workbook **O14 Defrost running (2051.2)**).
+- **O13 Wi-Fi link up (2051.1)**: Not shown in the app. Vendor name: 'DTU&WIFI是否上线', whether the DTU/Wi-Fi module is online. Values: NO (0), YES (1). Packed as `2051` bit 1 (workbook **O15 Hot water stage active (2051.3)**).
+- **O14 Defrost running (2051.2)**: Not shown in the app. Vendor name: '除霜Defrost', defrost. Values: NO (0), YES (1). Packed as `2051` bit 2 (workbook **O16**; also exposed as the **Defrost** binary sensor).
+- **O15 Hot water stage active (2051.3)**: Not shown in the app. Vendor name: '系统是否进入高温热水阶段', whether the system is in the high-temperature hot water stage. Values: NO (0), YES (1). Packed as `2051` bit 3 (workbook **O17**).
 
 **T11, T12, O10–O15:** Named cloud codes stay empty on this product; live values are in `2050`/`2051` (same as O01–O06 / S*). See [Live data](#live-data-the-app-heartbeat).
 
