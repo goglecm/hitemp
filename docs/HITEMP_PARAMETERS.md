@@ -910,3 +910,11 @@ meaning is known:
 | `1142_bit_13` | Reg 1142 bit 13                                  | uncertain  |
 | `1142_bit_14` | Reg 1142 bit 14                                  | uncertain  |
 | `1142_bit_15` | Reg 1142 bit 15                                  | uncertain  |
+| `T08_bit_00`  | T08 bit 0                                        | uncertain  |
+| `T08_bit_01`  | T08 bit 1                                        | uncertain  |
+| `T08_bit_02`  | T08 bit 2                                        | uncertain  |
+| `T08_bit_03`  | T08 bit 3                                        | uncertain  |
+| `T08_bit_04`  | T08 bit 4                                        | uncertain  |
+| `T08_bit_05`  | T08 bit 5                                        | uncertain  |
+| `T08_bit_06`  | T08 bit 6                                        | uncertain  |
+| `T08_bit_07`  | T08 bit 7                                        | uncertain  |
