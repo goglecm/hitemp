@@ -528,9 +528,9 @@ Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'cl
 | `H32` | Circle of submitting data to Cloud                  | 1Min to 255Min, steps of 1Min     | 1Min           | `1`             | DIGI1, 1 to 255      | number, Configuration, disabled | observed   |
 
 - **H01 Remember power state**: Whether the heat pump returns to its previous on/off state after a power cut. Values: NO (0), YES (1). YES restarts heating after a power cut if it was on before. Keep YES unless it should stay off. On a Trianco S300 every on/off, including from the remote contacts, raised T21 by 4, so with YES each switch is most likely written to the controller's memory.
-- **H03 Heating source**: Type of heat source. The app only offers Air source. Values: Air source (0).
-- **H07 Temperature unit**: Unit the heat pump reports temperatures in. Values: Celsius degree (0), Fahrenheit degree (1). The Temperature Unit select in Home Assistant must match it. If you change H07 in the app, change the select as well.
-- **H30 Device address**: Address of the controller on its communication bus. Read-only: a wrong address can cut the controller off from the Wi-Fi module.
+- **H03 Heating source (1069)**: Type of heat source. The app only offers Air source. Values: Air source (0).
+- **H07 Temperature unit (1073)**: Unit the heat pump reports temperatures in. Values: Celsius degree (0), Fahrenheit degree (1). The Temperature Unit select in Home Assistant must match it. If you change H07 in the app, change the select as well.
+- **H30 Panel address (1076)**: Address of the controller on its communication bus. Read-only: a wrong address can cut the controller off from the Wi-Fi module.
 - **H31 Control mode**: Whether a central controller or the DTU/Wi-Fi module controls the heat pump. Values: Centralized control (0), DTU&WIFI (1). Must stay on DTU&WIFI for the app and Home Assistant to work, so it is read-only.
 - **H32 Cloud upload interval**: Minutes between the heat pump's own uploads to the cloud. Your heat pump uses 1 minute. Home Assistant reads the cloud every 5 minutes, so a larger value only makes the readings older. Keep 1.
 
@@ -591,10 +591,10 @@ Several values are outside the app's own range, which the app shows as they are.
 - **R12 Compressor cutoff ambient (1115)**: Ambient temperature (T01) below which the compressor is forced off.
 - **R14 Second heat source target (1117)**: Target temperature of the second heating source (see S06). Your heat pump holds -10.0, outside the app's own range, which suggests it isn't used.
 - **R15 Maximum compressor ambient (1118)**: App name: 'Maximal ambient temp of working compressor'. A 55-80 °C range fits a water or refrigerant limit better than an air temperature.
-- **R17 Top sensor controls compressor**: Whether the top sensor (T03) controls the compressor instead of the bottom sensor (T02). Values: NO (0), YES (1).
-- **R18 Start hysteresis (top sensor)**: Restart hysteresis of the top sensor, used instead of R03 when R17 = YES.
-- **R19 Compressor stop setpoint 1**: App name: 'Setpoint 1 of ambient temp to stop compressor'.
-- **R20 Compressor stop setpoint 2**: App name: 'Setpoint 2 of ambient temp to stop compressor'.
+- **R17 Top sensor controls compressor (1120)**: Whether the top sensor (T03) controls the compressor instead of the bottom sensor (T02). Values: NO (0), YES (1).
+- **R18 Start hysteresis top (1121)**: Restart hysteresis of the top sensor, used instead of R03 when R17 = YES.
+- **R19 Compressor stop setpoint 1 (1122)**: App name: 'Setpoint 1 of ambient temp to stop compressor'.
+- **R20 Compressor stop setpoint 2 (1123)**: App name: 'Setpoint 2 of ambient temp to stop compressor'.
 
 **R08, R09, R10:** Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.
 

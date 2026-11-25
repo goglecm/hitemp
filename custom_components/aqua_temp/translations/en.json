@@ -1173,13 +1173,13 @@
         "name": "E05 EEV defrost position"
       },
       "1245226668902080512_h03": {
-        "name": "H03 Heating source"
+        "name": "H03 Heating source (1069)"
       },
       "1245226668902080512_h07": {
-        "name": "H07 Temperature unit"
+        "name": "H07 Temperature unit (1073)"
       },
       "1245226668902080512_h30": {
-        "name": "H30 Device address"
+        "name": "H30 Panel address (1076)"
       },
       "1245226668902080512_h31": {
         "name": "H31 Control mode"
@@ -1230,16 +1230,16 @@
         "name": "R15 Maximum compressor ambient (1118)"
       },
       "1245226668902080512_r17": {
-        "name": "R17 Top sensor controls compressor"
+        "name": "R17 Top sensor controls compressor (1120)"
       },
       "1245226668902080512_r18": {
-        "name": "R18 Start hysteresis (top sensor)"
+        "name": "R18 Start hysteresis top (1121)"
       },
       "1245226668902080512_r19": {
-        "name": "R19 Compressor stop setpoint 1"
+        "name": "R19 Compressor stop setpoint 1 (1122)"
       },
       "1245226668902080512_r20": {
-        "name": "R20 Compressor stop setpoint 2"
+        "name": "R20 Compressor stop setpoint 2 (1123)"
       },
       "1245226668902080512_o01": {
         "name": "O01 Compressor"

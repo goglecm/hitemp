@@ -514,7 +514,7 @@
   },
   {
     "key": "H03",
-    "name": "H03 Heating source",
+    "name": "H03 Heating source (1069)",
     "app_name": "Heating source",
     "platform": "sensor",
     "options": {
@@ -524,13 +524,15 @@
     "level": "066 (installer)",
     "app_range": "Air source",
     "app_value": "Air source",
-    "confidence": "observed",
-    "description": "Type of heat source. The app only offers Air source.",
-    "cloud_type": "ENUM"
+    "confidence": "documented",
+    "description": "Heating source selection. Workbook register 1069. The listed value is air source.",
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1069"
   },
   {
     "key": "H07",
-    "name": "H07 Temperature unit",
+    "name": "H07 Temperature unit (1073)",
     "app_name": "Temperature unit",
     "platform": "sensor",
     "options": {
@@ -541,14 +543,16 @@
     "level": "066 (installer)",
     "app_range": "Celsius degree, Fahrenheit degree",
     "app_value": "Celsius degree",
-    "confidence": "observed",
-    "description": "Unit the heat pump reports temperatures in.",
+    "confidence": "documented",
+    "description": "Celsius or Fahrenheit for the display. Workbook register 1073.",
     "guidance": "The Temperature Unit select in Home Assistant must match it. If you change H07 in the app, change the select as well.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook", "app"],
+    "register": "1073"
   },
   {
     "key": "H30",
-    "name": "H30 Device address",
+    "name": "H30 Panel address (1076)",
     "app_name": "Device address",
     "platform": "sensor",
     "display_precision": 0,
@@ -556,10 +560,12 @@
     "level": "066 (installer)",
     "app_range": "1 to 255, steps of 1",
     "app_value": "1",
-    "confidence": "observed",
-    "description": "Address of the controller on its communication bus.",
+    "confidence": "documented",
+    "description": "Address parameter of the wired panel, workbook register 1076. It is not the Wi-Fi Modbus slave, which answers at 99.",
     "guidance": "Read-only: a wrong address can cut the controller off from the Wi-Fi module.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "ha-230400"],
+    "register": "1076"
   },
   {
     "key": "H31",
@@ -1075,7 +1081,7 @@
   },
   {
     "key": "R17",
-    "name": "R17 Top sensor controls compressor",
+    "name": "R17 Top sensor controls compressor (1120)",
     "app_name": "Enable top sensor to control compressor?",
     "platform": "sensor",
     "options": {
@@ -1086,13 +1092,15 @@
     "level": "066 (installer)",
     "app_range": "NO, YES",
     "app_value": "NO",
-    "confidence": "observed",
-    "description": "Whether the top sensor (T03) controls the compressor instead of the bottom sensor (T02).",
-    "cloud_type": "ENUM"
+    "confidence": "documented",
+    "description": "Whether the top tank sensor, rather than the bottom sensor, decides when the compressor runs. Workbook register 1120.",
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1120"
   },
   {
     "key": "R18",
-    "name": "R18 Start hysteresis (top sensor)",
+    "name": "R18 Start hysteresis top (1121)",
     "app_name": "Hysteresis of heat pump startup(top sensor)",
     "platform": "sensor",
     "device_class": "temperature_delta",
@@ -1101,13 +1109,15 @@
     "level": "066 (installer)",
     "app_range": "1.0C to 20.0C, steps of 0.5C",
     "app_value": "5.0C",
-    "confidence": "observed",
-    "description": "Restart hysteresis of the top sensor, used instead of R03 when R17 = YES.",
-    "cloud_type": "TEMP1"
+    "confidence": "documented",
+    "description": "How far the top sensor must fall below the target before heating starts. Workbook register 1121.",
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1121"
   },
   {
     "key": "R19",
-    "name": "R19 Compressor stop setpoint 1",
+    "name": "R19 Compressor stop setpoint 1 (1122)",
     "app_name": "Setpoint 1 of ambient temp to stop compressor",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1116,14 +1126,16 @@
     "level": "066 (installer)",
     "app_range": "30.0C to 90.0C, steps of 0.5C",
     "app_value": "65.0C",
-    "confidence": "uncertain",
-    "description": "App name: 'Setpoint 1 of ambient temp to stop compressor'.",
+    "confidence": "documented",
+    "description": "First ambient setpoint that stops the compressor. Workbook register 1122.",
     "guidance": "Not documented. A 30-90 °C range fits a water temperature better than an air temperature.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1122"
   },
   {
     "key": "R20",
-    "name": "R20 Compressor stop setpoint 2",
+    "name": "R20 Compressor stop setpoint 2 (1123)",
     "app_name": "Setpoint 2 of ambient temp to stop compressor",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1132,10 +1144,12 @@
     "level": "066 (installer)",
     "app_range": "30.0C to 90.0C, steps of 0.5C",
     "app_value": "55.0C",
-    "confidence": "uncertain",
-    "description": "App name: 'Setpoint 2 of ambient temp to stop compressor'.",
+    "confidence": "documented",
+    "description": "Second ambient setpoint that stops the compressor. Workbook register 1123.",
     "guidance": "Not documented. A 30-90 °C range fits a water temperature better than an air temperature.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1123"
   },
   {
     "key": "O01",
