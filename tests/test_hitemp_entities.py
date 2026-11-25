@@ -83,7 +83,7 @@ async def test_names_start_with_the_code(
     device = await _setup(hass, add_device, make_entry)
 
     assert hass.states.get(entity_id(hass, "number", "R01", device.code)).name == (
-        "Hot Water R01 Target water temperature"
+        "Hot Water R01 Target water temperature (1104)"
     )
     assert hass.states.get(entity_id(hass, "sensor", "O07", device.code)).name == (
         "Hot Water O07 EEV position"

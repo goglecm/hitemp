@@ -199,7 +199,7 @@ YES` the heater heats to `R05` instead of `R01`. `S05` (heater
 - **Fan:** `M17` changed from 1 to 2 after the climate entity's fan mode was
   set to high. According to the manual that only changes what the fan does
   after the target is reached.
-- **R01** was written every few minutes by something other than the app,
+- **R01 Target water temperature (1104)** was written every few minutes by something other than the app,
   between 56 and 60 °C.
 - **Register 1158** read 23205 from 10:20 to 11:55 and from 14:15 to 15:00,
   probably while the app was open, and 0 otherwise. 23205 is the value of the
@@ -398,11 +398,11 @@ session expired, and the integration logs in again by itself.
 | `R05` | Setpoint of booster                            | 30.0C to 90.0C, steps of 0.5C | 55.0C      | `55.0`          | TEMP1, 30 to 90      | number, Controls | observed   |
 | `R06` | Booster startup delay                          | 0Min to 450Min, steps of 1Min | 200Min     | `200`           | DIGI4, 0 to 90       | number, Controls | documented |
 
-- **R01 Target water temperature**: Target water temperature, the main control. The climate entity sets the same value. Heating starts when the controlling sensor (T02 bottom, or T03 top with R17 = YES) drops R03 below R01, and stops at R01. Each change is probably stored in the controller's memory, which allows a limited number of writes (see T12), so avoid automations that change R01 every few minutes.
-- **R03 Start hysteresis (bottom sensor)**: How far below R01 the bottom sensor (T02) must drop before heating restarts. A small value keeps the water closer to R01 but starts the compressor more often; very small values cause short cycling. Your heat pump uses 5.0 °C.
-- **R04 Use R05 as booster setpoint**: Whether the booster heats to its own setpoint R05 instead of R01. Values: NO (0), YES (1).
-- **R05 Booster setpoint**: Water temperature the booster heats to when R04 = YES.
-- **R06 Booster start delay**: How long the heat pump runs before the booster may help. The cloud declares a range of 0-90 for the app's 0-450 minutes, so the heat pump most likely stores it in 5-minute units; Home Assistant writes it in steps of 5.
+- **R01 Target water temperature (1104)**: Target water temperature, the main control. The climate entity sets the same value. Heating starts when the controlling sensor (T02 bottom, or T03 top with R17 = YES) drops R03 below R01, and stops at R01. Each change is probably stored in the controller's memory, which allows a limited number of writes (see T12), so avoid automations that change R01 every few minutes.
+- **R03 Start hysteresis bottom (1106)**: How far below R01 the bottom sensor (T02) must drop before heating restarts. A small value keeps the water closer to R01 but starts the compressor more often; very small values cause short cycling. Your heat pump uses 5.0 °C.
+- **R04 Use R05 as booster setpoint (1107)**: Whether the booster heats to its own setpoint R05 instead of R01. Values: NO (0), YES (1).
+- **R05 Booster setpoint (1108)**: Water temperature the booster heats to when R04 = YES.
+- **R06 Booster start delay (1109)**: How long the heat pump runs before the booster may help. The cloud declares a range of 0-90 for the app's 0-450 minutes, so the heat pump most likely stores it in 5-minute units; Home Assistant writes it in steps of 5.
 
 **R04, R05, R06:** Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.
 

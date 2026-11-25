@@ -831,7 +831,7 @@
   },
   {
     "key": "R01",
-    "name": "R01 Target water temperature",
+    "name": "R01 Target water temperature (1104)",
     "app_name": "Target temp",
     "platform": "number",
     "device_class": "temperature",
@@ -844,13 +844,15 @@
     "app_range": "38.0C to 60.0C, steps of 0.5C",
     "app_value": "Set by you",
     "confidence": "documented",
-    "description": "Target water temperature, the main control. The climate entity sets the same value.",
+    "description": "Target water temperature, workbook register 1104. The climate entity writes it.",
     "guidance": "Heating starts when the controlling sensor (T02 bottom, or T03 top with R17 = YES) drops R03 below R01, and stops at R01. Each change is probably stored in the controller's memory, which allows a limited number of writes (see T12), so avoid automations that change R01 every few minutes.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook", "app", "s300"],
+    "register": "1104"
   },
   {
     "key": "R03",
-    "name": "R03 Start hysteresis (bottom sensor)",
+    "name": "R03 Start hysteresis bottom (1106)",
     "app_name": "Hysteresis of heat pump startup(bottom sensor)",
     "platform": "number",
     "device_class": "temperature_delta",
@@ -863,13 +865,15 @@
     "app_range": "1.0C to 20.0C, steps of 0.5C",
     "app_value": "5.0C",
     "confidence": "documented",
-    "description": "How far below R01 the bottom sensor (T02) must drop before heating restarts.",
+    "description": "How far the bottom sensor must fall below the target before heating starts. Workbook register 1106.",
     "guidance": "A small value keeps the water closer to R01 but starts the compressor more often; very small values cause short cycling. Your heat pump uses 5.0 °C.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1106"
   },
   {
     "key": "R04",
-    "name": "R04 Use R05 as booster setpoint",
+    "name": "R04 Use R05 as booster setpoint (1107)",
     "app_name": "Enable R05 as setpoint of booster?",
     "platform": "select",
     "options": {
@@ -880,14 +884,16 @@
     "level": "002 (user)",
     "app_range": "NO, YES",
     "app_value": "NO",
-    "confidence": "observed",
-    "description": "Whether the booster heats to its own setpoint R05 instead of R01.",
+    "confidence": "documented",
+    "description": "Whether the booster uses R05 as its own target. Workbook register 1107.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1107"
   },
   {
     "key": "R05",
-    "name": "R05 Booster setpoint",
+    "name": "R05 Booster setpoint (1108)",
     "app_name": "Setpoint of booster",
     "platform": "number",
     "device_class": "temperature",
@@ -899,14 +905,16 @@
     "level": "002 (user)",
     "app_range": "30.0C to 90.0C, steps of 0.5C",
     "app_value": "55.0C",
-    "confidence": "observed",
-    "description": "Water temperature the booster heats to when R04 = YES.",
+    "confidence": "documented",
+    "description": "Separate target for the electric heater when R04 is YES. Workbook register 1108.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1108"
   },
   {
     "key": "R06",
-    "name": "R06 Booster start delay",
+    "name": "R06 Booster start delay (1109)",
     "app_name": "Booster startup delay",
     "platform": "number",
     "device_class": "duration",
@@ -919,9 +927,11 @@
     "app_range": "0Min to 450Min, steps of 1Min",
     "app_value": "200Min",
     "confidence": "documented",
-    "description": "How long the heat pump runs before the booster may help. The cloud declares a range of 0-90 for the app's 0-450 minutes, so the heat pump most likely stores it in 5-minute units; Home Assistant writes it in steps of 5.",
+    "description": "Minutes the heat pump runs before the heater may help, in Hybrid. Workbook register 1109. The cloud step is 5.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.",
-    "cloud_type": "DIGI4"
+    "cloud_type": "DIGI4",
+    "source": ["workbook", "app", "s300"],
+    "register": "1109"
   },
   {
     "key": "R07",

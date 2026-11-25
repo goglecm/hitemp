@@ -129,7 +129,7 @@
         "name": "H99 Display temperature compensation"
       },
       "1245226668902080512_r04": {
-        "name": "R04 Use R05 as booster setpoint"
+        "name": "R04 Use R05 as booster setpoint (1107)"
       },
       "1245226668902080512_r07": {
         "name": "R07 Booster replaces heat pump"
@@ -1445,16 +1445,16 @@
         "name": "H32 Cloud upload interval"
       },
       "1245226668902080512_r01": {
-        "name": "R01 Target water temperature"
+        "name": "R01 Target water temperature (1104)"
       },
       "1245226668902080512_r03": {
-        "name": "R03 Start hysteresis (bottom sensor)"
+        "name": "R03 Start hysteresis bottom (1106)"
       },
       "1245226668902080512_r05": {
-        "name": "R05 Booster setpoint"
+        "name": "R05 Booster setpoint (1108)"
       },
       "1245226668902080512_r06": {
-        "name": "R06 Booster start delay"
+        "name": "R06 Booster start delay (1109)"
       },
       "1245226668902080512_r08": {
         "name": "R08 Booster-only below ambient"

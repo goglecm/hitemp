@@ -21,8 +21,8 @@ views:
             entity: climate.heat_pump
           - type: entities
             entities:
-              - number.heat_pump_r01_target_water_temperature
-              - number.heat_pump_r03_start_hysteresis_bottom_sensor
+              - number.heat_pump_r01_target_water_temperature_1104
+              - number.heat_pump_r03_start_hysteresis_bottom_1106
               - select.heat_pump_mode_real_operating_mode_1013
               - select.heat_pump_m17_fan_after_heating_1016
               - binary_sensor.heat_pump_vacation_mode_1129_bit_0
@@ -53,7 +53,7 @@ views:
                 name: Flow (T03)
               - entity: sensor.heat_pump_t02_bottom_water_temperature_2020
                 name: Return (T02)
-              - entity: number.heat_pump_r01_target_water_temperature
+              - entity: number.heat_pump_r01_target_water_temperature_1104
                 name: Target (R01)
           - type: history-graph
             title: Water temperature rise
