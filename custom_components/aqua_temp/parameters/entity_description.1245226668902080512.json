@@ -935,7 +935,7 @@
   },
   {
     "key": "R07",
-    "name": "R07 Booster replaces heat pump",
+    "name": "R07 Booster replaces heat pump (1110)",
     "app_name": "Booster replaces heat pump?",
     "platform": "select",
     "options": {
@@ -948,13 +948,15 @@
     "app_range": "NO, YES",
     "app_value": "YES",
     "confidence": "documented",
-    "description": "Whether the booster takes over from the heat pump below the R08 ambient temperature.",
+    "description": "Whether the booster runs instead of the heat pump. Workbook register 1110. Stays a disabled installer control.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted. With YES and no booster fitted, the heat pump presumably stops heating below R08 (-5.0 °C on your unit).",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1110"
   },
   {
     "key": "R08",
-    "name": "R08 Booster-only below ambient",
+    "name": "R08 Booster only below ambient (1111)",
     "app_name": "Setpoint of ambient temp to activate booster to replace heatpump",
     "platform": "number",
     "device_class": "temperature",
@@ -968,13 +970,15 @@
     "app_range": "-20.0C to 10.0C, steps of 0.5C",
     "app_value": "-5.0C",
     "confidence": "documented",
-    "description": "Lower ambient temperature (T01) limit of the High demand band of Intelligent mode; below it the electric heater presumably replaces the heat pump (R07 = YES).",
+    "description": "Ambient temperature below which Intelligent mode uses the booster only. Workbook register 1111.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1111"
   },
   {
     "key": "R09",
-    "name": "R09 Booster without delay below ambient",
+    "name": "R09 Booster without delay below ambient (1112)",
     "app_name": "Setpoint of ambient temp to activate booster without delay",
     "platform": "number",
     "device_class": "temperature",
@@ -988,13 +992,15 @@
     "app_range": "0.0C to 30.0C, steps of 0.5C",
     "app_value": "5.0C",
     "confidence": "documented",
-    "description": "Ambient temperature (T01) between the High demand (below) and Standard (above) bands of Intelligent mode.",
+    "description": "Ambient temperature below which the booster starts with no delay. Workbook register 1112.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1112"
   },
   {
     "key": "R10",
-    "name": "R10 Booster with delay below ambient",
+    "name": "R10 Booster with delay below ambient (1113)",
     "app_name": "Setpoint of ambient temp to activate booster with delay",
     "platform": "number",
     "device_class": "temperature",
@@ -1008,13 +1014,15 @@
     "app_range": "10.0C to 40.0C, steps of 0.5C",
     "app_value": "25.0C",
     "confidence": "documented",
-    "description": "Ambient temperature (T01) above which Intelligent mode runs as Eco, without the electric heater; below it, Standard.",
+    "description": "Ambient temperature below which the booster starts after the R06 delay. Workbook register 1113.",
     "guidance": "Electric heater logic (Trianco S300 manual): in Standard mode the heater starts if the target isn't reached after R06 minutes; in High demand mode it starts without the delay; in Eco mode it never starts; both decide with the R03 differential. Intelligent mode picks Eco above R10 ambient (T01), Standard between R09 and R10 and High demand between R08 and R09; with R07 = YES the heater presumably replaces the heat pump below R08. The heater output is O02. Only relevant with an electric heater fitted.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1113"
   },
   {
     "key": "R12",
-    "name": "R12 Compressor cut-off ambient temperature",
+    "name": "R12 Compressor cutoff ambient (1115)",
     "app_name": "Ambient temp of shutting down compressor compulsively",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1023,13 +1031,15 @@
     "level": "066 (installer)",
     "app_range": "-30.0C to -5.0C, steps of 0.5C",
     "app_value": "-15.0C",
-    "confidence": "observed",
-    "description": "Ambient temperature (T01) below which the compressor is forced off.",
-    "cloud_type": "TEMP1"
+    "confidence": "documented",
+    "description": "Ambient temperature that forces the compressor off. Workbook register 1115.",
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1115"
   },
   {
     "key": "R14",
-    "name": "R14 Second heat source target temperature",
+    "name": "R14 Second heat source target (1117)",
     "app_name": "The target temp of second heating source",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1038,14 +1048,16 @@
     "level": "066 (installer)",
     "app_range": "10.0C to 60.0C, steps of 0.5C",
     "app_value": "-10.0C",
-    "confidence": "uncertain",
-    "description": "Target temperature of the second heating source (see S06).",
+    "confidence": "documented",
+    "description": "Target temperature of the second heating source named by S06. Workbook register 1117.",
     "guidance": "Your heat pump holds -10.0, outside the app's own range, which suggests it isn't used.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1117"
   },
   {
     "key": "R15",
-    "name": "R15 Maximum ambient for compressor",
+    "name": "R15 Maximum compressor ambient (1118)",
     "app_name": "Maximal ambient temp of working compressor",
     "platform": "sensor",
     "device_class": "temperature",
@@ -1054,10 +1066,12 @@
     "level": "066 (installer)",
     "app_range": "55.0C to 80.0C, steps of 0.5C",
     "app_value": "78.0C",
-    "confidence": "uncertain",
-    "description": "App name: 'Maximal ambient temp of working compressor'.",
+    "confidence": "documented",
+    "description": "Highest ambient temperature at which the compressor may run. Workbook register 1118.",
     "guidance": "A 55-80 °C range fits a water or refrigerant limit better than an air temperature.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1118"
   },
   {
     "key": "R17",

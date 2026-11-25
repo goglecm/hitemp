@@ -132,7 +132,7 @@
         "name": "R04 Use R05 as booster setpoint (1107)"
       },
       "1245226668902080512_r07": {
-        "name": "R07 Booster replaces heat pump"
+        "name": "R07 Booster replaces heat pump (1110)"
       }
     },
     "sensor": {
@@ -1221,13 +1221,13 @@
         "name": "N11 Solar pump working mode"
       },
       "1245226668902080512_r12": {
-        "name": "R12 Compressor cut-off ambient temperature"
+        "name": "R12 Compressor cutoff ambient (1115)"
       },
       "1245226668902080512_r14": {
-        "name": "R14 Second heat source target temperature"
+        "name": "R14 Second heat source target (1117)"
       },
       "1245226668902080512_r15": {
-        "name": "R15 Maximum ambient for compressor"
+        "name": "R15 Maximum compressor ambient (1118)"
       },
       "1245226668902080512_r17": {
         "name": "R17 Top sensor controls compressor"
@@ -1457,13 +1457,13 @@
         "name": "R06 Booster start delay (1109)"
       },
       "1245226668902080512_r08": {
-        "name": "R08 Booster-only below ambient"
+        "name": "R08 Booster only below ambient (1111)"
       },
       "1245226668902080512_r09": {
-        "name": "R09 Booster without delay below ambient"
+        "name": "R09 Booster without delay below ambient (1112)"
       },
       "1245226668902080512_r10": {
-        "name": "R10 Booster with delay below ambient"
+        "name": "R10 Booster with delay below ambient (1113)"
       }
     }
   },
