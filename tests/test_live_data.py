@@ -76,7 +76,7 @@ async def test_live_values_arrive_after_heartbeat(
     device, entry = await _setup(hass, add_device, make_entry)
 
     data = entry.runtime_data.get_device_data(device.code)
-    assert data["S01"] == "1"
+    assert data.get("S01") == "1"
     assert data["O01"] == "1"
     assert data["Fault1"] == "0"
     assert data["code_version"] == "1.0"
@@ -103,7 +103,7 @@ async def test_live_data_can_be_turned_off(
 
     assert not fake_cloud.heartbeat_requests()
     data = entry.runtime_data.get_device_data(device.code)
-    assert data["S01"] is None
+    assert data.get("S01") is None
     assert data["T02"] is not None
     report = entry.runtime_data.get_live_data_report(device.code)
     assert report["heartbeat"]["result"] == "disabled"

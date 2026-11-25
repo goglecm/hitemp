@@ -69,6 +69,12 @@ PRODUCT_ID_HITEMP = "1245226668902080512"
 # (github.com/victor987/hitemp), read for diagnostics until their meaning on
 # other models is known
 HITEMP_DISCOVERY_CODES = [
+    "S06",
+    "S05",
+    "S04",
+    "S03",
+    "S02",
+    "S01",
     *("2011", "2012", "2013", "2014", "2026", "2027", "2057", "2058", "2059"),
     *("2068", "2069", "2070", "2071"),
     *(f"O{index}" for index in (18, 19, 21, 22, 23, 24, 25, 26, 27, 28)),

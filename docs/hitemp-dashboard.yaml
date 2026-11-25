@@ -26,7 +26,7 @@ views:
               - select.heat_pump_mode_real_operating_mode_1013
               - select.heat_pump_m17_fan_after_heating_1016
               - binary_sensor.heat_pump_l01_vacation_enabled_1129_0
-              - sensor.heat_pump_s01_remote_on_off_input
+              - binary_sensor.heat_pump_s01_remote_switch_open_2050_0
           - type: heading
             heading: Status
           - type: entities

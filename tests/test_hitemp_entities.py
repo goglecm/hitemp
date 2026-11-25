@@ -296,11 +296,13 @@ async def test_live_switches_are_labelled(
     """Switch inputs and outputs read like the app's CL/OP and ON/OFF."""
     device = await _setup(hass, add_device, make_entry)
 
-    assert hass.states.get(entity_id(hass, "sensor", "S01", device.code)).state == (
-        "Closed (1)"
+    assert (
+        hass.states.get(entity_id(hass, "binary_sensor", "S01", device.code)).state
+        == "off"
     )
-    assert hass.states.get(entity_id(hass, "sensor", "S03", device.code)).state == (
-        "Open (0)"
+    assert (
+        hass.states.get(entity_id(hass, "binary_sensor", "S03", device.code)).state
+        == "off"
     )
     assert hass.states.get(entity_id(hass, "sensor", "O01", device.code)).state == (
         "On (1)"
@@ -321,10 +323,14 @@ async def test_empty_live_switches_are_unavailable(
     )
     await setup_entry(hass, entry)
 
-    for key in ("S01", "O01"):
-        assert hass.states.get(entity_id(hass, "sensor", key, device.code)).state == (
-            STATE_UNAVAILABLE
-        )
+    assert (
+        hass.states.get(entity_id(hass, "binary_sensor", "S01", device.code)).state
+        == "off"
+    )
+    assert (
+        hass.states.get(entity_id(hass, "sensor", "O01", device.code)).state
+        == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.usefixtures("fake_cloud")
@@ -337,7 +343,7 @@ async def test_unconfirmed_and_unused_codes_are_disabled(
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("S02", "O10", "O15"):
+    for key in ("O10", "O15"):
         entry = registry.async_get(entity_id(hass, "sensor", key, device.code))
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
 

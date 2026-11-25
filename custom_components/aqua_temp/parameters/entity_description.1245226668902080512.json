@@ -1464,102 +1464,105 @@
   },
   {
     "key": "S01",
-    "name": "S01 Remote on/off input",
+    "name": "S01 Remote switch open (2050.0)",
     "app_name": "Remote ON/OFF switch",
-    "platform": "sensor",
-    "options": {
-      "0": "Open",
-      "1": "Closed"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "CL, OP",
     "app_value": "CL",
-    "confidence": "uncertain",
-    "description": "Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off.",
-    "guidance": "The cloud never reports S01 itself, but its effect shows in Power and in bit 0 of 2050. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The app shows CL (closed) or OP (open); 1 = Closed is assumed for this entity, which stays unavailable."
+    "confidence": "observed",
+    "description": "Bit 0 of register 2050. 1 means the remote on/off switch is open. On this S300 that matches Power off.",
+    "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
+    "register": "2050.0",
+    "source": ["workbook", "s300", "darksplat"],
+    "enabled_by_default": true,
+    "bit_of": ["2050", 0],
+    "device_class": "opening"
   },
   {
     "key": "S02",
-    "name": "S02 Overheat protection switch",
-    "platform": "sensor",
-    "options": {
-      "0": "Open",
-      "1": "Closed"
-    },
+    "name": "S02 Overheat switch closed (2050.1)",
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: 'Over heat protection switch'.",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
+    "description": "Bit 1 of register 2050. The dtu_wifi sheet leaves this bit blank. The other sheet calls it overheat protection and uses 1 for closed. Polarity is uncertain.",
+    "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
+    "register": "2050.1",
+    "source": ["workbook-hw211", "darksplat"],
+    "bit_of": ["2050", 1]
   },
   {
     "key": "S03",
-    "name": "S03 Low pressure switch",
+    "name": "S03 Low pressure switch open (2050.2)",
     "app_name": "Low pressure switch",
-    "platform": "sensor",
-    "options": {
-      "0": "Open",
-      "1": "Closed"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "CL, OP",
     "app_value": "OP",
-    "confidence": "uncertain",
-    "description": "Low pressure switch of the refrigerant circuit.",
-    "guidance": "The app showed OP while the heat pump ran normally, so Open isn't necessarily a fault. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
+    "confidence": "documented",
+    "description": "Bit 2 of register 2050. 1 means the low pressure switch is open. An earlier coil-temperature guess is not the workbook meaning.",
+    "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
+    "register": "2050.2",
+    "source": ["workbook", "darksplat"],
+    "enabled_by_default": true,
+    "bit_of": ["2050", 2],
+    "device_class": "opening"
   },
   {
     "key": "S04",
-    "name": "S04 High pressure switch",
+    "name": "S04 High pressure switch open (2050.3)",
     "app_name": "High pressure switch",
-    "platform": "sensor",
-    "options": {
-      "0": "Open",
-      "1": "Closed"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "CL, OP",
     "app_value": "CL",
-    "confidence": "uncertain",
-    "description": "High pressure switch of the refrigerant circuit.",
-    "guidance": "The app showed CL during normal operation. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
+    "confidence": "documented",
+    "description": "Bit 3 of register 2050. 1 means the high pressure switch is open. EvoHeat labels this input DI04.",
+    "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
+    "register": "2050.3",
+    "source": ["workbook", "evoheat-manual", "darksplat"],
+    "enabled_by_default": true,
+    "bit_of": ["2050", 3],
+    "device_class": "opening"
   },
   {
     "key": "S05",
-    "name": "S05 Heater acceleration input",
+    "name": "S05 Heater boost switch open (2050.4)",
     "app_name": "Accelerate the running time of heater",
-    "platform": "sensor",
-    "options": {
-      "0": "Open",
-      "1": "Closed"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "CL, OP",
     "app_value": "CL",
-    "confidence": "uncertain",
-    "description": "App name: 'Accelerate the running time of heater'.",
-    "guidance": "Probably the input that starts the booster without the R06 delay. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
+    "confidence": "documented",
+    "description": "Bit 4 of register 2050. 1 means the heater time-shorten input is open.",
+    "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
+    "register": "2050.4",
+    "source": ["workbook", "darksplat"],
+    "enabled_by_default": true,
+    "bit_of": ["2050", 4],
+    "device_class": "opening"
   },
   {
     "key": "S06",
-    "name": "S06 Second heating source input",
+    "name": "S06 External heat switch active (2050.5)",
     "app_name": "Second heating source",
-    "platform": "sensor",
-    "options": {
-      "0": "Open",
-      "1": "Closed"
-    },
+    "platform": "binary_sensor",
     "entity_category": "diagnostic",
     "level": "066 (installer)",
     "app_range": "CL, OP",
     "app_value": "OP",
     "confidence": "uncertain",
-    "description": "Second heating source input (see R14).",
-    "guidance": "In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed."
+    "description": "Bit 5 of register 2050, the external heat-source input. The workbook does not state the polarity. On this S300 the bit is often set.",
+    "guidance": "Read from the packed status word. The named cloud code itself stays empty; it is still probed so a future value would show up in diagnostics.",
+    "register": "2050.5",
+    "source": ["workbook", "s300", "darksplat"],
+    "enabled_by_default": true,
+    "bit_of": ["2050", 5]
   },
   {
     "key": "T01",

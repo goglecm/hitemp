@@ -298,17 +298,17 @@ The bits decoded so far on a Trianco S300. Official meanings come from the
 EVO270 `dtu_wifi` workbook (see [HW211 register comparison](HW211_REGISTER_COMPARISON.md));
 S300 log notes that conflict with the workbook are marked **uncertain**.
 
-| Word   | Bit    | Official (`dtu_wifi`)                 | S300 observation                                                               | Confidence |
-| ------ | ------ | ------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
-| `2050` | 0      | S01 remote on/off (**1=OP open**)     | set while the unit is switched off (contacts open)                             | observed   |
-| `2050` | 2      | **S03 low pressure** (**1=OP**)       | earlier “coil above about −3 °C (`D01`)” guess — **prefer official**; re-check | uncertain  |
-| `2050` | 5      | **S06 external heat source switch**   | often/always set so far; why on this install is unknown                        | uncertain  |
-| `2050` | 8      | O01 compressor                        | the compressor runs (**Compressor running**)                                   | observed   |
-| `2050` | 9      | O02 electrical heater                 | the electric heater is on (**Electric heater on**)                             | observed   |
-| `2050` | 10     | O03 4-way valve                       | set while defrosting                                                           | observed   |
-| `2050` | 11, 12 | O04 fan high / O05 fan low (or solar) | the fan runs; which bit is which speed isn't known yet                         | uncertain  |
-| `2051` | 1      | DTU&WIFI online                       | always set so far while online                                                 | observed   |
-| `2051` | 2      | Defrost                               | defrosting (**Defrost**)                                                       | observed   |
+| Word   | Bit    | Official (`dtu_wifi`)                                | S300 observation                                                               | Confidence |
+| ------ | ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
+| `2050` | 0      | S01 remote on/off (**1=OP open**)                    | set while the unit is switched off (contacts open)                             | observed   |
+| `2050` | 2      | **S03 Low pressure switch open (2050.2)** (**1=OP**) | earlier “coil above about −3 °C (`D01`)” guess — **prefer official**; re-check | uncertain  |
+| `2050` | 5      | **S06 External heat switch active (2050.5)**         | often/always set so far; why on this install is unknown                        | uncertain  |
+| `2050` | 8      | O01 compressor                                       | the compressor runs (**Compressor running**)                                   | observed   |
+| `2050` | 9      | O02 electrical heater                                | the electric heater is on (**Electric heater on**)                             | observed   |
+| `2050` | 10     | O03 4-way valve                                      | set while defrosting                                                           | observed   |
+| `2050` | 11, 12 | O04 fan high / O05 fan low (or solar)                | the fan runs; which bit is which speed isn't known yet                         | uncertain  |
+| `2051` | 1      | DTU&WIFI online                                      | always set so far while online                                                 | observed   |
+| `2051` | 2      | Defrost                                              | defrosting (**Defrost**)                                                       | observed   |
 
 To find out, download the diagnostics of the heat pump while it runs. The
 `live_data` section lists the result of the last heartbeat, which codes had a
@@ -612,11 +612,11 @@ The app shows `CL` (closed) or `OP` (open).
 | `S05` | Accelerate the running time of heater | CL, OP    | CL        | empty           |                      | sensor, Diagnostic | uncertain  |
 | `S06` | Second heating source                 | CL, OP    | OP        | empty           |                      | sensor, Diagnostic | uncertain  |
 
-- **S01 Remote on/off input**: Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off. Values: Open (0), Closed (1). The cloud never reports S01 itself, but its effect shows in Power and in bit 0 of 2050. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The app shows CL (closed) or OP (open); 1 = Closed is assumed for this entity, which stays unavailable.
-- **S03 Low pressure switch**: Low pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed OP while the heat pump ran normally, so Open isn't necessarily a fault. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **S04 High pressure switch**: High pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed CL during normal operation. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **S05 Heater acceleration input**: App name: 'Accelerate the running time of heater'. Values: Open (0), Closed (1). Probably the input that starts the booster without the R06 delay. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
-- **S06 Second heating source input**: Second heating source input (see R14). Values: Open (0), Closed (1).
+- **S01 Remote switch open (2050.0)**: Remote on/off terminals, DI05 and GND in the manual, linked at the factory; a thermostat or volt-free contact there switches the heat pump on and off. Values: Open (0), Closed (1). The cloud never reports S01 itself, but its effect shows in Power and in bit 0 of 2050. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The app shows CL (closed) or OP (open); 1 = Closed is assumed for this entity, which stays unavailable.
+- **S03 Low pressure switch open (2050.2)**: Low pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed OP while the heat pump ran normally, so Open isn't necessarily a fault. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
+- **S04 High pressure switch open (2050.3)**: High pressure switch of the refrigerant circuit. Values: Open (0), Closed (1). The app showed CL during normal operation. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
+- **S05 Heater boost switch open (2050.4)**: App name: 'Accelerate the running time of heater'. Values: Open (0), Closed (1). Probably the input that starts the booster without the R06 delay. In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
+- **S06 External heat switch active (2050.5)**: Second heating source input (see R14). Values: Open (0), Closed (1).
 
 **S06:** In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 
@@ -684,7 +684,7 @@ Their names come from the vendor's parameter file, translated where it is Chines
 - **T06 Discharge temperature (2024)**: Not shown in the app. The vendor parameter file calls it the solar temperature. On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while T07 reads -30.0, the value of a missing sensor. That fits the compressor discharge (hot gas) temperature, which the manual's P81/E04 protections watch.
 - **T11 Out-of-range count empty**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
 - **T12 EEPROM write count empty**: Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.
-- **S02 Overheat protection switch**: Not shown in the app. Vendor name: 'Over heat protection switch'. Values: Open (0), Closed (1). In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
+- **S02 Overheat switch closed (2050.1)**: Not shown in the app. Vendor name: 'Over heat protection switch'. Values: Open (0), Closed (1). In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 - **O10 3V_DE output**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label **O12** on that bit; this entity keeps legacy/app **O10**).
 - **O11 MV_DE output**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook **O13**).
 - **O12 Shutdown output**: Not shown in the app. Vendor name: 'shutDown'. Values: Off (0), On (1). Packed as `2051` bit 0 (workbook **O14**).
