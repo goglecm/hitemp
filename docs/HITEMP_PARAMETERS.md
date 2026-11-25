@@ -926,3 +926,11 @@ meaning is known:
 | `T08_bit_13`  | T08 bit 13                                       | uncertain  |
 | `T08_bit_14`  | T08 bit 14                                       | uncertain  |
 | `T08_bit_15`  | T08 bit 15                                       | uncertain  |
+| `F03_bit_00`  | F03 bit 0                                        | uncertain  |
+| `F03_bit_01`  | F03 bit 1                                        | uncertain  |
+| `F03_bit_02`  | F03 bit 2                                        | uncertain  |
+| `F03_bit_03`  | F03 bit 3                                        | uncertain  |
+| `F03_bit_04`  | F03 bit 4                                        | uncertain  |
+| `F03_bit_05`  | F03 bit 5                                        | uncertain  |
+| `F03_bit_06`  | F03 bit 6                                        | uncertain  |
+| `F03_bit_07`  | F03 bit 7                                        | uncertain  |
