@@ -2,7 +2,7 @@
 
 # FoxAir / WarmLink / PHNIX space-heating register research
 
-**Status:** research extract only. **Do not treat as a write recipe for Trianco S300 / HW211.**  
+**Status:** research extract only. **Do not treat as a write recipe for Trianco S300 / HW211.**
 **Board family:** FoxAir GL9 / PHNIX air-to-water **space-heating** mainboards (WarmLink / Linked-Go product family **644**, firmware 3.x) — **different** from HW211 DHW / Trianco S300 `dtu_wifi`.
 
 Sources mined (cloned or fetched 2026-11-20; no inventions):
@@ -81,7 +81,7 @@ Focus addresses requested: **2019, 2034, 2050, 2055**.
 
 ### MAIN 2019 — cloud `O01~023` (load / output bitfield)
 
-Source: FoxAir_Control `data/foxair_phnix_registers.json` → `"2019"`.  
+Source: FoxAir_Control `data/foxair_phnix_registers.json` → `"2019"`.
 Type: `BITFIELD`, read-only. Cloud BINARY string MSB-first.
 
 | Bit | Logical O# (board text) | Meaning (FoxAir_Control)                                                | WarmLink 644 app label (when present)                   |
@@ -120,7 +120,7 @@ Type: `BITFIELD`, read-only. Cloud BINARY string MSB-first.
 
 ### MAIN 2018 — additional outputs (heating)
 
-FoxAir_Control lists 2018 as DIGI1 “025 / Elektrischer Wassertankheizer”.  
+FoxAir_Control lists 2018 as DIGI1 “025 / Elektrischer Wassertankheizer”.
 **ha-foxair** expands it as BITFIELD:
 
 | Bit | Meaning                              |

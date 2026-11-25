@@ -2,9 +2,9 @@
 
 # Research dump: OEM manuals / datasheets / vendor docs (web, not only GitHub)
 
-**Date:** 2026-11-20  
-**Scope:** Online OEM manuals, datasheets, ManualsLib/manufacturer PDFs, Chinese vendor pages, Gitee/gitcode/CSDN for **HW211 / Trianco Activair / PHNIX DHW** register knowledge.  
-**Constraint:** Research dump only — does **not** modify `HW211_REGISTER_COMPARISON.md`. No invented Modbus addresses.  
+**Date:** 2026-11-20
+**Scope:** Online OEM manuals, datasheets, ManualsLib/manufacturer PDFs, Chinese vendor pages, Gitee/gitcode/CSDN for **HW211 / Trianco Activair / PHNIX DHW** register knowledge.
+**Constraint:** Research dump only — does **not** modify `HW211_REGISTER_COMPARISON.md`. No invented Modbus addresses.
 **Known baseline:** `sjtrny/esphome-hw211` EVO270-1 workbook (`dtu_wifi` sheet) already maps Power / Mode / T01–T06 / R… / O… / S… / D/E/G/H/L/M/N / packed `2050`/`2051` / `2085`.
 
 ---
@@ -68,7 +68,7 @@ What _is_ newly useful from OEM/web sources:
 | Trianco Activair HT / High Temperature error codes  | https://www.manualslib.com/manual/3053727/Trianco-Activair.html?page=28                                                                                         | Space-heating E01–E29 / inverter faults — heating board family                                                                                 |
 | Trianco wall-hung WarmLink commissioning            | https://trianco.co.uk/…Activair-Wall-Hung-3.2kW-Manual.pdf…                                                                                                     | H07/H25/G01–G05 — **FoxAir/WarmLink heating** parameter names                                                                                  |
 | Termobrasa Gold catalogues                          | https://termobrasa.com/wp-content/uploads/2025/03/Catalogo_Termobrasa_2025.pdf ; EN: `/2025/07/EN_termobrasa_catalogo_2025.pdf`                                 | Wi-Fi + app only; **no Modbus / register table**                                                                                               |
-| Indol EcoSave PV300 productblatt                    | https://www.vvsbutiken.nu/dokument/EcoSave%20produktblad%20v1.pdf                                                                                               | Specs + Wi-Fi; **no Modbus**                                                                                                                   |
+| Indol EcoSave PV300 productblatt                    | https://www.vvsbutiken.nu/document/EcoSave%20produktblad%20v1.pdf                                                                                               | Specs + Wi-Fi; **no Modbus**                                                                                                                   |
 | PHNIX commercial BMS blog                           | https://www.phnix-e.com/commercial-heat-pump-bms-integration-monitoring-points.html                                                                             | Generic “ask for points list”; no DHW HW211 map                                                                                                |
 | PHNIX PC4001 board notes                            | https://www.bestcontactor.com/product/phnix-pc4001/                                                                                                             | Commercial board; T1=supply / T2=return — **different** T-map; Modbus addr param P29 default 1                                                 |
 | 科特时控 芬尼克兹 PC4001/PC8001 gateway             | https://www.ketetech.com/ProductShow_460.html                                                                                                                   | Gateway product page; no register table                                                                                                        |
@@ -81,7 +81,7 @@ What _is_ newly useful from OEM/web sources:
 
 ### 1. PCB DI / OUT / T labelling ↔ app O / S / T names — **HW211 DHW**
 
-From Evo270 Manual §8.2 PCB Description  
+From Evo270 Manual §8.2 PCB Description
 (https://evoheat.com.au/wp-content/uploads/2021/07/pdf-manual-Evo270-Manual.pdf):
 
 | PCB symbol  | Manual meaning             | Correlation to known `dtu_wifi` / cloud names                                 |

@@ -2,8 +2,8 @@
 
 # Research dump: GitHub / web sweep for HW211 DHW register sources
 
-**Date:** 2026-11-20  
-**Scope:** Aggressive search for any remaining repos/docs that decode HW211 / Activair / Trianco / Indol / PHNIX **DHW** heat-pump registers or bits that prior research may have missed.  
+**Date:** 2026-11-20
+**Scope:** Aggressive search for any remaining repos/docs that decode HW211 / Activair / Trianco / Indol / PHNIX **DHW** heat-pump registers or bits that prior research may have missed.
 **Constraint:** Research dump only — does **not** modify `HW211_REGISTER_COMPARISON.md`. No invented mappings.
 
 ---

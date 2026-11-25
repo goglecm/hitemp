@@ -2,10 +2,10 @@
 
 # Research dump: HiTemp / Aqua Temp / Linked-Go app & cloud API artifacts
 
-**Status:** research only — do **not** merge into `HW211_REGISTER_COMPARISON.md` without review.  
-**Product of interest:** `1245226668902080512` (HW211 DHW / Trianco S300 / Indol PV300 / Activair DHW / EvoHeat EVO270 family).  
-**Written:** 2026-11-20  
-**Method:** public web / GitHub / forums / MITM issue text only. No APK download, no paywalled binaries, no invented maps.  
+**Status:** research only — do **not** merge into `HW211_REGISTER_COMPARISON.md` without review.
+**Product of interest:** `1245226668902080512` (HW211 DHW / Trianco S300 / Indol PV300 / Activair DHW / EvoHeat EVO270 family).
+**Written:** 2026-11-20
+**Method:** public web / GitHub / forums / MITM issue text only. No APK download, no paywalled binaries, no invented maps.
 **Cross-check:** adds only material **not** already covered (or only briefly footnoted) in:
 
 - `docs/_research_hitemp_cloud.md`
@@ -45,7 +45,7 @@ From prior dumps — referenced only for gap control:
 
 ## 2. NEW — Full HiTemp iOS poll map (aquatemp #130)
 
-**Source:** [radical-squared/aquatemp#130](https://github.com/radical-squared/aquatemp/issues/130) — Proxyman MITM of **HiTemp iOS v1.3.3**, EvoHeat EVO270-1 (same OEM product family as `1245…`).  
+**Source:** [radical-squared/aquatemp#130](https://github.com/radical-squared/aquatemp/issues/130) — Proxyman MITM of **HiTemp iOS v1.3.3**, EvoHeat EVO270-1 (same OEM product family as `1245…`).
 **Class:** observation (app traffic).
 
 ### 2.1 Control write (already summarised; kept for appId)

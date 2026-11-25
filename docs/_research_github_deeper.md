@@ -2,9 +2,9 @@
 
 # Research dump: deeper GitHub / code-host search (additive only)
 
-**Date:** 2026-11-20  
-**Scope:** Second-pass host search for **any remaining** HW211 / HiTemp / Activair / Linked-Go **DHW register maps** beyond the known set and beyond prior dumps in `docs/_research_*.md`.  
-**Constraint:** Research only — does **not** modify `HW211_REGISTER_COMPARISON.md`. No inventing mappings.  
+**Date:** 2026-11-20
+**Scope:** Second-pass host search for **any remaining** HW211 / HiTemp / Activair / Linked-Go **DHW register maps** beyond the known set and beyond prior dumps in `docs/_research_*.md`.
+**Constraint:** Research only — does **not** modify `HW211_REGISTER_COMPARISON.md`. No inventing mappings.
 **Rule:** List **NEW / additive** finds; known set verified for deltas only.
 
 ---

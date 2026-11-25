@@ -8,8 +8,8 @@
 **Product ID of interest:** `1245226668902080512` (Trianco S300 / Indol PV300 /
 Activair DHW / EvoHeat EVO270 / Termobrasa BI*GOLD family on HiTemp app).
 
-**Written:** 2026-11-20  
-**Method:** GitHub raw docs + issues/PRs + HA community threads + local docs for gap notes only.  
+**Written:** 2026-11-20
+**Method:** GitHub raw docs + issues/PRs + HA community threads + local docs for gap notes only.
 **Rule followed:** no invented mappings; observation vs vendor labelled.
 
 ---
@@ -97,9 +97,9 @@ FoxAir `send_app_heartbeat` (tested in `tests/test_cloud_app_heartbeat.py`):
 
 ## 3. Complete named ↔ numeric alias table (victor987)
 
-**Source:** [victor987/hitemp `DEVICE_PARAMETERS.md`](https://github.com/victor987/hitemp/blob/main/DEVICE_PARAMETERS.md)  
-**Device:** Indol PV300, product `1245226668902080512`, scan 2026-03-23  
-**Evidence class:** **observation** (equal values when querying letter code and numeric `0–9999`).  
+**Source:** [victor987/hitemp `DEVICE_PARAMETERS.md`](https://github.com/victor987/hitemp/blob/main/DEVICE_PARAMETERS.md)
+**Device:** Indol PV300, product `1245226668902080512`, scan 2026-03-23
+**Evidence class:** **observation** (equal values when querying letter code and numeric `0–9999`).
 **Author claim:** 95 aliases (79 writable + 16 read-only). **Enumerated Alt Code cells in named sections: 109.** Pattern **R(n) = 1103+n** for R01–R20.
 
 ### Special / control
@@ -200,7 +200,7 @@ FoxAir `send_app_heartbeat` (tested in `tests/test_cloud_app_heartbeat.py`):
 
 ### Letters with **no** data on this product (victor)
 
-`A, B, I, J, K, P, Q, S, U, V, W, X, Y, Z` — entire letter ranges empty.  
+`A, B, I, J, K, P, Q, S, U, V, W, X, Y, Z` — entire letter ranges empty.
 **S*** empty is critical: remote switch / pressure inputs are **not** available as named cloud codes.
 
 ---
@@ -211,7 +211,7 @@ Bit index **0 = LSB** (rightmost char of the 16-char `"000…0010"` cloud string
 
 ### 4.1 Official vendor (`dtu_wifi` workbook via sjtrny)
 
-**Source:** `sjtrny/esphome-hw211` → `protocol/hw211_modbus.json` address **2050/2051/2085**, sheet `dtu_wifi`.  
+**Source:** `sjtrny/esphome-hw211` → `protocol/hw211_modbus.json` address **2050/2051/2085**, sheet `dtu_wifi`.
 **Class:** **vendor**.
 
 #### 2050 State0 — Slave component status
@@ -263,14 +263,14 @@ Bit index **0 = LSB** (rightmost char of the 16-char `"000…0010"` cloud string
 
 ### 4.2 victor987 observation (same product ID)
 
-**Source:** `DEVICE_PARAMETERS.md` numeric row for `2050`.  
+**Source:** `DEVICE_PARAMETERS.md` numeric row for `2050`.
 **Class:** **observation**.
 
 > Operating status: **bit8=compressor, bit9=e-heater, bits2+5=always set**
 
 Sample idle-ish word: `0000000000100100` → bits **2** and **5** set (matches “always set” note; **not** a vendor meaning).
 
-`2051` sample: `0000000000000001` → bit **0** set (workbook: shutDown) — **not** interpreted further by victor.  
+`2051` sample: `0000000000000001` → bit **0** set (workbook: shutDown) — **not** interpreted further by victor.
 `2085`: all zeros in scan.
 
 Victor’s HA code (`BINARY_STATUS_PARAMS = []`) no longer exposes O01–O06 as binary sensors (they stay empty); README still lists compressor/heater/defrost conceptually.
@@ -288,7 +288,7 @@ Examples:
 | compressor+fan off | `0000000000110000` |
 | compressor+fan on  | `0000100100110000` |
 
-Author claim: “bits 5 to 10 are O01–O06”.  
+Author claim: “bits 5 to 10 are O01–O06”.
 **Conflict with vendor:** workbook puts O01–O06 on **bits 8–13**. The on-example actually shows **bits 4,5,8,11** (LSB-right): bits 4–5 look “sticky”; bit 8 ≈ compressor; bit 11 ≈ fan high — consistent with vendor **if** the author’s bit-range statement is ignored.
 
 ### 4.4 Local Trianco S300 observations (already in local docs; listed for conflict matrix)
@@ -309,7 +309,7 @@ Author claim: “bits 5 to 10 are O01–O06”.
 
 ### 4.5 HA community Modbus (HW211 family)
 
-**Source:** [community.home-assistant.io #230400](https://community.home-assistant.io/t/implementation-of-aqua-temp-controller/230400?page=8).  
+**Source:** [community.home-assistant.io #230400](https://community.home-assistant.io/t/implementation-of-aqua-temp-controller/230400?page=8).
 **Class:** **observation** against manufacturer spreadsheet.
 
 ESPHome binary sensor: holding register **2050**, bitmask **`0x0100`** → **bit 8 = compressor**. Aligns with vendor + victor + local.

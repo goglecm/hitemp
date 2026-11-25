@@ -2,8 +2,8 @@
 
 # Research dump: forums / Reddit / blogs / community archives
 
-**Date:** 2026-11-20  
-**Scope:** Hunt community sources (HA forum, Reddit, Domoticz/openHAB/Node-RED, Dutch/UK/AU installer forums, Facebook group archives, sjtrny blog, YouTube, Discord indexes) for **HW211 / Trianco Activair / HiTemp / Indol** register and bit explanations **not** already captured as GitHub workbook extracts.  
+**Date:** 2026-11-20
+**Scope:** Hunt community sources (HA forum, Reddit, Domoticz/openHAB/Node-RED, Dutch/UK/AU installer forums, Facebook group archives, sjtrny blog, YouTube, Discord indexes) for **HW211 / Trianco Activair / HiTemp / Indol** register and bit explanations **not** already captured as GitHub workbook extracts.
 **Constraint:** Research dump only — does **not** modify `HW211_REGISTER_COMPARISON.md`. No invented mappings. No commit.
 
 **Anchors searched:** chip HW211; Activair schematic CODE `20230302-0005` (AI01–AI06, DI01, OUT/HT/EEV/FM/COMP, RS485 WIFI); app codes O/S/T/R; status words `2050`/`2051`; `mode_real`.
@@ -21,7 +21,7 @@ Community channels **do** contribute:
 3. **Anecdotal / partial:** Neptuno HA mode remapping; timer-on-device vs app mismatch; H30≠DTU slave; PC1006 successor rumour; aquatemp #108 bit-range wording is wrong even though live `2050` strings match bit 8/11.
 4. **Traps (do not merge into HW211 DHW State0):** Pool PC1004 / Thermotec Node-RED maps; PHNIX WarmLink heating Modbus; Activair R32/R290 space-heating WarmLink manuals; Activair Indoor 5 DI labels (PI3/PI4/PI5).
 
-**Public URL for schematic `20230302-0005`:** still not found.  
+**Public URL for schematic `20230302-0005`:** still not found.
 **Facebook / ESPHome Discord / YouTube:** no indexed register tables for HW211 Modbus.
 
 ---
