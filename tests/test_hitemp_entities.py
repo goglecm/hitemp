@@ -337,7 +337,7 @@ async def test_unconfirmed_and_unused_codes_are_disabled(
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("S02", "O10", "O15", "N01"):
+    for key in ("S02", "O10", "O15"):
         entry = registry.async_get(entity_id(hass, "sensor", key, device.code))
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
 

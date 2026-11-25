@@ -1188,22 +1188,22 @@
         "name": "H98 Model selection (1074)"
       },
       "1245226668902080512_n01": {
-        "name": "N01 Solar pump control sensor"
+        "name": "N01 Solar pump control sensor (1080)"
       },
       "1245226668902080512_n02": {
-        "name": "N02 Solar pump maximum run time"
+        "name": "N02 Solar pump maximum run time (1081)"
       },
       "1245226668902080512_n03": {
-        "name": "N03 Solar pump hysteresis"
+        "name": "N03 Solar pump hysteresis (1082)"
       },
       "1245226668902080512_n04": {
-        "name": "N04 Night temperature reduction"
+        "name": "N04 Night temperature reduction (1083)"
       },
       "1245226668902080512_n05": {
-        "name": "N05 Night reduction start hour"
+        "name": "N05 Night reduction start hour (1084)"
       },
       "1245226668902080512_n06": {
-        "name": "N06 Night reduction end hour"
+        "name": "N06 Night reduction end hour (1085)"
       },
       "1245226668902080512_n07": {
         "name": "N07 Solar water cooling start temperature"
