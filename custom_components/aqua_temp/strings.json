@@ -86,7 +86,7 @@
         "name": "Status"
       },
       "1245226668902080512_power": {
-        "name": "Power"
+        "name": "Power Heat pump on (1011)"
       },
       "1245226668902080512_compressor_running": {
         "name": "Compressor running (2050 bit 8)"
@@ -111,10 +111,10 @@
         "name": "Temperature Unit"
       },
       "1245226668902080512_mode_real": {
-        "name": "mode_real Operating mode"
+        "name": "mode_real Operating mode (1013)"
       },
       "1245226668902080512_m17": {
-        "name": "M17 Fan after heating"
+        "name": "M17 Fan after heating (1016)"
       },
       "1245226668902080512_d06": {
         "name": "D06 Defrost method"
@@ -1160,6 +1160,9 @@
       "1442284873216843776_t28": {
         "name": "Target frequency [T28]"
       },
+      "1245226668902080512_mode": {
+        "name": "Mode Requested mode (1012)"
+      },
       "1245226668902080512_01": {
         "name": "/01 Use of OUT05"
       },
@@ -1332,7 +1335,7 @@
         "name": "2050 Operating status bits"
       },
       "1245226668902080512_m06": {
-        "name": "M06 Electric heating"
+        "name": "M06 Booster mode (1014)"
       },
       "1245226668902080512_o29": {
         "name": "O29 Fan speed"

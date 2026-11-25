@@ -1,21 +1,35 @@
 [
   {
     "key": "Power",
-    "name": "Power",
+    "name": "Power Heat pump on (1011)",
     "platform": "binary_sensor",
     "device_class": "power",
     "on_value": "1",
     "entity_category": "diagnostic",
     "confidence": "observed",
-    "description": "On/off state of the heat pump (1 = on). The climate entity turns it on and off.",
+    "description": "On/off state of the heat pump (1 = on), workbook register 1011. The climate entity turns it on and off.",
     "cloud_type": "ENUM",
-    "guidance": "On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The compressor stopped or started about a minute later. Each switch raised T21 by 4: the on/off state is written to the controller's memory, most likely because H01 = YES remembers it. Whether switching on from Home Assistant or the app overrides open contacts isn't known, so avoid switching it from both."
+    "guidance": "On a Trianco S300, opening the remote on/off contacts set Power to 0 and closing them set it to 1 by the next read. Whether Home Assistant can override open contacts is not known, so avoid switching it from both.",
+    "source": ["workbook", "s300", "aquatemp-130"],
+    "register": "1011"
   },
   {
     "key": "Mode",
-    "name": "Mode",
-    "platform": null,
-    "description": "Active mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (seen in the app on a Trianco S300). In vacation mode_real keeps the mode to return to."
+    "name": "Mode Requested mode (1012)",
+    "platform": "sensor",
+    "description": "Mode requested of the controller, workbook register 1012. 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation.",
+    "confidence": "observed",
+    "source": ["workbook", "s300", "darksplat"],
+    "guidance": "Read-only here. The writable Select Mode entity writes mode_real (1013), which is what the app and this S300 showed changing. Local Modbus tests write 1012 as the requested mode.",
+    "register": "1012",
+    "entity_category": "diagnostic",
+    "options": {
+      "0": "Intelligent",
+      "2": "Eco",
+      "3": "Hybrid",
+      "4": "Fast heating",
+      "7": "Vacation"
+    }
   },
   {
     "key": "Manual-mute",
@@ -31,7 +45,7 @@
   },
   {
     "key": "mode_real",
-    "name": "mode_real Operating mode",
+    "name": "mode_real Operating mode (1013)",
     "app_name": "Select Mode",
     "platform": "select",
     "options": {
@@ -45,9 +59,11 @@
     "app_range": "Intelligent Mode, Eco Mode, Hybrid Mode, Fast Heating Mode",
     "app_value": "Eco Mode",
     "confidence": "observed",
-    "description": "Operating mode, as on the app's Select Mode page. Hybrid is the manual's Standard mode and Fast heating its High demand mode.",
-    "guidance": "Eco: heat pump only. Hybrid: the electric heater helps if the target isn't reached after R06 minutes. Fast heating: the electric heater runs at once. Intelligent: chooses between them by the ambient temperature (R08-R10). Without an electric heater fitted, Eco is the mode to use. Vacation is set on the app's Timer page and shows as Mode 7 and the Vacation mode sensor. The values were confirmed by switching modes in the app on a Trianco S300.",
-    "cloud_type": "ENUM"
+    "description": "Operating mode shown as the actual mode, workbook register 1013. Hybrid is the manual's Standard mode and Fast heating its High demand mode.",
+    "guidance": "Eco heats with the heat pump only. Hybrid lets the electric heater help after R06 minutes. Fast heating runs the heater at once. Intelligent chooses from the ambient temperature. Vacation is Mode 7 and does not replace this value. Writes stay on this code.",
+    "cloud_type": "ENUM",
+    "source": ["workbook", "app", "s300", "darksplat"],
+    "register": "1013"
   },
   {
     "key": "MO6",
@@ -57,7 +73,7 @@
   },
   {
     "key": "M17",
-    "name": "M17 Fan after heating",
+    "name": "M17 Fan after heating (1016)",
     "app_name": "Ventilation / Air Speed",
     "platform": "select",
     "options": {
@@ -69,9 +85,11 @@
     "level": "App settings",
     "app_range": "Ventilation ON/OFF, Air Speed Low or High",
     "confidence": "documented",
-    "description": "What the fan does once the water has reached its target temperature: run at low speed, run at high speed, or stop (Trianco S300 manual). It is the app's Ventilation switch and Air Speed knob.",
-    "guidance": "A ventilation setting: Low or High keeps air moving through the unit after heating stops, Off lets the fan stop. While heating the controller runs the fan itself, so this doesn't change the fan speed during heating or the efficiency. The climate entity's fan modes write the same code.",
-    "cloud_type": "ENUM"
+    "description": "What the fan does once the water has reached its target: low, high, or off. Workbook register 1016. This is a setting, not the fan-running bits.",
+    "guidance": "While heating, the controller runs the fan itself. The climate entity's fan modes write this same code. The Indol range goes to 5; this unit uses 0-2.",
+    "cloud_type": "ENUM",
+    "source": ["workbook", "trianco-manual"],
+    "register": "1016"
   },
   {
     "key": "2074",
@@ -1628,17 +1646,19 @@
   },
   {
     "key": "M06",
-    "name": "M06 Electric heating",
+    "name": "M06 Booster mode (1014)",
     "platform": "sensor",
     "options": {
       "0": "Off",
       "1": "On"
     },
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Electric heater request register.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here."
+    "description": "Workbook register 1014, booster works independently (1 on, 2 off, 0 instruction complete). It is not the electric-heater-running bit.",
+    "guidance": "On a Trianco S300 this stays 0 while the heater bit of 2050 is set. Do not use it as the heater state. It is recorded, not offered as a control.",
+    "source": ["workbook", "s300"],
+    "register": "1014"
   },
   {
     "key": "O29",
