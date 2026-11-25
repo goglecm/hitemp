@@ -950,3 +950,11 @@ meaning is known:
 | `L28_bit_05`  | L28 bit 5                                        | uncertain  |
 | `L28_bit_06`  | L28 bit 6                                        | uncertain  |
 | `L28_bit_07`  | L28 bit 7                                        | uncertain  |
+| `L28_bit_08`  | L28 bit 8                                        | uncertain  |
+| `L28_bit_09`  | L28 bit 9                                        | uncertain  |
+| `L28_bit_10`  | L28 bit 10                                       | uncertain  |
+| `L28_bit_11`  | L28 bit 11                                       | uncertain  |
+| `L28_bit_12`  | L28 bit 12                                       | uncertain  |
+| `L28_bit_13`  | L28 bit 13                                       | uncertain  |
+| `L28_bit_14`  | L28 bit 14                                       | uncertain  |
+| `L28_bit_15`  | L28 bit 15                                       | uncertain  |
