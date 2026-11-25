@@ -1410,13 +1410,13 @@
         "name": "State1 Function status (2051)"
       },
       "1245226668902080512_1142": {
-        "name": "1142 Flags"
+        "name": "Reg 1142 Flags"
       },
       "1245226668902080512_1151": {
-        "name": "1151 Flags"
+        "name": "M11 Clock apply (1151)"
       },
       "1245226668902080512_2085": {
-        "name": "2085 Flags"
+        "name": "Fault0 Fault bits (2085)"
       },
       "1245226668902080512_t08": {
         "name": "T08 Flags"

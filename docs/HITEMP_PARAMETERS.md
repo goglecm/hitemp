@@ -733,9 +733,9 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 
 - **T21 Settings write count (2027)**: Counter that rises with every settings change, equal to register 2027. It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes.
 - **State1 Function status (2051)**: Packed status word: bit 2 is set during defrost, bit 1 has always been set.
-- **1142 Flags**: Flag word, all bits clear so far.
-- **1151 Flags**: Flag word. It read 1 after the app's Align the device time.
-- **2085 Flags**: Flag word, all bits clear so far.
+- **Reg 1142 Flags**: Flag word, all bits clear so far.
+- **M11 Clock apply (1151)**: Flag word. It read 1 after the app's Align the device time.
+- **Fault0 Fault bits (2085)**: Flag word, all bits clear so far.
 - **T08 Flags**: Sensor status flags on an Indol PV300 with the same product ID; all clear so far.
 - **F03 Flags**: Configuration flags, all clear so far.
 - **L28 Flags**: Schedule flags, all clear so far.

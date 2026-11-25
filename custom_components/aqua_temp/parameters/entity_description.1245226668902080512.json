@@ -2101,33 +2101,44 @@
   },
   {
     "key": "1142",
-    "name": "1142 Flags",
+    "name": "Reg 1142 Flags",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Flag word, all bits clear so far."
+    "description": "A flag word with no published bit legend.",
+    "register": "1142",
+    "source": ["s300"],
+    "guidance": "All bits have been clear in the logs so far. The individual bits are recorded separately."
   },
   {
     "key": "1151",
-    "name": "1151 Flags",
+    "name": "M11 Clock apply (1151)",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Flag word. It read 1 after the app's Align the device time."
+    "enabled_by_default": true,
+    "confidence": "documented",
+    "description": "Clock modify/apply flag, workbook register 1151.",
+    "register": "1151",
+    "named_code": "M11",
+    "source": ["workbook", "darksplat"],
+    "guidance": "Registers 1152-1156 are a command mailbox, not a continuously readable clock."
   },
   {
     "key": "2085",
-    "name": "2085 Flags",
+    "name": "Fault0 Fault bits (2085)",
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
-    "confidence": "uncertain",
-    "description": "Flag word, all bits clear so far."
+    "enabled_by_default": true,
+    "confidence": "documented",
+    "description": "Packed fault word. Named bits are sensor and protection faults.",
+    "register": "2085",
+    "named_code": "Fault0",
+    "source": ["workbook"],
+    "guidance": "A zero word means none of the listed faults are active. Display codes that are not in this word are not bits of it."
   },
   {
     "key": "T08",
@@ -2135,9 +2146,11 @@
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Sensor status flags on an Indol PV300 with the same product ID; all clear so far."
+    "description": "A bitmask whose bits are not named in the workbook.",
+    "source": ["s300", "victor"],
+    "guidance": "Victor's address 2029 is blank in the sheet and is not used."
   },
   {
     "key": "F03",
@@ -2145,9 +2158,11 @@
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Configuration flags, all clear so far."
+    "description": "A configuration bitmask with no published bit legend.",
+    "source": ["s300"],
+    "guidance": "Recorded so a set bit can be matched to a change on the heat pump."
   },
   {
     "key": "L28",
@@ -2155,9 +2170,11 @@
     "platform": "sensor",
     "bitword": true,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Schedule flags, all clear so far."
+    "description": "A schedule bitmask with no published bit legend and no workbook address.",
+    "source": ["s300"],
+    "guidance": "Recorded so a set bit can be matched to a timer or schedule change."
   },
   {
     "key": "superheat",
