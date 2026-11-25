@@ -934,3 +934,11 @@ meaning is known:
 | `F03_bit_05`  | F03 bit 5                                        | uncertain  |
 | `F03_bit_06`  | F03 bit 6                                        | uncertain  |
 | `F03_bit_07`  | F03 bit 7                                        | uncertain  |
+| `F03_bit_08`  | F03 bit 8                                        | uncertain  |
+| `F03_bit_09`  | F03 bit 9                                        | uncertain  |
+| `F03_bit_10`  | F03 bit 10                                       | uncertain  |
+| `F03_bit_11`  | F03 bit 11                                       | uncertain  |
+| `F03_bit_12`  | F03 bit 12                                       | uncertain  |
+| `F03_bit_13`  | F03 bit 13                                       | uncertain  |
+| `F03_bit_14`  | F03 bit 14                                       | uncertain  |
+| `F03_bit_15`  | F03 bit 15                                       | uncertain  |
