@@ -444,7 +444,7 @@
   },
   {
     "key": "G01",
-    "name": "G01 Disinfection temperature",
+    "name": "G01 Disinfection temperature (1046)",
     "app_name": "Disinfection target temp",
     "platform": "number",
     "device_class": "temperature",
@@ -458,13 +458,15 @@
     "app_range": "30.0C to 70.0C, steps of 0.5C",
     "app_value": "60.0C",
     "confidence": "observed",
-    "description": "Water temperature the disinfection cycle heats to.",
+    "description": "Tank temperature the disinfection cycle heats to. Workbook register 1046. Stays a disabled control.",
     "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook", "app"],
+    "register": "1046"
   },
   {
     "key": "G02",
-    "name": "G02 Disinfection duration",
+    "name": "G02 Disinfection duration (1047)",
     "app_name": "Duration of disinfection",
     "platform": "number",
     "device_class": "duration",
@@ -478,13 +480,15 @@
     "app_range": "0Min to 90Min, steps of 1Min",
     "app_value": "0Min",
     "confidence": "observed",
-    "description": "How long the water is held at G01.",
+    "description": "How long disinfection holds that temperature. Workbook register 1047. Stays a disabled control.",
     "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "app"],
+    "register": "1047"
   },
   {
     "key": "G03",
-    "name": "G03 Disinfection start hour",
+    "name": "G03 Disinfection start hour (1048)",
     "app_name": "Startup point of disinfection",
     "platform": "number",
     "unit_of_measurement": "h",
@@ -497,13 +501,15 @@
     "app_range": "0H to 23H, steps of 1H",
     "app_value": "0H",
     "confidence": "observed",
-    "description": "Hour of the day the disinfection starts.",
+    "description": "Hour of the day disinfection may start. Workbook register 1048. Stays a disabled control.",
     "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "app"],
+    "register": "1048"
   },
   {
     "key": "G04",
-    "name": "G04 Disinfection interval",
+    "name": "G04 Disinfection interval (1049)",
     "app_name": "Circle of disinfection",
     "platform": "number",
     "device_class": "duration",
@@ -517,9 +523,11 @@
     "app_range": "1Day to 99Day, steps of 1Day",
     "app_value": "7Day",
     "confidence": "observed",
-    "description": "Days between disinfection cycles.",
+    "description": "Days between disinfection cycles. Workbook register 1049. Stays a disabled control.",
     "guidance": "Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "app"],
+    "register": "1049"
   },
   {
     "key": "H01",
@@ -1293,7 +1301,7 @@
   },
   {
     "key": "O07",
-    "name": "O07 EEV position",
+    "name": "O07 EEV position (2060)",
     "app_name": "EEV current position",
     "platform": "sensor",
     "unit_of_measurement": "steps",
@@ -1304,13 +1312,15 @@
     "app_range": "0N to 500N, steps of 1N",
     "app_value": "100N",
     "confidence": "observed",
-    "description": "Current opening of the electronic expansion valve (EEV), 0-500 steps.",
+    "description": "Current electronic expansion valve position in steps. Workbook register 2060.",
     "guidance": "On your heat pump it reads 480 (E05) while stopped or defrosting, starts at E03 (240) when heating begins, then works down towards E04 (100) as it regulates the superheat. Plot it with the Superheat sensor and E02.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "s300"],
+    "register": "2060"
   },
   {
     "key": "O08",
-    "name": "O08 Compressor running hours",
+    "name": "O08 Compressor hours (2061)",
     "app_name": "Accumulative running time of compressor",
     "platform": "sensor",
     "device_class": "duration",
@@ -1321,13 +1331,15 @@
     "level": "066 (installer)",
     "app_value": "211H",
     "confidence": "observed",
-    "description": "Total compressor running time.",
+    "description": "Accumulated compressor running hours. Workbook register 2061.",
     "guidance": "A statistics graph with the 'change' statistic per day shows the daily running hours.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "s300"],
+    "register": "2061"
   },
   {
     "key": "O09",
-    "name": "O09 Booster running hours",
+    "name": "O09 Heater hours (2062)",
     "app_name": "Accumulative running time of booster",
     "platform": "sensor",
     "device_class": "duration",
@@ -1338,9 +1350,11 @@
     "level": "066 (installer)",
     "app_value": "0H",
     "confidence": "observed",
-    "description": "Total booster (electric heater) running time.",
+    "description": "Accumulated electric heater running hours. Workbook register 2062. Victor's O18 alias for this address conflicts with the workbook and is not used.",
     "guidance": "A statistics graph with the 'change' statistic per day shows the daily running hours.",
-    "cloud_type": "DIGI1"
+    "cloud_type": "DIGI1",
+    "source": ["workbook", "s300"],
+    "register": "2062"
   },
   {
     "key": "O10",
@@ -1744,10 +1758,11 @@
     "state_class": "measurement",
     "display_precision": 0,
     "entity_category": null,
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Fan speed in revolutions per minute.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default."
+    "description": "Fan speed code. Victor matched it to 2067, which the workbook leaves blank, so the address is not shown. It read 0 on this S300 while heating.",
+    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default.",
+    "source": ["victor", "s300"]
   },
   {
     "key": "T07",

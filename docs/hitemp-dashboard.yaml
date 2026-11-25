@@ -69,7 +69,7 @@ views:
             stat_types:
               - change
             entities:
-              - entity: sensor.heat_pump_o08_compressor_running_hours
+              - entity: sensor.heat_pump_o08_compressor_hours_2061
                 name: Compressor (O08)
 
       - type: grid
@@ -108,5 +108,5 @@ views:
             title: Expansion valve position
             hours_to_show: 24
             entities:
-              - entity: sensor.heat_pump_o07_eev_position
+              - entity: sensor.heat_pump_o07_eev_position_2060
                 name: EEV (O07)

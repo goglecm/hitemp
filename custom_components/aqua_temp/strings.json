@@ -1260,13 +1260,13 @@
         "name": "O06 Solar pump/valve (OUT06)"
       },
       "1245226668902080512_o07": {
-        "name": "O07 EEV position"
+        "name": "O07 EEV position (2060)"
       },
       "1245226668902080512_o08": {
-        "name": "O08 Compressor running hours"
+        "name": "O08 Compressor hours (2061)"
       },
       "1245226668902080512_o09": {
-        "name": "O09 Booster running hours"
+        "name": "O09 Heater hours (2062)"
       },
       "1245226668902080512_o10": {
         "name": "O10 3V_DE output"
@@ -1430,16 +1430,16 @@
         "name": "E04 EEV minimum position (1058)"
       },
       "1245226668902080512_g01": {
-        "name": "G01 Disinfection temperature"
+        "name": "G01 Disinfection temperature (1046)"
       },
       "1245226668902080512_g02": {
-        "name": "G02 Disinfection duration"
+        "name": "G02 Disinfection duration (1047)"
       },
       "1245226668902080512_g03": {
-        "name": "G03 Disinfection start hour"
+        "name": "G03 Disinfection start hour (1048)"
       },
       "1245226668902080512_g04": {
-        "name": "G04 Disinfection interval"
+        "name": "G04 Disinfection interval (1049)"
       },
       "1245226668902080512_h32": {
         "name": "H32 Cloud upload interval (1066)"

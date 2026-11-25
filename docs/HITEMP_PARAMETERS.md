@@ -450,7 +450,7 @@ The raw values of live readings are the range seen in the log.
 - **T04 Coil temperature (2022)**: Temperature of the evaporator coil, the coil the air passes through. Defrost starts and ends on this temperature (D01, D02). It is also the reference for the superheat (T05 - T04).
 - **T05 Suction temperature (2023)**: Refrigerant temperature in the suction pipe, the gas going from the coil to the compressor. It is not an air temperature. With E01 = Automatic the EEV keeps T05 - T04 (superheat) at E02. When T05 stays well below T04, as in your log (about -13 °C against 0 °C), the superheat is negative and the EEV closes to its minimum E04. The data can't tell whether that comes from the sensor placement or the refrigerant circuit; ask an installer rather than changing E02 or E04.
 - **T10 Displayed water temperature (2025)**: Water temperature shown on the display and in the app; the climate entity's current temperature. Equal to T03 throughout your log.
-- **O07 EEV position**: Current opening of the electronic expansion valve (EEV), 0-500 steps. On your heat pump it reads 480 (E05) while stopped or defrosting, starts at E03 (240) when heating begins, then works down towards E04 (100) as it regulates the superheat. Plot it with the Superheat sensor and E02.
+- **O07 EEV position (2060)**: Current opening of the electronic expansion valve (EEV), 0-500 steps. On your heat pump it reads 480 (E05) while stopped or defrosting, starts at E03 (240) when heating begins, then works down towards E04 (100) as it regulates the superheat. Plot it with the Superheat sensor and E02.
 
 ## Codes from the app, password 066 (installer)
 
@@ -501,10 +501,10 @@ The heat pump reports 1, which the app can't name either, so the active function
 | `G03` | Startup point of disinfection | 0H to 23H, steps of 1H        | 0H        | `0`             | DIGI1, 0 to 23       | number, Configuration, disabled | observed   |
 | `G04` | Circle of disinfection        | 1Day to 99Day, steps of 1Day  | 7Day      | `7`             | DIGI1, 1 to 99       | number, Configuration, disabled | observed   |
 
-- **G01 Disinfection temperature**: Water temperature the disinfection cycle heats to.
-- **G02 Disinfection duration**: How long the water is held at G01.
-- **G03 Disinfection start hour**: Hour of the day the disinfection starts.
-- **G04 Disinfection interval**: Days between disinfection cycles.
+- **G01 Disinfection temperature (1046)**: Water temperature the disinfection cycle heats to.
+- **G02 Disinfection duration (1047)**: How long the water is held at G01.
+- **G03 Disinfection start hour (1048)**: Hour of the day the disinfection starts.
+- **G04 Disinfection interval (1049)**: Days between disinfection cycles.
 
 Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'clock and holds it for G02 minutes. G02 = 0, as on your heat pump, most likely means it never runs. Above 60 °C (the limit of R01) the booster is probably needed.
 
@@ -641,8 +641,8 @@ The app shows `ON` or `OFF` for the outputs.
 - **O04 Fan high speed**: Fan high speed output. Values: Off (0), On (1).
 - **O05 Fan low speed (OUT05)**: Fan low speed output (OUT05, see /01). Values: Off (0), On (1).
 - **O06 Solar pump/valve (OUT06)**: Reserve, solar pump or solar valve output (OUT06, see /02). Values: Off (0), On (1).
-- **O08 Compressor running hours**: Total compressor running time.
-- **O09 Booster running hours**: Total booster (electric heater) running time.
+- **O08 Compressor hours (2061)**: Total compressor running time.
+- **O09 Heater hours (2062)**: Total booster (electric heater) running time.
 
 **O01, O02, O03, O04, O05, O06:** Named codes stay empty on this product (the app paints them from `2050` bits 8–13). These entities stay Unavailable; use the compressor / heater / defrost binary sensors and the `2050` word instead. 1 = On is assumed if a value ever appears.
 

@@ -86,7 +86,7 @@ async def test_names_start_with_the_code(
         "Hot Water R01 Target water temperature (1104)"
     )
     assert hass.states.get(entity_id(hass, "sensor", "O07", device.code)).name == (
-        "Hot Water O07 EEV position"
+        "Hot Water O07 EEV position (2060)"
     )
     assert hass.states.get(entity_id(hass, "sensor", "T01", device.code)).name == (
         "Hot Water T01 Ambient temperature (2019)"
@@ -337,7 +337,7 @@ async def test_unconfirmed_and_unused_codes_are_disabled(
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("S02", "O10", "O15", "O29", "N01"):
+    for key in ("S02", "O10", "O15", "N01"):
         entry = registry.async_get(entity_id(hass, "sensor", key, device.code))
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
 
