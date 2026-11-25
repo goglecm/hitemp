@@ -120,7 +120,7 @@
         "name": "D06 Defrost method (1039)"
       },
       "1245226668902080512_e01": {
-        "name": "E01 EEV control mode"
+        "name": "E01 EEV control mode (1055)"
       },
       "1245226668902080512_h01": {
         "name": "H01 Remember power state (1067)"
@@ -1170,7 +1170,7 @@
         "name": "/02 OUT06 use (1021)"
       },
       "1245226668902080512_e05": {
-        "name": "E05 EEV defrost position"
+        "name": "E05 EEV defrost position (1059)"
       },
       "1245226668902080512_h03": {
         "name": "H03 Heating source (1069)"
@@ -1421,13 +1421,13 @@
         "name": "D07 Intelligent defrost threshold (1040)"
       },
       "1245226668902080512_e02": {
-        "name": "E02 Target superheat"
+        "name": "E02 Target superheat (1056)"
       },
       "1245226668902080512_e03": {
-        "name": "E03 EEV start position"
+        "name": "E03 EEV start position (1057)"
       },
       "1245226668902080512_e04": {
-        "name": "E04 EEV minimum position"
+        "name": "E04 EEV minimum position (1058)"
       },
       "1245226668902080512_g01": {
         "name": "G01 Disinfection temperature"

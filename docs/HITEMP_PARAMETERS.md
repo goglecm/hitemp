@@ -415,10 +415,10 @@ session expired, and the integration logs in again by itself.
 | `E03` | Original position of EEV        | 0N to 500N                     | 240N      | `240`           | DIGI2, 0 to 500      | number, Configuration, disabled | documented |
 | `E04` | Minimal opening position of EEV | 0N to 500N                     | 100N      | `100`           | DIGI2, 0 to 500      | number, Configuration, disabled | documented |
 
-- **E01 EEV control mode**: Whether the electronic expansion valve (EEV) regulates itself (Automatic) or not (Manual). 1 = Automatic is confirmed by the PHNIX PC1001 manual; the app lists the options in a different order. Values: Manual (0), Automatic (1). Keep Automatic. In Manual the valve no longer follows the superheat target E02, which can return liquid refrigerant to the compressor or starve the coil.
-- **E02 Target superheat**: Superheat the EEV aims for: suction minus coil temperature (T05 - T04). Compare it with the Superheat sensor. A higher target closes the valve further (less refrigerant, safer for the compressor, less heat); a lower one opens it. Change it only with an installer: too little superheat can return liquid to the compressor.
-- **E03 EEV start position**: EEV opening when the compressor starts. The valve starts at E03 (O07 reads 240 at start-up) and then regulates towards E02.
-- **E04 EEV minimum position**: Smallest opening the EEV may regulate down to. Your EEV often sits at this minimum because the measured superheat is below E02. Lowering E04 lets it close further and reduces the refrigerant flow; don't change it to chase the superheat reading without an installer.
+- **E01 EEV control mode (1055)**: Whether the electronic expansion valve (EEV) regulates itself (Automatic) or not (Manual). 1 = Automatic is confirmed by the PHNIX PC1001 manual; the app lists the options in a different order. Values: Manual (0), Automatic (1). Keep Automatic. In Manual the valve no longer follows the superheat target E02, which can return liquid refrigerant to the compressor or starve the coil.
+- **E02 Target superheat (1056)**: Superheat the EEV aims for: suction minus coil temperature (T05 - T04). Compare it with the Superheat sensor. A higher target closes the valve further (less refrigerant, safer for the compressor, less heat); a lower one opens it. Change it only with an installer: too little superheat can return liquid to the compressor.
+- **E03 EEV start position (1057)**: EEV opening when the compressor starts. The valve starts at E03 (O07 reads 240 at start-up) and then regulates towards E02.
+- **E04 EEV minimum position (1058)**: Smallest opening the EEV may regulate down to. Your EEV often sits at this minimum because the measured superheat is below E02. Lowering E04 lets it close further and reduces the refrigerant flow; don't change it to chase the superheat reading without an installer.
 
 ### Unit settings
 
@@ -514,7 +514,7 @@ Disinfection (anti-legionella) heats the water to G01 every G04 days at G03 o'cl
 | ----- | ------------------------------ | ---------- | --------- | --------------- | -------------------- | ------------------ | ---------- |
 | `E05` | Position of EEV for defrosting | 0N to 500N | 480N      | `480`           | DIGI2, 0 to 500      | sensor, Diagnostic | documented |
 
-- **E05 EEV defrost position**: EEV opening during defrost. O07 reads this value (480) during defrost and while the compressor is stopped.
+- **E05 EEV defrost position (1059)**: EEV opening during defrost. O07 reads this value (480) during defrost and while the compressor is stopped.
 
 ### Unit settings
 

@@ -341,7 +341,7 @@
   },
   {
     "key": "E01",
-    "name": "E01 EEV control mode",
+    "name": "E01 EEV control mode (1055)",
     "app_name": "EEV adjustment mode",
     "platform": "select",
     "options": {
@@ -354,13 +354,15 @@
     "app_range": "automatic, Manual",
     "app_value": "automatic",
     "confidence": "documented",
-    "description": "Whether the electronic expansion valve (EEV) regulates itself (Automatic) or not (Manual). 1 = Automatic is confirmed by the PHNIX PC1001 manual; the app lists the options in a different order.",
+    "description": "Manual or automatic electronic expansion valve. Workbook register 1055. Stays a disabled control.",
     "guidance": "Keep Automatic. In Manual the valve no longer follows the superheat target E02, which can return liquid refrigerant to the compressor or starve the coil.",
-    "cloud_type": "ENUM"
+    "cloud_type": "ENUM",
+    "source": ["workbook"],
+    "register": "1055"
   },
   {
     "key": "E02",
-    "name": "E02 Target superheat",
+    "name": "E02 Target superheat (1056)",
     "app_name": "Target degree of supreheat",
     "platform": "number",
     "device_class": "temperature_delta",
@@ -374,13 +376,15 @@
     "app_range": "-20.0C to 20.0C, steps of 0.5C",
     "app_value": "5.0C",
     "confidence": "documented",
-    "description": "Superheat the EEV aims for: suction minus coil temperature (T05 - T04).",
+    "description": "Superheat the valve aims for in automatic mode. Workbook register 1056. Stays a disabled control.",
     "guidance": "Compare it with the Superheat sensor. A higher target closes the valve further (less refrigerant, safer for the compressor, less heat); a lower one opens it. Change it only with an installer: too little superheat can return liquid to the compressor.",
-    "cloud_type": "TEMP1"
+    "cloud_type": "TEMP1",
+    "source": ["workbook"],
+    "register": "1056"
   },
   {
     "key": "E03",
-    "name": "E03 EEV start position",
+    "name": "E03 EEV start position (1057)",
     "app_name": "Original position of EEV",
     "platform": "number",
     "unit_of_measurement": "steps",
@@ -393,13 +397,15 @@
     "app_range": "0N to 500N",
     "app_value": "240N",
     "confidence": "documented",
-    "description": "EEV opening when the compressor starts.",
+    "description": "Valve position when heating starts. Workbook register 1057. Stays a disabled control.",
     "guidance": "The valve starts at E03 (O07 reads 240 at start-up) and then regulates towards E02.",
-    "cloud_type": "DIGI2"
+    "cloud_type": "DIGI2",
+    "source": ["workbook"],
+    "register": "1057"
   },
   {
     "key": "E04",
-    "name": "E04 EEV minimum position",
+    "name": "E04 EEV minimum position (1058)",
     "app_name": "Minimal opening position of EEV",
     "platform": "number",
     "unit_of_measurement": "steps",
@@ -412,13 +418,15 @@
     "app_range": "0N to 500N",
     "app_value": "100N",
     "confidence": "documented",
-    "description": "Smallest opening the EEV may regulate down to.",
+    "description": "Most closed position the valve is allowed. Workbook register 1058. Stays a disabled control.",
     "guidance": "Your EEV often sits at this minimum because the measured superheat is below E02. Lowering E04 lets it close further and reduces the refrigerant flow; don't change it to chase the superheat reading without an installer.",
-    "cloud_type": "DIGI2"
+    "cloud_type": "DIGI2",
+    "source": ["workbook"],
+    "register": "1058"
   },
   {
     "key": "E05",
-    "name": "E05 EEV defrost position",
+    "name": "E05 EEV defrost position (1059)",
     "app_name": "Position of EEV for defrosting",
     "platform": "sensor",
     "unit_of_measurement": "steps",
@@ -428,9 +436,11 @@
     "app_range": "0N to 500N",
     "app_value": "480N",
     "confidence": "documented",
-    "description": "EEV opening during defrost.",
+    "description": "Valve position used while defrosting. Workbook register 1059. On this S300 it moved to 480 during defrost.",
     "guidance": "O07 reads this value (480) during defrost and while the compressor is stopped.",
-    "cloud_type": "DIGI2"
+    "cloud_type": "DIGI2",
+    "source": ["workbook", "s300"],
+    "register": "1059"
   },
   {
     "key": "G01",

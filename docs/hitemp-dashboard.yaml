@@ -102,7 +102,7 @@ views:
             entities:
               - entity: sensor.heat_pump_superheat_t05_t04
                 name: Superheat (T05 - T04)
-              - entity: number.heat_pump_e02_target_superheat
+              - entity: number.heat_pump_e02_target_superheat_1056
                 name: Target (E02)
           - type: history-graph
             title: Expansion valve position
