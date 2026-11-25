@@ -878,3 +878,11 @@ meaning is known:
 | `2051_bit_13` | Reg 2051 bit 13                                  | uncertain  |
 | `2051_bit_14` | Reg 2051 bit 14                                  | uncertain  |
 | `2051_bit_15` | Reg 2051 bit 15                                  | uncertain  |
+| `2085_bit_00` | Reg 2085 bit 0 (P04 ambient sensor fault)        | documented |
+| `2085_bit_01` | Reg 2085 bit 1 (P01 bottom sensor fault)         | documented |
+| `2085_bit_02` | Reg 2085 bit 2 (P02 top sensor fault)            | documented |
+| `2085_bit_03` | Reg 2085 bit 3 (P05 coil sensor fault)           | documented |
+| `2085_bit_04` | Reg 2085 bit 4 (P07 suction sensor fault)        | documented |
+| `2085_bit_05` | Reg 2085 bit 5 (P034 solar sensor fault)         | documented |
+| `2085_bit_06` | Reg 2085 bit 6                                   | uncertain  |
+| `2085_bit_07` | Reg 2085 bit 7                                   | uncertain  |

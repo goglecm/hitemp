@@ -249,6 +249,30 @@
       },
       "1245226668902080512_2051_bit_15": {
         "name": "Reg 2051 bit 15"
+      },
+      "1245226668902080512_2085_bit_00": {
+        "name": "Reg 2085 bit 0 (P04 ambient sensor fault)"
+      },
+      "1245226668902080512_2085_bit_01": {
+        "name": "Reg 2085 bit 1 (P01 bottom sensor fault)"
+      },
+      "1245226668902080512_2085_bit_02": {
+        "name": "Reg 2085 bit 2 (P02 top sensor fault)"
+      },
+      "1245226668902080512_2085_bit_03": {
+        "name": "Reg 2085 bit 3 (P05 coil sensor fault)"
+      },
+      "1245226668902080512_2085_bit_04": {
+        "name": "Reg 2085 bit 4 (P07 suction sensor fault)"
+      },
+      "1245226668902080512_2085_bit_05": {
+        "name": "Reg 2085 bit 5 (P034 solar sensor fault)"
+      },
+      "1245226668902080512_2085_bit_06": {
+        "name": "Reg 2085 bit 6"
+      },
+      "1245226668902080512_2085_bit_07": {
+        "name": "Reg 2085 bit 7"
       }
     },
     "climate": {
