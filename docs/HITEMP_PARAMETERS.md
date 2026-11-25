@@ -813,10 +813,10 @@ The climate entity and the Power sensor use some of these; the rest were request
 - **L02 Vacation year (1130)**: Vacation year (20YY), from the app's Timer page.
 - **L03 Vacation month (1131)**: Vacation month, from the app's Timer page.
 - **L04 Vacation day (1132)**: Vacation day, from the app's Timer page.
-- **L06**: Timer 1 on hour, from the app's Timer page.
-- **L07**: Timer 1 on minute, from the app's Timer page.
-- **L08**: Timer 1 off hour, from the app's Timer page.
-- **L09**: Timer 1 off minute, from the app's Timer page.
+- **L06 Timer 1 start hour (1134)**: Timer 1 on hour, from the app's Timer page.
+- **L07 Timer 1 start minute (1135)**: Timer 1 on minute, from the app's Timer page.
+- **L08 Timer 1 stop hour (1136)**: Timer 1 off hour, from the app's Timer page.
+- **L09 Timer 1 stop minute (1137)**: Timer 1 off minute, from the app's Timer page.
 - **L10**: Timer 2 on hour, from the app's Timer page.
 - **L11**: Timer 2 on minute, from the app's Timer page.
 - **L12**: Timer 2 off hour, from the app's Timer page.
