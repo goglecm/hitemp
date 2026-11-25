@@ -1323,10 +1323,10 @@
         "name": "T06 Discharge temperature (2024)"
       },
       "1245226668902080512_t11": {
-        "name": "T11 Out-of-range protection count"
+        "name": "T11 Out-of-range count empty"
       },
       "1245226668902080512_t12": {
-        "name": "T12 EEPROM write count"
+        "name": "T12 EEPROM write count empty"
       },
       "1245226668902080512_2050": {
         "name": "2050 Operating status bits"
@@ -1338,10 +1338,10 @@
         "name": "O29 Fan speed"
       },
       "1245226668902080512_t07": {
-        "name": "T07 Discharge temperature (unconfirmed)"
+        "name": "T07 Discharge temperature unconfirmed"
       },
       "1245226668902080512_t09": {
-        "name": "T09 Compressor temperature (unconfirmed)"
+        "name": "T09 Compressor temperature unconfirmed"
       },
       "1245226668902080512_vacation_date": {
         "name": "Vacation date (L02-L04)"
@@ -1365,7 +1365,10 @@
         "name": "1129 Vacation flags"
       },
       "1245226668902080512_t21": {
-        "name": "T21 Settings write counter"
+        "name": "T21 Settings write count (2027)"
+      },
+      "1245226668902080512_t20": {
+        "name": "T20 Out-of-range count (2026)"
       },
       "1245226668902080512_2051": {
         "name": "2051 Status bits"

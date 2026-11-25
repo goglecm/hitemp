@@ -275,6 +275,11 @@ def test_main_temperatures_name_their_register() -> None:
         assert "workbook" in items[key]["source"]
 
     assert items["T06"]["confidence"] == "uncertain"
+    assert items["T20"]["platform"] == "sensor"
+    assert items["T20"]["register"] == "2026"
+    assert items["T21"]["register"] == "2027"
+    assert items["T11"]["enabled_by_default"] is True
+    assert items["T07"]["register"] if False else "register" not in items["T07"]
 
 
 def test_hitemp_model_selection_is_read_only() -> None:

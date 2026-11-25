@@ -333,11 +333,11 @@ async def test_unconfirmed_and_unused_codes_are_disabled(
     add_device: Callable[..., FakeDevice],
     make_entry: Callable[..., MockConfigEntry],
 ) -> None:
-    """Codes the app does not show, and the solar circuit, start disabled."""
+    """Sensors not yet given an enabled default stay off until their batch."""
     device = await _setup(hass, add_device, make_entry)
     registry = er.async_get(hass)
 
-    for key in ("T07", "T09", "T11", "T12", "S02", "O10", "O15", "O29", "N01", "M06"):
+    for key in ("S02", "O10", "O15", "O29", "N01", "M06"):
         entry = registry.async_get(entity_id(hass, "sensor", key, device.code))
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
 

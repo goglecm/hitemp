@@ -1562,25 +1562,27 @@
   },
   {
     "key": "T11",
-    "name": "T11 Out-of-range protection count",
+    "name": "T11 Out-of-range count empty",
     "platform": "sensor",
     "display_precision": 0,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.",
-    "guidance": "The cloud has returned no value for it so far."
+    "description": "Named count that the cloud leaves empty on this product. The workbook count is T20 at register 2026.",
+    "guidance": "Use T20 for the out-of-range count. This entity stays so an empty cloud code is visible.",
+    "source": ["s300"]
   },
   {
     "key": "T12",
-    "name": "T12 EEPROM write count",
+    "name": "T12 EEPROM write count empty",
     "platform": "sensor",
     "display_precision": 0,
     "entity_category": "diagnostic",
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.",
-    "guidance": "The cloud has returned no value for it so far."
+    "description": "Named count that the cloud leaves empty on this product. The workbook EEPROM write count is T21 at register 2027.",
+    "guidance": "Use T21 for the settings-write count.",
+    "source": ["s300"]
   },
   {
     "key": "2050",
@@ -1653,29 +1655,31 @@
   },
   {
     "key": "T07",
-    "name": "T07 Discharge temperature (unconfirmed)",
+    "name": "T07 Discharge temperature unconfirmed",
     "platform": "sensor",
     "device_class": "temperature",
     "unit_of_measurement": "°C",
     "state_class": "measurement",
     "entity_category": null,
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Not shown in the app.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature."
+    "description": "A temperature code with no address in the EVO270 dtu_wifi sheet. It reads about -30 °C on a Trianco S300, the value of a missing sensor.",
+    "guidance": "Do not treat this as discharge. T06 is the value that rises while the compressor runs. Victor's equal-value alias 2028 is blank in the workbook, so it is not used.",
+    "source": ["s300"]
   },
   {
     "key": "T09",
-    "name": "T09 Compressor temperature (unconfirmed)",
+    "name": "T09 Compressor temperature unconfirmed",
     "platform": "sensor",
     "device_class": "temperature",
     "unit_of_measurement": "°C",
     "state_class": "measurement",
     "entity_category": null,
-    "enabled_by_default": false,
+    "enabled_by_default": true,
     "confidence": "uncertain",
-    "description": "Not shown in the app.",
-    "guidance": "On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 30-40 °C and dropped when the compressor started."
+    "description": "A temperature code with no confirmed address. Victor matched it to 2030, which is the status word on the other Modbus sheet, not a temperature on dtu_wifi.",
+    "guidance": "Leave it as an unknown reading. It is enabled so the value is recorded.",
+    "source": ["s300", "victor"]
   },
   {
     "key": "vacation_mode",
@@ -1766,20 +1770,29 @@
   },
   {
     "key": "T21",
-    "name": "T21 Settings write counter",
+    "name": "T21 Settings write count (2027)",
     "platform": "sensor",
     "state_class": "total_increasing",
     "display_precision": 0,
     "entity_category": "diagnostic",
     "confidence": "observed",
-    "description": "Counter that rises with every settings change, equal to register 2027.",
-    "guidance": "It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes."
+    "description": "Workbook register 2027 (T21), the number of times the controller has written its settings memory.",
+    "guidance": "On a Trianco S300 this rose by 4 each time the remote on/off contacts changed Power, because H01 remembers that state.",
+    "source": ["workbook", "s300"],
+    "register": "2027"
   },
   {
     "key": "T20",
-    "name": "T20",
-    "platform": null,
-    "description": "Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11)."
+    "name": "T20 Out-of-range count (2026)",
+    "platform": "sensor",
+    "description": "Workbook register 2026 (T20), how many times a parameter was written outside its allowed range.",
+    "confidence": "documented",
+    "source": ["workbook"],
+    "guidance": "The named code T11 is empty on this product. This register is the one the workbook defines.",
+    "enabled_by_default": true,
+    "register": "2026",
+    "entity_category": "diagnostic",
+    "display_precision": 0
   },
   {
     "key": "L02",

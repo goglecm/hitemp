@@ -682,8 +682,8 @@ Their names come from the vendor's parameter file, translated where it is Chines
 | `O15` | O15 High-temperature hot water stage | empty            |                      | sensor, Diagnostic, disabled | uncertain  |
 
 - **T06 Discharge temperature (2024)**: Not shown in the app. The vendor parameter file calls it the solar temperature. On a Trianco S300 it rises to 60-90 °C while the compressor runs and drops when it stops, while T07 reads -30.0, the value of a missing sensor. That fits the compressor discharge (hot gas) temperature, which the manual's P81/E04 protections watch.
-- **T11 Out-of-range protection count**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
-- **T12 EEPROM write count**: Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.
+- **T11 Out-of-range count empty**: Not shown in the app. Vendor name: '进入参数超范围保护次数', number of times the out-of-range parameter protection was entered.
+- **T12 EEPROM write count empty**: Not shown in the app. Vendor name: '记忆芯片EEPROM存储次数', number of times the settings memory (EEPROM) was written.
 - **S02 Overheat protection switch**: Not shown in the app. Vendor name: 'Over heat protection switch'. Values: Open (0), Closed (1). In your log the cloud returned no value for the S and O codes, even while the app was open, so this shows Unavailable until the heat pump reports it. The app shows CL (closed) or OP (open); 1 = Closed is assumed.
 - **O10 3V_DE output**: Not shown in the app. Vendor name: '3V_DE'. Values: Off (0), On (1). Packed as `2050` bit 14 (workbook label **O12** on that bit; this entity keeps legacy/app **O10**).
 - **O11 MV_DE output**: Not shown in the app. Vendor name: 'MV_DE'. Values: Off (0), On (1). Packed as `2050` bit 15 (workbook **O13**).
@@ -731,7 +731,7 @@ Decoded by changing these settings in the app of a Trianco S300. Read-only.
 | `F03`  | F03 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
 | `L28`  | L28 Flags                  | `0000000000000000` |                      | sensor, Diagnostic, disabled | uncertain  |
 
-- **T21 Settings write counter**: Counter that rises with every settings change, equal to register 2027. It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes.
+- **T21 Settings write count (2027)**: Counter that rises with every settings change, equal to register 2027. It rose by 4 for a mode change and by 32 for setting both timers, so it most likely counts writes to the controller's settings memory, the vendor's EEPROM storage count (T12). That memory allows a limited number of writes.
 - **2051 Status bits**: Packed status word: bit 2 is set during defrost, bit 1 has always been set.
 - **1142 Flags**: Flag word, all bits clear so far.
 - **1151 Flags**: Flag word. It read 1 after the app's Align the device time.
@@ -761,8 +761,8 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 - **Defrost (2051 bit 2)**: Bit 2 of the status word 2051, set while the heat pump defrosts. On a Trianco S300 it was set for about 3 minutes every 45-49 minutes while the EEV moved to its defrost position (E05), the suction temperature jumped to 25-35 °C, the coil warmed up and the fan stopped, as the manual describes for defrost. Defrosts started with the coil (T04) at about D01 and at least D03 minutes after the previous one.
 - **M06 Electric heating**: Electric heater request register. Values: Off (0), On (1). On an Indol PV300 with the same product ID (github.com/victor987/hitemp), writing 1 turned the electric heater on and 2 turned it off, after which it read 0. On a Trianco S300 it stayed 0 while the heater ran in Fast heating mode; the app's Electric heating switch followed the heater output (2050 bit 9) instead. Read-only here.
 - **O29 Fan speed**: Fan speed in revolutions per minute. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 0 with the fan off and about 570 to 830 rpm when running. On a Trianco S300 it read 0 while the compressor ran, so it is disabled by default.
-- **T07 Discharge temperature (unconfirmed)**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature.
-- **T09 Compressor temperature (unconfirmed)**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 30-40 °C and dropped when the compressor started.
+- **T07 Discharge temperature unconfirmed**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 59 °C and was taken to be the compressor discharge temperature. On a Trianco S300 it reads -30.0, the value of a sensor that isn't fitted; T06 there behaves like the discharge temperature.
+- **T09 Compressor temperature unconfirmed**: Not shown in the app. On an Indol PV300 with the same product ID (github.com/victor987/hitemp), it read 30-40 °C and dropped when the compressor started.
 
 ### Calculated by Home Assistant
 
@@ -778,38 +778,38 @@ These come from the scan of an Indol PV300 with the same product ID. The status 
 
 The climate entity and the Power sensor use some of these; the rest were requested by the original integration and are kept for diagnostics.
 
-| Code            | Name in Home Assistant | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
-| --------------- | ---------------------- | --------------- | -------------------- | ------------------------- | ---------- |
-| `Power`         | Power                  | `1`             | ENUM, 0 to 1         | binary_sensor, Diagnostic | observed   |
-| `Mode`          | Mode                   | `2`             | ENUM, 0 to 7         | requested, no entity      |            |
-| `T20`           | T20                    | `1`             |                      | requested, no entity      |            |
-| `L02`           | L02                    | `10`            |                      | requested, no entity      |            |
-| `L03`           | L03                    | `5`             |                      | requested, no entity      |            |
-| `L04`           | L04                    | `28`            |                      | requested, no entity      |            |
-| `L06`           | L06                    | `0`             |                      | requested, no entity      |            |
-| `L07`           | L07                    | `0`             |                      | requested, no entity      |            |
-| `L08`           | L08                    | `0`             |                      | requested, no entity      |            |
-| `L09`           | L09                    | `0`             |                      | requested, no entity      |            |
-| `L10`           | L10                    | `0`             |                      | requested, no entity      |            |
-| `L11`           | L11                    | `0`             |                      | requested, no entity      |            |
-| `L12`           | L12                    | `0`             |                      | requested, no entity      |            |
-| `L13`           | L13                    | `0`             |                      | requested, no entity      |            |
-| `Manual-mute`   | Manual-mute            | empty           |                      | requested, no entity      |            |
-| `Set_Temp`      | Set_Temp               | empty           |                      | requested, no entity      |            |
-| `MO6`           | MO6                    | empty           |                      | requested, no entity      |            |
-| `2074`          | 2074                   | `0`             | DIGI1                | requested, no entity      |            |
-| `2075`          | 2075                   | `0`             | DIGI1                | requested, no entity      |            |
-| `2076`          | 2076                   | `0`             | DIGI1                | requested, no entity      |            |
-| `2077`          | 2077                   | empty           |                      | requested, no entity      |            |
-| `1158`          | 1158                   | `0` to `23205`  | DIGI1                | requested, no entity      |            |
-| `1159`          | 1159                   | empty           |                      | requested, no entity      |            |
-| `2064`          | 2064                   | `0`             | DIGI1                | requested, no entity      |            |
-| `ver`           | Version                | empty           |                      | requested, no entity      |            |
-| `software_code` | Software Code          | empty           |                      | requested, no entity      |            |
+| Code            | Name in Home Assistant        | Raw cloud value | Cloud type and range | Home Assistant            | Confidence |
+| --------------- | ----------------------------- | --------------- | -------------------- | ------------------------- | ---------- |
+| `Power`         | Power                         | `1`             | ENUM, 0 to 1         | binary_sensor, Diagnostic | observed   |
+| `Mode`          | Mode                          | `2`             | ENUM, 0 to 7         | requested, no entity      |            |
+| `T20`           | T20 Out-of-range count (2026) | `1`             |                      | sensor, Diagnostic        | documented |
+| `L02`           | L02                           | `10`            |                      | requested, no entity      |            |
+| `L03`           | L03                           | `5`             |                      | requested, no entity      |            |
+| `L04`           | L04                           | `28`            |                      | requested, no entity      |            |
+| `L06`           | L06                           | `0`             |                      | requested, no entity      |            |
+| `L07`           | L07                           | `0`             |                      | requested, no entity      |            |
+| `L08`           | L08                           | `0`             |                      | requested, no entity      |            |
+| `L09`           | L09                           | `0`             |                      | requested, no entity      |            |
+| `L10`           | L10                           | `0`             |                      | requested, no entity      |            |
+| `L11`           | L11                           | `0`             |                      | requested, no entity      |            |
+| `L12`           | L12                           | `0`             |                      | requested, no entity      |            |
+| `L13`           | L13                           | `0`             |                      | requested, no entity      |            |
+| `Manual-mute`   | Manual-mute                   | empty           |                      | requested, no entity      |            |
+| `Set_Temp`      | Set_Temp                      | empty           |                      | requested, no entity      |            |
+| `MO6`           | MO6                           | empty           |                      | requested, no entity      |            |
+| `2074`          | 2074                          | `0`             | DIGI1                | requested, no entity      |            |
+| `2075`          | 2075                          | `0`             | DIGI1                | requested, no entity      |            |
+| `2076`          | 2076                          | `0`             | DIGI1                | requested, no entity      |            |
+| `2077`          | 2077                          | empty           |                      | requested, no entity      |            |
+| `1158`          | 1158                          | `0` to `23205`  | DIGI1                | requested, no entity      |            |
+| `1159`          | 1159                          | empty           |                      | requested, no entity      |            |
+| `2064`          | 2064                          | `0`             | DIGI1                | requested, no entity      |            |
+| `ver`           | Version                       | empty           |                      | requested, no entity      |            |
+| `software_code` | Software Code                 | empty           |                      | requested, no entity      |            |
 
 - **Power**: On/off state of the heat pump (1 = on). The climate entity turns it on and off. On a Trianco S300, opening the remote on/off contacts (S01, DI05 and GND in the manual) set Power to 0 and closing them set it to 1 by the next read, within a minute. The compressor stopped or started about a minute later. Each switch raised T21 by 4: the on/off state is written to the controller's memory, most likely because H01 = YES remembers it. Whether switching on from Home Assistant or the app overrides open contacts isn't known, so avoid switching it from both.
 - **Mode**: Active mode: 0 Intelligent, 2 Eco, 3 Hybrid, 4 Fast heating, 7 Vacation (seen in the app on a Trianco S300). In vacation mode_real keeps the mode to return to.
-- **T20**: Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11).
+- **T20 Out-of-range count (2026)**: Read 1, equal to register 2026. Possibly the vendor's out-of-range protection count (T11).
 - **L02**: Vacation year (20YY), from the app's Timer page.
 - **L03**: Vacation month, from the app's Timer page.
 - **L04**: Vacation day, from the app's Timer page.

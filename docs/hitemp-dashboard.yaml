@@ -39,7 +39,7 @@ views:
               - binary_sensor.heat_pump_compressor_running_2050_bit_8
               - binary_sensor.heat_pump_electric_heater_on_2050_bit_9
               - sensor.heat_pump_code_changes
-              - sensor.heat_pump_t21_settings_write_counter
+              - sensor.heat_pump_t21_settings_write_count_2027
 
       - type: grid
         cards:
