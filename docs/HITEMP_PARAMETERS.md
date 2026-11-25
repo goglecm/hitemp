@@ -558,11 +558,11 @@ Several values are outside the app's own range, which the app shows as they are.
 - **N04 Night temperature reduction (1083)**: App name: 'Activate the nighttime temp decreases mode'. Values: NO (0), YES (1).
 - **N05 Night reduction start hour (1084)**: App name: 'Startup point of the nighttime temp decreases mode'.
 - **N06 Night reduction end hour (1085)**: App name: 'Shutdown point of the nighttime temp decreases mode'.
-- **N07 Solar water cooling start temperature**: App name: 'Startup temp of decreasing solar water temp'.
-- **N08 Solar water cooling stop hysteresis**: App name: 'Temp hysteresis of stopping decreasing solar water temp'.
-- **N09 Solar water release temperature**: App name: 'Solar water releasing temp'.
-- **N10 Solar pump stop temperature**: App name: 'Shutdown temp of solar water pump'.
-- **N11 Solar pump working mode**: App name: 'Working mode of solar water pump'. Values: Dependent (0), Independent (1).
+- **N07 Solar water cooling start temperature (1086)**: App name: 'Startup temp of decreasing solar water temp'.
+- **N08 Solar water cooling stop hysteresis (1087)**: App name: 'Temp hysteresis of stopping decreasing solar water temp'.
+- **N09 Solar water release temperature (1088)**: App name: 'Solar water releasing temp'.
+- **N10 Solar pump stop temperature (1089)**: App name: 'Shutdown temp of solar water pump'.
+- **N11 Solar pump working mode (1090)**: App name: 'Working mode of solar water pump'. Values: Dependent (0), Independent (1).
 
 **N01, N02, N03, N07, N08, N09, N10, N11:** Solar circuit setting. Your installation has no solar circuit, so the N codes presumably have no effect; several hold values outside the app's own range (for example N07 = -25.0). Read-only.
 

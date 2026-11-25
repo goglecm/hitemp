@@ -1206,19 +1206,19 @@
         "name": "N06 Night reduction end hour (1085)"
       },
       "1245226668902080512_n07": {
-        "name": "N07 Solar water cooling start temperature"
+        "name": "N07 Solar water cooling start temperature (1086)"
       },
       "1245226668902080512_n08": {
-        "name": "N08 Solar water cooling stop hysteresis"
+        "name": "N08 Solar water cooling stop hysteresis (1087)"
       },
       "1245226668902080512_n09": {
-        "name": "N09 Solar water release temperature"
+        "name": "N09 Solar water release temperature (1088)"
       },
       "1245226668902080512_n10": {
-        "name": "N10 Solar pump stop temperature"
+        "name": "N10 Solar pump stop temperature (1089)"
       },
       "1245226668902080512_n11": {
-        "name": "N11 Solar pump working mode"
+        "name": "N11 Solar pump working mode (1090)"
       },
       "1245226668902080512_r12": {
         "name": "R12 Compressor cutoff ambient (1115)"
