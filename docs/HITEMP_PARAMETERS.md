@@ -828,7 +828,7 @@ The climate entity and the Power sensor use some of these; the rest were request
 - **2075**: Register requested by the original integration, meaning unknown.
 - **2076**: Register requested by the original integration, meaning unknown.
 - **2077**: Register requested by the original integration, meaning unknown.
-- **1158**: Read 23205, the value of the app's live data request (app_heartbeat), for hours in one log, probably while the app was open, and 0 otherwise. The integration's own request has not changed it.
+- **Reg 1158 Heartbeat echo**: Read 23205, the value of the app's live data request (app_heartbeat), for hours in one log, probably while the app was open, and 0 otherwise. The integration's own request has not changed it.
 - **1159**: Register requested by the original integration, meaning unknown.
 - **2064**: Register requested by the original integration, meaning unknown.
 - **Version**: Version code of other models. Empty on HiTemp, see code_version and MainBoard Version.
@@ -964,3 +964,7 @@ meaning is known:
 | `1133_bit_03` | Reg 1133 bit 3 (L05 timer 2 stop enabled)        | documented |
 | `1129_bit_00` | Reg 1129 bit 0 (L01 vacation enabled)            | documented |
 | `1151_bit_00` | Reg 1151 bit 0 (M11 clock apply requested)       | documented |
+| `2011`        | Reg 2011 Main version                            | documented |
+| `2012`        | Reg 2012 Main software code                      | documented |
+| `2013`        | Reg 2013 Panel version                           | documented |
+| `2014`        | Reg 2014 Panel software code                     | documented |

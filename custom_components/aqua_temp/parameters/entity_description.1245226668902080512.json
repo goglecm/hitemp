@@ -117,9 +117,15 @@
   },
   {
     "key": "1158",
-    "name": "1158",
-    "platform": null,
-    "description": "Read 23205, the value of the app's live data request (app_heartbeat), for hours in one log, probably while the app was open, and 0 otherwise. The integration's own request has not changed it."
+    "name": "Reg 1158 Heartbeat echo",
+    "platform": "sensor",
+    "description": "Echo of the app heartbeat. Workbook register 1158, value 23205 (0x5AA5) while live data is being requested.",
+    "confidence": "observed",
+    "source": ["workbook", "s300"],
+    "guidance": "It confirms the controller accepted the heartbeat. It is not a setting.",
+    "entity_category": "diagnostic",
+    "enabled_by_default": true,
+    "register": "1158"
   },
   {
     "key": "1159",
@@ -3741,5 +3747,53 @@
     "description": "Bit 0 of 1151. M11 clock apply requested",
     "guidance": "1 means the condition in the name is active. Unnamed bits are recorded so their pattern can be compared with the heat pump.",
     "register": "1151.0"
+  },
+  {
+    "key": "2011",
+    "platform": "sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 2011 Main version",
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Main program version. A raw value of 11 means V1.1.",
+    "guidance": "Shown with the software code on the device information.",
+    "enabled_by_default": true,
+    "register": "2011"
+  },
+  {
+    "key": "2012",
+    "platform": "sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 2012 Main software code",
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Software code of the main program. 1234 means software 35005-311234.",
+    "guidance": "Paired with register 2011.",
+    "enabled_by_default": true,
+    "register": "2012"
+  },
+  {
+    "key": "2013",
+    "platform": "sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 2013 Panel version",
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Wired panel program version. A raw value of 11 means V1.1.",
+    "guidance": "Shown with the panel software code.",
+    "enabled_by_default": true,
+    "register": "2013"
+  },
+  {
+    "key": "2014",
+    "platform": "sensor",
+    "entity_category": "diagnostic",
+    "name": "Reg 2014 Panel software code",
+    "confidence": "documented",
+    "source": ["workbook"],
+    "description": "Software code of the wired panel.",
+    "guidance": "Paired with register 2013.",
+    "enabled_by_default": true,
+    "register": "2014"
   }
 ]

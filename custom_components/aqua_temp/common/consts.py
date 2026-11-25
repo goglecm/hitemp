@@ -41,6 +41,8 @@ FAULT_WORD_CODES = [f"Fault{index}" for index in range(1, 11)]
 # The PCB software code and version, as on the app's About page, under the
 # names of the live data block and as HiTemp registers; then the display's
 BOARD_VERSION_CODES = ["MainBoard Version", "code_version"]
+# Pairs of (software code, version). Do not drop either code: the version
+# text unpacks both. The same registers are also entities.
 REGISTER_BOARD_VERSION_CODES = ["2012", "2011"]
 DISPLAY_VERSION_CODES = ["2014", "2013"]
 # Output and switch states packed into one value, bit order unconfirmed
@@ -87,7 +89,7 @@ HITEMP_DISCOVERY_CODES = [
     "S03",
     "S02",
     "S01",
-    *("2011", "2012", "2013", "2014", "2026", "2027", "2057", "2058", "2059"),
+    *("2026", "2027", "2057", "2058", "2059"),
     *("2068", "2069", "2070", "2071"),
     *(f"O{index}" for index in (18, 19, 21, 22, 23, 24, 25, 26, 27, 28)),
     *("M07", "M12", "M13", "M14", "M15", "M16"),
